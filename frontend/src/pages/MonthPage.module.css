@@ -1,0 +1,115 @@
+/* MonthPage. Дизайн: 05-month.html */
+.summary {
+  display: flex;
+  justify-content: flex-end;
+  font-size: var(--fs-12);
+  color: var(--ink-secondary);
+}
+.layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-page);
+  align-items: flex-start;
+}
+.main {
+  flex: 999 1 600px;
+  min-width: 0;
+}
+.side {
+  flex: 1 1 240px;
+  max-width: 280px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-page);
+}
+
+/* Темна картка: «32 події · 6 задач» */
+.unit {
+  font-size: var(--fs-14);
+  font-weight: var(--fw-medium);
+  opacity: 0.8;
+}
+
+/* Білі картки: заголовок 14/700 (у мокапі місяця — 14, не 15) */
+.cardTitle {
+  font-size: var(--fs-14);
+}
+.lock {
+  display: inline-flex;
+  color: var(--ink-secondary);
+}
+.link {
+  font-weight: var(--fw-semibold);
+  color: var(--accent);
+  text-decoration: none;
+}
+.link:hover {
+  color: var(--accent-strong);
+}
+.note {
+  font-size: var(--fs-11);
+  color: var(--ink-secondary);
+}
+
+/* Свята цього сезону: квадрат місяць/число + назва + «п'ятниця · вихідний» */
+.holiday {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.holidayDate {
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border-radius: 9px; /* з мокапа; токена для 9px немає */
+  background: var(--bg);
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px; /* з мокапа; токена для 9px немає */
+  font-weight: var(--fw-semibold);
+  line-height: 1.1;
+}
+.holidayNext {
+  background: var(--accent-tint);
+  color: var(--accent-strong);
+}
+.holidayDay {
+  font-size: var(--fs-15);
+}
+.holidayText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.holidayName {
+  font-size: var(--fs-13);
+  font-weight: var(--fw-semibold);
+}
+.holidayMeta {
+  font-size: var(--fs-11);
+  color: var(--ink-secondary);
+}
+
+/* Календарі: чіпи без фону, 6px між рядками */
+.calList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+@media (max-width: 1000px) {
+  .side {
+    max-width: none;
+  }
+}
+@media (max-width: 767px) {
+  .main {
+    overflow-x: auto;
+    margin: 0 -16px;
+    padding: 0 16px;
+  }
+}

@@ -1,0 +1,184 @@
+/* InvitePage. Дизайн: design/screens/15-invite.html. Лише змінні з src/styles/tokens.css. */
+.page {
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: 28px;
+  background: var(--bg);
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--ink);
+}
+.logo:hover {
+  color: var(--ink);
+}
+.logoMark {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-input);
+  background: var(--dark);
+  color: var(--ink-on-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.logoText {
+  font-size: var(--fs-18);
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.01em;
+}
+
+.card {
+  width: 520px;
+  max-width: 100%;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.lead {
+  display: block;
+  font-size: var(--fs-12);
+  color: var(--ink-secondary);
+}
+.title {
+  margin: 2px 0 0;
+  font-size: var(--fs-22);
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.01em;
+}
+
+/* Блок деталей */
+.details {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.detail {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--fs-13);
+  min-width: 0;
+}
+.detail b {
+  font-weight: var(--fw-semibold);
+}
+.detailStart {
+  align-items: flex-start;
+}
+.detailIcon {
+  width: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--ink-secondary);
+  flex: none;
+}
+.detailStart .detailIcon {
+  margin-top: 2px;
+}
+.calDot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--r-dot);
+}
+.link {
+  font-weight: var(--fw-medium);
+  overflow-wrap: anywhere;
+}
+.description {
+  line-height: 1.5;
+  color: var(--ink-body);
+}
+.muted {
+  color: var(--ink-secondary);
+}
+
+/* «У цей час ти вільна» / перетин */
+.info {
+  background: var(--accent-tint-soft);
+  border-radius: var(--r-block);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--fs-13);
+}
+.infoIcon {
+  color: var(--accent);
+  flex: none;
+}
+.infoDanger {
+  background: var(--danger-tint);
+}
+.infoDanger .infoIcon {
+  color: var(--danger);
+}
+
+/* Кнопки */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.card .big {
+  height: 44px;
+  font-size: var(--fs-14);
+}
+.card .accept {
+  padding: 0 22px;
+}
+.actionsHint {
+  margin-left: auto;
+  font-size: var(--fs-12);
+  color: var(--ink-secondary);
+}
+.result {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  min-height: 44px;
+}
+.resultText {
+  font-size: var(--fs-14);
+  font-weight: var(--fw-semibold);
+}
+.resultLink {
+  font-size: var(--fs-13);
+  font-weight: var(--fw-semibold);
+}
+
+.footnote {
+  font-size: var(--fs-12);
+  color: var(--ink-secondary);
+  text-align: center;
+}
+
+@media (max-width: 767px) {
+  .page {
+    padding: 16px;
+    justify-content: flex-start;
+  }
+  .actionsHint {
+    margin-left: 0;
+    flex-basis: 100%;
+  }
+}

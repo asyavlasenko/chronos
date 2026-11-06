@@ -1,0 +1,6 @@
+/* Checkbox. Дизайн: 07-tasks.html, 01-overview.html */
+.box {
+  margin: 0;
+  cursor: pointer;
+  flex: none;
+}

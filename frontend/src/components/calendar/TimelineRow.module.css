@@ -1,0 +1,121 @@
+/* TimelineRow. Дизайн: design/screens/03-week-timeline.html (.dl, .row, .ev, .rem, смужка «Весь день») */
+.row {
+  display: flex;
+}
+.today {
+  background: var(--accent-tint-soft);
+}
+
+/* --- колонка дня (посилання на /calendar/day) --- */
+.dayLink {
+  flex: 0 0 132px;
+  box-sizing: border-box;
+  padding: 14px 10px 0 18px;
+  border-top: 1px solid var(--line-grid);
+  text-decoration: none;
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.dayLink:hover .dayName {
+  text-decoration: underline;
+}
+.dayName {
+  font-size: var(--fs-15);
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+}
+.dayNum {
+  color: var(--ink-secondary);
+  font-weight: var(--fw-medium);
+  font-size: var(--fs-15);
+}
+.daySummary {
+  font-size: var(--fs-11);
+  color: var(--ink-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.today .dayName,
+.today .dayNum,
+.today .daySummary {
+  color: var(--accent);
+}
+.today .dayNum,
+.today .daySummary {
+  font-weight: var(--fw-semibold);
+}
+
+/* --- смуга годин: колонки через repeating-linear-gradient (інлайн, бо кількість годин — проп) --- */
+.track {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  border-top: 1px solid var(--line-grid);
+  cursor: cell;
+}
+
+/* Зустріч/задача: top 8, height 56, radius 10, padding 7px 10px (мокап .ev) */
+.row .block {
+  border-radius: var(--r-input);
+  padding: 7px 10px;
+}
+.row .blockCompact {
+  padding: 4px 10px;
+}
+
+/* Нагадування: пілюля шириною за вмістом (без розтягування до правого краю), ближче до кінця — від правого краю */
+.row .track .rem {
+  right: auto;
+  width: auto;
+  height: 24px;
+  padding: 0 9px;
+  font-size: var(--fs-11);
+}
+.row .track .remEnd {
+  left: auto;
+  right: 8px;
+}
+
+/* Подія «весь день»: тонка смужка зверху рядка кольором календаря */
+.allDayRow {
+  position: absolute;
+  left: 0;
+  right: 8px;
+  top: 6px;
+  height: 22px;
+  display: flex;
+  gap: 4px;
+  z-index: 1;
+}
+.allDay {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 22px;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 6px;
+  color: var(--ink-on-dark);
+  padding: 0 10px;
+  font-family: var(--font);
+  font-size: var(--fs-11);
+  font-weight: var(--fw-semibold);
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.allDay:hover {
+  filter: brightness(0.95);
+}
+
+/* Вільне вікно «+ вільно» (лише сьогодні): обгортка задає left/width у %, FreeSlot заповнює її */
+.freeWrap {
+  position: absolute;
+  box-sizing: border-box;
+}

@@ -1,0 +1,65 @@
+/* MiniMonth. Дизайн: 04-day.html */
+.wrap {
+  display: flex;
+  flex-direction: column;
+}
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.title {
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-14);
+}
+.arrows {
+  display: flex;
+  gap: 4px;
+}
+.weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+  margin-bottom: 4px;
+}
+.weekdays span {
+  text-align: center;
+  font-size: var(--fs-11);
+  font-weight: var(--fw-semibold);
+  color: var(--ink-secondary);
+}
+.days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+}
+.day {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-pill);
+  font-size: var(--fs-12);
+  font-weight: var(--fw-medium);
+  color: var(--ink);
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font);
+}
+.day:hover {
+  background: var(--bg);
+}
+.outside {
+  color: var(--ink-secondary);
+}
+.marked {
+  background: var(--bg);
+}
+.active,
+.active:hover {
+  background: var(--dark);
+  color: var(--ink-on-dark);
+  font-weight: var(--fw-bold);
+}

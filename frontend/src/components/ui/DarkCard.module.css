@@ -1,0 +1,29 @@
+/* DarkCard. Дизайн: 01-overview.html, 04-day.html */
+.eyebrow {
+  font-size: var(--fs-11);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.7;
+}
+.value {
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.title {
+  font-size: var(--fs-14);
+  font-weight: var(--fw-semibold);
+  margin-top: 6px;
+}
+.meta {
+  font-size: var(--fs-12);
+  opacity: 0.8;
+}
+.footer {
+  margin-top: auto;
+  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

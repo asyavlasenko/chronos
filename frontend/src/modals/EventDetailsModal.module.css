@@ -1,0 +1,139 @@
+/* EventDetailsModal. Дизайн: design/screens/12-event-details.html. Лише змінні з src/styles/tokens.css. */
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.head .calBadge {
+  font-size: var(--fs-12);
+  padding: 4px 10px;
+}
+.actions {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.title {
+  margin: 0 0 4px;
+  font-size: var(--fs-22);
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+.meta {
+  font-size: var(--fs-14);
+  color: var(--ink-secondary);
+}
+.rel {
+  color: var(--accent);
+  font-weight: var(--fw-semibold);
+}
+.relPast {
+  color: var(--ink-secondary);
+  font-weight: var(--fw-medium);
+}
+.done {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  margin-top: 10px;
+  font-size: var(--fs-13);
+  cursor: pointer;
+}
+.holidayNote {
+  font-size: var(--fs-13);
+  color: var(--ink-body);
+  line-height: 1.5;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--fs-13);
+}
+.rowTop {
+  align-items: flex-start;
+}
+.rowIcon {
+  flex: none;
+  color: var(--ink-secondary);
+}
+.rowIconTop {
+  margin-top: 2px;
+}
+.link {
+  font-weight: var(--fw-medium);
+  overflow-wrap: anywhere;
+}
+.join {
+  margin-left: auto;
+}
+.row .change {
+  margin-left: auto;
+  height: auto;
+  padding: 0;
+}
+.desc {
+  margin: 0;
+  line-height: 1.5;
+  color: var(--ink-body);
+}
+
+/* учасники */
+.people {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-soft);
+}
+.peopleHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.eyebrow {
+  font-size: var(--fs-12);
+  font-weight: var(--fw-semibold);
+  color: var(--ink-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.summary {
+  font-size: var(--fs-12);
+  color: var(--ink-secondary);
+}
+.person {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.muted {
+  color: var(--ink-secondary);
+}
+.invite {
+  display: flex;
+  gap: 6px;
+  margin-top: 2px;
+}
+.invite .inviteInput {
+  flex: 1;
+  min-width: 0;
+}
+.error {
+  font-size: var(--fs-12);
+  color: var(--danger);
+}

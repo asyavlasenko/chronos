@@ -1,0 +1,39 @@
+/* SharedCalendarsCard. Дизайн: 01-overview.html (картка «Спільні календарі») */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+  text-decoration: none;
+}
+.row:hover {
+  color: var(--ink);
+}
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--r-dot);
+  flex: none;
+}
+.name {
+  font-size: var(--fs-13);
+  font-weight: var(--fw-semibold);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.roles {
+  font-size: var(--fs-12);
+  color: var(--ink-secondary);
+}
+.invite {
+  display: flex;
+  gap: 6px;
+  margin-top: auto;
+}
+.email {
+  flex: 1;
+  min-width: 0;
+}

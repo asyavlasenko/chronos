@@ -1,0 +1,54 @@
+/* FreeSlot. Дизайн: 02-week-cards.html, 04-day.html, 01-overview.html, 16-mobile.html */
+.slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-sizing: border-box;
+  border: 1px dashed #d1d5db;
+  background: transparent;
+  color: var(--ink-secondary);
+  font-family: var(--font);
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+}
+.slot:hover {
+  background: var(--accent-tint-soft);
+  border-color: var(--accent-dashed);
+}
+.abs {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  width: auto;
+}
+.week {
+  left: 0;
+  right: 0;
+  border-color: var(--accent-dashed);
+  background: var(--accent-tint-soft);
+  color: var(--accent);
+  border-radius: var(--r-chip);
+  font-size: var(--fs-11);
+  font-weight: var(--fw-semibold);
+  padding: 0 4px;
+  gap: 0;
+}
+.day {
+  border-radius: var(--r-block);
+  font-size: var(--fs-13);
+}
+.overview {
+  border-radius: var(--r-input);
+  font-size: var(--fs-12);
+}
+.list {
+  border-radius: var(--r-block);
+  height: 40px;
+  font-size: var(--fs-12);
+}
+.add {
+  font-weight: var(--fw-semibold);
+  color: var(--accent);
+}

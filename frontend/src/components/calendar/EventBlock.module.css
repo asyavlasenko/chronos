@@ -1,0 +1,385 @@
+/* EventBlock. Дизайн: 02-week-cards.html, 04-day.html, 01-overview.html, 03-week-timeline.html, 05-month.html */
+.block {
+  box-sizing: border-box;
+  border: 0;
+  font-family: var(--font);
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  transition: filter 0.12s ease;
+}
+.block:hover {
+  filter: brightness(0.97);
+}
+.abs {
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+.main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+  gap: 1px;
+}
+.title {
+  font-weight: var(--fw-semibold);
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.meta {
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.desc {
+  margin-top: auto;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- тиждень: 36px/год, radius 8, 11/600 + 10 --- */
+.week {
+  border-radius: var(--r-chip);
+  padding: 4px 7px;
+  align-items: flex-start;
+}
+.week .title {
+  font-size: var(--fs-11);
+}
+.week .meta {
+  font-size: var(--fs-10);
+}
+
+/* --- день: 64px/год, radius 12, 15/700 + 12 --- */
+.day {
+  border-radius: var(--r-block);
+  padding: 12px 14px;
+  gap: 14px;
+  align-items: flex-start;
+}
+.day .main {
+  gap: 4px;
+  height: 100%;
+}
+.day .title {
+  font-size: var(--fs-15);
+  font-weight: var(--fw-bold);
+}
+.day .meta,
+.day .desc {
+  font-size: var(--fs-12);
+}
+
+/* --- огляд: 44px/год, radius 10, 13/600 + 12 --- */
+.overview {
+  border-radius: var(--r-input);
+  padding: 8px 10px;
+  gap: 10px;
+  align-items: flex-start;
+}
+.overview .main {
+  gap: 2px;
+}
+.overview .title {
+  font-size: var(--fs-13);
+}
+.overview .meta {
+  font-size: var(--fs-12);
+}
+
+/* --- стрічка часу: блок колонкою (назва 12/600 + час 11) --- */
+.timeline {
+  border-radius: var(--r-input);
+  padding: 7px 10px;
+  align-items: flex-start;
+  gap: 6px;
+}
+.timeline .main {
+  gap: 2px;
+}
+.timeline .title {
+  font-size: var(--fs-12);
+}
+.timeline .meta {
+  font-size: var(--fs-11);
+  opacity: 0.85;
+}
+
+/* --- мобільний: rows 12px radius --- */
+.mobile {
+  border-radius: var(--r-block);
+  padding: 10px 12px;
+  align-items: flex-start;
+}
+.mobile .main {
+  gap: 2px;
+}
+.mobile .title {
+  font-size: var(--fs-13);
+}
+.mobile .meta {
+  font-size: var(--fs-11);
+}
+
+.selected {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  z-index: 2;
+}
+.day.selected {
+  outline-color: var(--dark);
+  outline-offset: 2px;
+}
+.mobile.selected {
+  outline-color: var(--dark);
+  outline-offset: 2px;
+}
+
+.author {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  color: var(--ink-on-dark);
+  font-size: 7px;
+  font-weight: var(--fw-bold);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  letter-spacing: 0.02em;
+}
+.week .author {
+  position: absolute;
+  right: 5px;
+  top: 5px;
+}
+.people {
+  margin-left: auto;
+  flex: none;
+}
+.action {
+  flex: none;
+  margin-left: auto;
+}
+
+/* --- нагадування: біла пілюля --- */
+.reminder {
+  border: 1px solid #d1d5db;
+  border-radius: var(--r-pill);
+  background: var(--card);
+  color: var(--ink);
+  padding: 0 7px;
+  gap: 5px;
+  font-weight: var(--fw-medium);
+  white-space: nowrap;
+  height: 22px;
+}
+.reminder.week {
+  font-size: var(--fs-10);
+}
+.reminder.day,
+.reminder.overview,
+.reminder.mobile {
+  height: 36px;
+  padding: 0 12px;
+  font-size: var(--fs-12);
+  border-radius: var(--r-input);
+}
+.reminder.timeline {
+  font-size: var(--fs-11);
+  height: 24px;
+  padding: 0 9px;
+}
+.reminder.list,
+.reminder.chip {
+  height: auto;
+  padding: 2px 7px;
+  font-size: var(--fs-11);
+  border-radius: 6px;
+}
+.remTime {
+  color: var(--ink-secondary);
+}
+.remTitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --- задача: блок з чекбоксом --- */
+.task {
+  background: var(--card-muted);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  cursor: default;
+}
+.task:hover {
+  filter: none;
+}
+.task.week {
+  border-radius: var(--r-chip);
+  padding: 4px 7px;
+  gap: 6px;
+  align-items: center;
+}
+.task.day {
+  border-radius: var(--r-block);
+  padding: 0 14px;
+  gap: 12px;
+  align-items: center;
+}
+.task.overview {
+  border-radius: var(--r-input);
+  padding: 0 10px;
+  gap: 10px;
+  align-items: center;
+}
+.task.mobile {
+  border-radius: var(--r-block);
+  padding: 10px 12px;
+  gap: 10px;
+  background: var(--card);
+  align-items: center;
+}
+.task.list,
+.task.chip {
+  border-radius: 6px;
+  padding: 2px 7px;
+  gap: 6px;
+  align-items: center;
+  font-size: var(--fs-11);
+}
+.taskBox {
+  flex: none;
+}
+.taskBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  font-family: var(--font);
+  color: inherit;
+  cursor: pointer;
+}
+.task.week .taskBody .title {
+  font-size: var(--fs-11);
+}
+.task.week .taskBody .meta {
+  font-size: var(--fs-10);
+  color: var(--ink-secondary);
+}
+.task.day .taskBody .title {
+  font-size: var(--fs-14);
+}
+.task.day .taskBody .meta,
+.task.overview .taskBody .meta {
+  font-size: var(--fs-12);
+  color: var(--ink-secondary);
+}
+.task.overview .taskBody {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.task.overview .taskBody .title {
+  font-size: var(--fs-13);
+}
+.task.mobile .taskBody .title {
+  font-size: var(--fs-13);
+}
+.task.mobile .taskBody .meta {
+  font-size: var(--fs-11);
+  color: var(--ink-secondary);
+}
+.done .title {
+  color: var(--ink-secondary);
+  text-decoration: line-through;
+  font-weight: var(--fw-medium);
+}
+
+/* --- рядок у місяці: час · крапка · назва --- */
+.listRow {
+  background: transparent;
+  padding: 2px 0;
+  gap: 5px;
+  font-size: var(--fs-11);
+  color: var(--ink);
+  width: 100%;
+  border-radius: 4px;
+}
+.listRow:hover {
+  background: var(--bg);
+  filter: none;
+}
+.listTime {
+  color: var(--ink-secondary);
+  flex: none;
+  font-weight: var(--fw-medium);
+}
+.listDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+  flex: none;
+}
+.listTitle {
+  font-weight: var(--fw-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- чіп: «08:30 Пробіжка» --- */
+.chip {
+  border-radius: 6px;
+  padding: 3px 7px;
+  font-size: var(--fs-11);
+  font-weight: var(--fw-medium);
+  white-space: nowrap;
+  gap: 0;
+}
+.holiday {
+  justify-content: center;
+}
+
+/* плоскі рядки місяця для нагадувань/задач */
+.listBox {
+  flex: none;
+}
+.listIcon {
+  color: var(--ink-secondary);
+  flex: none;
+}
+.listTitleBtn {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-weight: var(--fw-medium);
+  color: inherit;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.done .listTitleBtn {
+  color: var(--ink-secondary);
+  text-decoration: line-through;
+}

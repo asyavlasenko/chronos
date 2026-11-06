@@ -1,0 +1,28 @@
+/* Textarea. Дизайн: 10-event-create.html */
+.textarea {
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--r-input);
+  padding: 10px 12px;
+  font-family: var(--font);
+  font-size: var(--fs-13);
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--card);
+  outline: 0;
+  resize: vertical;
+  min-height: 90px;
+}
+.textarea::placeholder {
+  color: var(--ink-tertiary);
+}
+.textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-tint);
+}
+.invalid,
+.invalid:focus {
+  border-color: var(--danger);
+  box-shadow: none;
+}

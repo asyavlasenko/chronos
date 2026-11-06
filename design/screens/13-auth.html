@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Chronos design reference. Static mockup exported from the design canvas; not production code. -->
+<title>Chronos — вхід і реєстрація</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+.lbl{display:block;font-size:12px;font-weight:600;color:#6B7280;margin-bottom:6px}
+.inp{height:44px;box-sizing:border-box;border:1px solid #E5E7EB;border-radius:10px;padding:0 12px;font-family:inherit;font-size:14px;color:#111827;outline:0;background:#fff;width:100%}
+@media (max-width: 900px){.wrap{grid-template-columns:minmax(0,1fr) !important}}
+</style>
+</head>
+<body>
+<div style="box-sizing: border-box; min-height: 800px; padding: 28px; background: #F3F4F6; color: #111827; font-family: 'Inter', system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;">
+
+  <div class="wrap" style="display: grid; grid-template-columns: 420px 360px; gap: 16px; align-items: stretch; max-width: 100%;">
+
+    <form aria-label="Вхід" style="box-sizing: border-box; background: #fff; border-radius: 18px; padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+      <a href="01-overview.html" style="display: flex; align-items: center; gap: 9px; text-decoration: none; color: #111827; margin-bottom: 4px;"><span style="width: 32px; height: 32px; border-radius: 10px; background: #111827; color: #fff; display: flex; align-items: center; justify-content: center;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg></span><span style="font-size: 18px; font-weight: 700; letter-spacing: -0.01em;">Chronos</span></a>
+      <div role="tablist" aria-label="Вхід або реєстрація" style="display: flex; background: #F3F4F6; border-radius: 999px; padding: 3px; gap: 2px;">
+        <button type="button" role="tab" aria-selected="true" style="flex: 1; border: 0; background: #111827; color: #fff; border-radius: 999px; height: 32px; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;">Вхід</button>
+        <button type="button" role="tab" aria-selected="false" style="flex: 1; border: 0; background: transparent; color: #111827; border-radius: 999px; height: 32px; font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer;">Реєстрація</button>
+      </div>
+      <div><h1 style="margin: 0 0 4px; font-size: 20px; font-weight: 700; letter-spacing: -0.01em;">З поверненням</h1><span style="font-size: 13px; color: #6B7280;">Увійди, щоб побачити свої календарі та запрошення.</span></div>
+      <div><label for="email" class="lbl">Email</label><input id="email" type="email" class="inp" placeholder="you@mail.com" value="asia@mail.com" /></div>
+      <div><div style="display: flex; justify-content: space-between; align-items: baseline;"><label for="pass" class="lbl">Пароль</label><a href="#reset" style="font-size: 12px; font-weight: 600; text-decoration: none;">Забули пароль?</a></div><div style="position: relative;"><input id="pass" type="password" class="inp" value="••••••••••" style="padding-right: 44px;" /><button type="button" aria-label="Показати пароль" style="position: absolute; right: 6px; top: 6px; width: 32px; height: 32px; border: 0; border-radius: 8px; background: transparent; color: #6B7280; cursor: pointer; padding: 0; display: flex; align-items: center; justify-content: center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div></div>
+      <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;"><input type="checkbox" checked style="width: 15px; height: 15px; margin: 0; accent-color: #111827;" />Запам'ятати мене</label>
+      <a href="01-overview.html" style="text-decoration: none; background: #111827; color: #fff; border-radius: 999px; height: 44px; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center;">Увійти</a>
+      <div style="display: flex; align-items: center; gap: 10px; font-size: 11px; color: #9CA3AF;"><span style="flex: 1; height: 1px; background: #E5E7EB;"></span>або<span style="flex: 1; height: 1px; background: #E5E7EB;"></span></div>
+      <button type="button" style="border: 1px solid #E5E7EB; background: #fff; color: #111827; border-radius: 999px; height: 44px; font-family: inherit; font-size: 14px; font-weight: 500; cursor: pointer;">Продовжити з Google</button>
+      <span style="text-align: center; font-size: 13px; color: #6B7280;">Немає акаунта? <a href="#register" style="font-weight: 600; text-decoration: none;">Зареєструватися</a></span>
+    </form>
+
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      <div style="flex: 1; background: #111827; color: #fff; border-radius: 18px; padding: 22px; display: flex; flex-direction: column; gap: 10px;">
+        <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.7;">Chronos</span>
+        <span style="font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2;">Один календар для навчання, роботи та команди</span>
+        <ul style="list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 13px; opacity: 0.9;">
+          <li style="display: flex; gap: 8px; align-items: center;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #60A5FA;"></span>Зустрічі, нагадування і задачі в одному місці</li>
+          <li style="display: flex; gap: 8px; align-items: center;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #60A5FA;"></span>Спільні календарі з ролями</li>
+          <li style="display: flex; gap: 8px; align-items: center;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #60A5FA;"></span>Запрошення на email</li>
+          <li style="display: flex; gap: 8px; align-items: center;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #60A5FA;"></span>Свята твоєї країни автоматично</li>
+        </ul>
+      </div>
+      <div style="background: #fff; border-radius: 18px; padding: 16px 18px; display: flex; align-items: center; gap: 12px;">
+        <span style="width: 36px; height: 36px; border-radius: 10px; background: #FEF3E2; color: #9A4B00; display: flex; align-items: center; justify-content: center; flex: none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"></rect><path d="M3 8l9 6 9-6"></path></svg></span>
+        <span style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 13px; font-weight: 600;">Тебе запросили в календар «Робота»</span><span style="font-size: 12px; color: #6B7280;">Увійди з цим email — запрошення чекатиме.</span></span>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

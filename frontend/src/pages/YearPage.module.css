@@ -1,0 +1,94 @@
+/* YearPage. Дизайн: 06-year.html */
+.legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: var(--fs-11);
+  color: var(--ink-secondary);
+}
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+.dotEvent {
+  background: var(--dark);
+}
+.dotHoliday {
+  background: var(--accent);
+}
+.dotDeadline {
+  background: var(--cal-study);
+}
+
+.layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-page);
+  align-items: flex-start;
+}
+.months {
+  flex: 999 1 700px;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.side {
+  flex: 1 1 240px;
+  max-width: 280px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-page);
+}
+
+/* Темна картка: «184 події» */
+.unit {
+  font-size: var(--fs-14);
+  font-weight: var(--fw-medium);
+  opacity: 0.8;
+}
+
+/* Свята України · рік */
+.cardTitle {
+  font-size: var(--fs-14);
+}
+.lock {
+  display: inline-flex;
+  color: var(--ink-secondary);
+}
+.holiday {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: var(--fs-13);
+}
+.holidayName {
+  min-width: 0;
+}
+.holidayDate {
+  color: var(--ink-secondary);
+  white-space: nowrap;
+}
+.note {
+  font-size: var(--fs-11);
+  color: var(--ink-secondary);
+}
+
+@media (max-width: 1000px) {
+  .months {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .side {
+    max-width: none;
+  }
+}

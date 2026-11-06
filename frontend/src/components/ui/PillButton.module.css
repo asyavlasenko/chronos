@@ -1,0 +1,127 @@
+/* PillButton. Дизайн: 01-overview.html, 02-week-cards.html, 11/12 модалки. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 0;
+  border-radius: var(--r-pill);
+  font-family: var(--font);
+  font-size: var(--fs-13);
+  font-weight: var(--fw-semibold);
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.primary {
+  background: var(--dark);
+  color: var(--ink-on-dark);
+}
+.primary:hover {
+  background: #1f2937;
+  color: var(--ink-on-dark);
+}
+
+.secondary {
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-weight: var(--fw-medium);
+}
+.secondary:hover {
+  color: var(--ink);
+  background: var(--card-muted);
+}
+
+.white {
+  background: var(--card);
+  color: var(--ink);
+}
+.white:hover {
+  color: var(--ink);
+  background: var(--card-muted);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--ink);
+  font-weight: var(--fw-medium);
+}
+.ghost:hover {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.danger {
+  background: var(--card);
+  color: var(--danger);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.danger:hover {
+  background: var(--danger-tint);
+  color: var(--danger);
+}
+
+.accent {
+  background: transparent;
+  color: var(--accent);
+  padding: 0;
+  height: auto;
+}
+.accent:hover {
+  color: var(--accent-strong);
+}
+
+.lg {
+  height: 40px;
+  padding: 0 18px;
+}
+.md {
+  height: var(--control-h);
+  padding: 0 16px;
+}
+.sm {
+  height: var(--control-h-sm);
+  padding: 0 14px;
+}
+.xs {
+  height: 32px;
+  padding: 0 12px;
+  font-size: var(--fs-12);
+}
+.xxs {
+  height: var(--control-h-xs);
+  padding: 0 12px;
+  font-size: var(--fs-12);
+}
+
+.rounded.lg,
+.rounded.md {
+  border-radius: var(--r-input);
+}
+.rounded.sm,
+.rounded.xs,
+.rounded.xxs {
+  border-radius: var(--r-chip);
+}
+
+.full {
+  width: 100%;
+}
+
+/* accent — кнопка-посилання без фону: перебиває розміри, оголошені вище */
+.btn.accent {
+  padding: 0;
+  height: auto;
+}

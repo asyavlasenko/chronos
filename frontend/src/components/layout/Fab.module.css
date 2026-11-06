@@ -1,0 +1,21 @@
+/* Fab. Дизайн: 16-mobile.html */
+.fab {
+  display: none;
+}
+@media (max-width: 767px) {
+  .fab {
+    position: fixed;
+    right: 16px;
+    bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+    z-index: 31;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--dark);
+    color: var(--ink-on-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-fab);
+  }
+}

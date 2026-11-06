@@ -1,0 +1,31 @@
+/* MobileDayList. Дизайн: 16-mobile.html (список подій дня) */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.row {
+  display: flex;
+  gap: 10px;
+}
+.time {
+  width: 40px;
+  flex: none;
+  font-size: var(--fs-11);
+  font-weight: var(--fw-semibold);
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+}
+.end {
+  color: var(--ink-secondary);
+  font-weight: var(--fw-medium);
+}
+.block {
+  flex: 1;
+  min-width: 0;
+}
+.empty {
+  font-size: var(--fs-12);
+  color: var(--ink-secondary);
+}

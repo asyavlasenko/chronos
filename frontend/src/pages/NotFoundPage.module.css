@@ -1,0 +1,36 @@
+/* NotFoundPage. Лише змінні з src/styles/tokens.css. */
+.page {
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: 28px;
+  background: var(--bg);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.page .card {
+  width: 420px;
+  max-width: 100%;
+  align-items: center;
+  text-align: center;
+}
+.code {
+  font-size: var(--fs-11);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-tertiary);
+}
+.title {
+  font-size: var(--fs-20);
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.01em;
+}
+.text {
+  font-size: var(--fs-13);
+  color: var(--ink-secondary);
+}
+.btn {
+  margin-top: 8px;
+}

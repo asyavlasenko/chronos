@@ -1,0 +1,19 @@
+/* NowLine. Дизайн: 02-week-cards.html, 04-day.html */
+.line {
+  position: absolute;
+  height: 2px;
+  background: var(--accent);
+  z-index: 3;
+  pointer-events: none;
+}
+.label {
+  position: absolute;
+  top: -8px;
+  font-size: var(--fs-10);
+  font-weight: var(--fw-semibold);
+  color: var(--ink-on-dark);
+  background: var(--accent);
+  border-radius: 4px;
+  padding: 2px 5px;
+  line-height: 1.2;
+}

@@ -1,0 +1,55 @@
+/* IconButton. Дизайн: 02-week-cards.html, 11-event-quick-modal.html, 04-day.html */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  padding: 0;
+  color: var(--ink);
+  cursor: pointer;
+  flex: none;
+  text-decoration: none;
+  transition: background-color 0.12s ease;
+}
+.btn:hover {
+  color: var(--ink);
+}
+
+.white {
+  background: var(--card);
+}
+.white:hover {
+  background: var(--card-muted);
+}
+.muted {
+  background: var(--bg);
+}
+.muted:hover {
+  background: var(--line);
+}
+
+.md {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-input);
+}
+.sm {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-chip);
+}
+.xs {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--r-chip);
+}
+.round {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-pill);
+}
+.xl {
+  width: var(--control-h);
+  height: var(--control-h);
+  border-radius: 50%;
+}

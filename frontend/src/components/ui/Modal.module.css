@@ -1,0 +1,47 @@
+/* Modal. Дизайн: 11-event-quick-modal.html, 12-event-details.html */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--overlay);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow-y: auto;
+  padding-bottom: 40px;
+  box-sizing: border-box;
+}
+.card {
+  box-sizing: border-box;
+  max-width: calc(100% - 32px);
+  background: var(--card);
+  color: var(--ink);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow-modal);
+  display: flex;
+  flex-direction: column;
+  animation: rise 0.16s ease-out;
+}
+/* Лише transform: анімація opacity у фоновій вкладці може «зависнути» на 0 і сховати модалку */
+@keyframes rise {
+  from {
+    transform: translateY(8px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@media (max-width: 767px) {
+  .overlay {
+    padding-top: 0 !important;
+    align-items: flex-end;
+    padding-bottom: 0;
+  }
+  .card {
+    width: 100% !important;
+    max-width: none;
+    border-radius: var(--r-card) var(--r-card) 0 0;
+    max-height: 92vh;
+    overflow-y: auto;
+  }
+}

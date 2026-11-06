@@ -1,0 +1,16 @@
+/* HourRuler. Дизайн: 02-week-cards.html, 04-day.html */
+.ruler {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+}
+.labels {
+  display: flex;
+  flex-direction: column;
+}
+.label {
+  display: block;
+  color: var(--ink-secondary);
+  line-height: 1;
+  transform: translateY(-5px);
+}

@@ -1,0 +1,8 @@
+/* HourGrid. Дизайн: 02-week-cards.html, 04-day.html */
+.grid {
+  position: relative;
+  box-sizing: border-box;
+}
+.clickable {
+  cursor: cell;
+}

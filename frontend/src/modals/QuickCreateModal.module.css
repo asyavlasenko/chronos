@@ -1,0 +1,115 @@
+/* QuickCreateModal. Дизайн: design/screens/11-event-quick-modal.html. Лише змінні з src/styles/tokens.css. */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.eyebrow {
+  font-size: var(--fs-12);
+  font-weight: var(--fw-semibold);
+  color: var(--ink-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.fieldCol {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* назва: без рамки, лише підкреслення 2px --dark */
+.form .titleInput {
+  height: 46px;
+  padding: 0 2px;
+  border: 0;
+  border-bottom: 2px solid var(--dark);
+  border-radius: 0;
+  background: transparent;
+  font-size: var(--fs-18);
+  font-weight: var(--fw-semibold);
+}
+.form .titleInput:focus {
+  border-color: var(--dark);
+  box-shadow: none;
+}
+.form .titleError,
+.form .titleError:focus {
+  border-color: var(--danger);
+}
+.error {
+  font-size: var(--fs-12);
+  color: var(--danger);
+}
+
+/* дата · початок – кінець */
+.timeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.clock {
+  flex: none;
+  color: var(--ink-secondary);
+}
+.timeRow .date {
+  flex: 1;
+  min-width: 0;
+}
+.timeRow .time {
+  width: 88px;
+  flex: none;
+  text-align: center;
+}
+.dash {
+  color: var(--ink-secondary);
+}
+
+/* календар · учасники */
+.calRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dotWrap {
+  display: flex;
+  justify-content: center;
+  width: 16px;
+  flex: none;
+}
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--r-dot);
+}
+.calSelect {
+  flex: 1;
+  min-width: 0;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-soft);
+}
+.more {
+  font-size: var(--fs-13);
+  font-weight: var(--fw-semibold);
+}
+.keys {
+  margin-left: auto;
+  font-size: var(--fs-11);
+  color: var(--ink-secondary);
+}
+@media (max-width: 767px) {
+  .keys {
+    display: none;
+  }
+}

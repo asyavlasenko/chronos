@@ -1,0 +1,65 @@
+/* SegmentedControl. Дизайн: 02-week-cards.html, 11-event-quick-modal.html */
+.wrap {
+  display: inline-flex;
+  border-radius: var(--r-pill);
+  gap: 2px;
+}
+.white {
+  background: var(--card);
+}
+.muted {
+  background: var(--bg);
+}
+.md {
+  padding: 4px;
+}
+.sm {
+  padding: 3px;
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  border-radius: var(--r-pill);
+  font-family: var(--font);
+  font-weight: var(--fw-medium);
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
+}
+.md .item {
+  height: 30px;
+  padding: 0 14px;
+  font-size: var(--fs-13);
+}
+.sm .item {
+  height: 28px;
+  padding: 0 12px;
+  font-size: var(--fs-12);
+}
+.item:hover {
+  color: var(--ink);
+  background: var(--bg);
+}
+.white .item:hover {
+  background: var(--bg);
+}
+.muted .item:hover {
+  background: var(--line);
+}
+.active,
+.item.active:hover {
+  background: var(--dark);
+  color: var(--ink-on-dark);
+  font-weight: var(--fw-semibold);
+}
+.stretch .item {
+  flex: 1;
+}

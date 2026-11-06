@@ -1,0 +1,51 @@
+/* TasksCard. Дизайн: 01-overview.html (картка «Задачі») */
+.count {
+  font-size: var(--fs-12);
+  font-weight: var(--fw-semibold);
+  color: var(--ink-secondary);
+}
+.bar {
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--bg);
+  display: flex;
+}
+.fill {
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--dark);
+  display: block;
+}
+.list {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 0;
+}
+.title {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  font-size: var(--fs-13);
+  font-weight: var(--fw-medium);
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.empty {
+  font-size: var(--fs-12);
+  color: var(--ink-secondary);
+  padding: 6px 0;
+}
+.more {
+  margin-top: auto;
+  font-size: var(--fs-12);
+  font-weight: var(--fw-semibold);
+}

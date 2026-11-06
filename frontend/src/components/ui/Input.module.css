@@ -1,0 +1,61 @@
+/* Input. Дизайн: 10-event-create.html, 13-auth.html */
+.input {
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--r-input);
+  padding: 0 12px;
+  font-family: var(--font);
+  color: var(--ink);
+  background: var(--card);
+  outline: 0;
+  transition:
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+.input::placeholder {
+  color: var(--ink-tertiary);
+}
+.input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-tint);
+}
+.invalid,
+.invalid:focus {
+  border-color: var(--danger);
+  box-shadow: none;
+}
+.lg {
+  height: 44px;
+  font-size: var(--fs-14);
+}
+.md {
+  height: 40px;
+  font-size: var(--fs-13);
+}
+.sm {
+  height: 36px;
+  font-size: var(--fs-13);
+}
+.xs {
+  height: 32px;
+  font-size: var(--fs-12);
+  padding: 0 10px;
+  border-radius: var(--r-chip);
+}
+.wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+.wrap .input {
+  padding-right: 40px;
+}
+.trailing {
+  position: absolute;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  color: var(--ink-secondary);
+}

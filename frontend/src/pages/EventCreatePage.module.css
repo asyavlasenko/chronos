@@ -1,0 +1,202 @@
+/* EventCreatePage. Дизайн: design/screens/10-event-create.html. Лише змінні з src/styles/tokens.css. */
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  color: var(--ink-secondary);
+  font-size: var(--fs-13);
+  font-weight: var(--fw-medium);
+}
+.back:hover {
+  color: var(--ink);
+}
+.layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+/* --- форма --- */
+.card {
+  flex: 999 1 560px;
+  max-width: 720px;
+  min-width: 0;
+}
+.notFound {
+  max-width: 560px;
+}
+.h1 {
+  margin: 0 0 4px;
+  font-size: var(--fs-22);
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.01em;
+}
+.sub {
+  font-size: var(--fs-13);
+  color: var(--ink-secondary);
+}
+.card .titleInput {
+  height: 46px;
+  font-size: var(--fs-16);
+  font-weight: var(--fw-semibold);
+}
+
+.types {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.typeBtn {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-block);
+  background: var(--card);
+  color: var(--ink);
+  text-align: left;
+  font-family: var(--font);
+  cursor: pointer;
+  transition:
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+.typeBtn:hover {
+  border-color: #d1d5db;
+}
+.typeActive,
+.typeActive:hover {
+  border-color: var(--dark);
+  box-shadow: inset 0 0 0 1px var(--dark);
+}
+.typeTitle {
+  font-size: var(--fs-13);
+  font-weight: var(--fw-semibold);
+}
+.typeActive .typeTitle {
+  font-weight: var(--fw-bold);
+}
+.typeHint {
+  font-size: var(--fs-11);
+  color: var(--ink-secondary);
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.when {
+  display: flex;
+  gap: 8px;
+}
+.when > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+.when .time {
+  width: 90px;
+  flex: none;
+  text-align: center;
+}
+.hintLink {
+  font-weight: var(--fw-semibold);
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: -6px;
+  width: fit-content;
+  font-size: var(--fs-13);
+  cursor: pointer;
+}
+.calDot {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--r-dot);
+}
+.colorRow {
+  display: flex;
+  align-items: center;
+  height: 40px;
+}
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line-soft);
+}
+.tip {
+  margin-left: auto;
+  font-size: var(--fs-12);
+  color: var(--ink-secondary);
+}
+
+/* --- бічна панель: прев'ю і «цей час вільний» --- */
+.aside {
+  flex: 1 1 300px;
+  max-width: 360px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.eyebrow {
+  font-size: var(--fs-12);
+  font-weight: var(--fw-semibold);
+  color: var(--ink-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.previewBlock {
+  width: 100%;
+  min-height: 36px;
+}
+.note {
+  font-size: var(--fs-12);
+  color: var(--ink-secondary);
+  line-height: 1.45;
+}
+.darkEyebrow {
+  font-size: var(--fs-11);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.7;
+}
+.status {
+  font-size: var(--fs-14);
+  font-weight: var(--fw-semibold);
+}
+.statusConflict {
+  color: var(--danger-tint);
+}
+.darkText {
+  font-size: var(--fs-12);
+  line-height: 1.45;
+  opacity: 0.8;
+}
+
+@media (max-width: 1000px) {
+  .aside {
+    max-width: none;
+  }
+}
+@media (max-width: 600px) {
+  .grid2,
+  .types {
+    grid-template-columns: 1fr;
+  }
+  .tip {
+    margin-left: 0;
+    flex-basis: 100%;
+  }
+}

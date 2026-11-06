@@ -1,0 +1,27 @@
+# Залежності
+node_modules/
+
+# Змінні середовища (секрети ніколи не комітимо)
+.env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env
+
+# Збірки та кеші
+dist/
+build/
+coverage/
+.vite/
+*.tsbuildinfo
+
+# Логи
+*.log
+npm-debug.log*
+
+# ОС та IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

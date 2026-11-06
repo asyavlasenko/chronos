@@ -1,0 +1,90 @@
+/* Chronos — design tokens. Source of truth for colors, type, radii, spacing.
+   Import once in the app root (e.g. src/styles/tokens.css) and use only these variables. */
+
+:root {
+  /* Surfaces */
+  --bg: #F3F4F6;            /* page background */
+  --card: #FFFFFF;          /* cards, panels, modals */
+  --card-muted: #FAFAFB;    /* task blocks, subtle fills */
+  --dark: #111827;          /* hero cards, primary buttons, active pills */
+  --dark-soft: rgba(255, 255, 255, 0.12); /* inner blocks on dark cards */
+
+  /* Text */
+  --ink: #111827;
+  --ink-secondary: #6B7280;
+  --ink-tertiary: #9CA3AF;
+  --ink-on-dark: #FFFFFF;
+  --ink-body: #374151;      /* long descriptions */
+
+  /* Lines */
+  --line: #E5E7EB;          /* borders, inputs */
+  --line-soft: #F1F2F4;     /* dividers inside cards, hour grid */
+  --line-grid: #EFF0F3;     /* hour lines in day/week grids */
+
+  /* Accent — only for "today" / "now" / focus / links */
+  --accent: #2563EB;
+  --accent-strong: #1D4ED8;
+  --accent-tint: #EAF1FF;
+  --accent-tint-soft: #F7F9FF;   /* today column / selected row background */
+  --accent-dashed: #93C5FD;      /* free-slot dashed border */
+
+  /* Status */
+  --danger: #B91C1C;
+  --danger-tint: #FEE2E2;
+  --success: #046C4E;
+  --success-tint: #E6F6EE;
+
+  /* Calendar colors — a calendar has a base color plus a tint pair for event blocks */
+  --cal-main: #111827;        --cal-main-tint: #F1F2F4;    --cal-main-text: #111827;
+  --cal-study: #6D5BD0;       --cal-study-tint: #EEEBFB;   --cal-study-text: #4C3DB2;
+  --cal-work: #D97706;        --cal-work-tint: #FEF3E2;    --cal-work-text: #9A4B00;
+  --cal-sport: #059669;       --cal-sport-tint: #E6F6EE;   --cal-sport-text: #046C4E;
+  --cal-holidays: #2563EB;    --cal-holidays-tint: #EAF1FF; --cal-holidays-text: #1D4ED8;
+  --cal-volunteer: #DB2777;   --cal-volunteer-tint: #FCE7F3; --cal-volunteer-text: #9D174D;
+
+  /* Member colors in shared calendars (per-user event color) */
+  --member-blue: #2563EB;     --member-blue-tint: #EAF1FF;   --member-blue-text: #1D4ED8;
+  --member-purple: #7C3AED;   --member-purple-tint: #F1EAFE; --member-purple-text: #5B21B6;
+  --member-green: #059669;    --member-green-tint: #E6F6EE;  --member-green-text: #046C4E;
+  --member-orange: #EA580C;   --member-pink: #DB2777;        --member-graphite: #374151;
+
+  /* Type */
+  --font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --fs-10: 10px; --fs-11: 11px; --fs-12: 12px; --fs-13: 13px; --fs-14: 14px;
+  --fs-15: 15px; --fs-16: 16px; --fs-17: 17px; --fs-18: 18px; --fs-20: 20px;
+  --fs-22: 22px; --fs-26: 26px; --fs-28: 28px; --fs-34: 34px;
+  --fw-regular: 400; --fw-medium: 500; --fw-semibold: 600; --fw-bold: 700;
+
+  /* Radii */
+  --r-pill: 999px;   /* nav pills, buttons, chips, search */
+  --r-card: 18px;    /* cards, modals */
+  --r-card-sm: 16px; /* day cards in week view, mobile cards */
+  --r-block: 12px;   /* big event blocks (day view), inputs in forms */
+  --r-input: 10px;   /* inputs, selects, small event blocks */
+  --r-chip: 8px;     /* mini event blocks in week cards, icon buttons */
+  --r-dot: 3px;      /* calendar color squares */
+
+  /* Spacing */
+  --page-pad: 20px 28px 28px;
+  --gap-page: 16px;  /* between cards */
+  --card-pad: 18px;
+  --card-pad-lg: 20px;
+
+  /* Grids */
+  --hour-h-week: 36px;   /* week cards */
+  --hour-h-day: 64px;    /* day view */
+  --hour-h-overview: 44px;
+  --hour-h-team: 48px;
+  --hour-col-w: 44px;    /* left hour labels column */
+
+  /* Controls */
+  --control-h: 38px;     /* header buttons, search */
+  --control-h-sm: 34px;  /* toolbar buttons */
+  --control-h-xs: 28px;  /* chips, segmented items */
+
+  /* Shadows */
+  --shadow-modal: 0 24px 60px rgba(17, 24, 39, 0.25);
+  --shadow-fab: 0 12px 28px rgba(17, 24, 39, 0.28);
+  --ring-today: 0 0 0 2px #111827;   /* today card outline */
+  --overlay: rgba(17, 24, 39, 0.22); /* modal backdrop */
+}

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Chronos design reference. Static mockup exported from the design canvas; not production code. -->
+<title>Chronos — швидке створення по кліку на слот</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+.bd{opacity:.45}
+.day{flex:1 1 150px;min-width:150px;background:#fff;border-radius:16px;display:flex;flex-direction:column;overflow:hidden}
+.dh{height:70px;box-sizing:border-box;padding:12px 14px 0;display:flex;justify-content:space-between;align-items:flex-start}
+.dh .w{display:block;font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase}
+.dh .n{font-size:22px;font-weight:700}
+.grid{position:relative;height:432px;margin:0 8px;background-image:repeating-linear-gradient(to bottom,#F1F2F4 0,#F1F2F4 1px,transparent 1px,transparent 36px)}
+.ev{position:absolute;left:0;right:0;box-sizing:border-box;border-radius:8px;padding:4px 7px;display:flex;flex-direction:column;gap:1px;overflow:hidden;font-size:11px;font-weight:600;line-height:1.2}
+.ev small{font-size:10px;font-weight:400}
+.inp{height:40px;box-sizing:border-box;border:1px solid #E5E7EB;border-radius:10px;padding:0 12px;font-family:inherit;font-size:13px;color:#111827;outline:0;background:#fff}
+</style>
+</head>
+<body>
+<div style="position: relative; box-sizing: border-box; padding: 20px 28px 28px; background: #F3F4F6; color: #111827; font-family: 'Inter', system-ui, sans-serif; display: flex; flex-direction: column; gap: 16px; min-height: 780px;">
+
+<header class="bd" aria-hidden="true" style="display: flex; align-items: center; gap: 14px;">
+  <span style="display: flex; align-items: center; gap: 9px;"><span style="width: 28px; height: 28px; border-radius: 9px; background: #111827; display: block;"></span><span style="font-size: 16px; font-weight: 700;">Chronos</span></span>
+  <span style="display: flex; gap: 4px; font-size: 13px;"><span style="padding: 8px 12px; color: #6B7280;">Огляд</span><span style="padding: 8px 12px; background: #fff; border-radius: 999px; font-weight: 600;">Календар</span><span style="padding: 8px 12px; color: #6B7280;">Задачі</span><span style="padding: 8px 12px; color: #6B7280;">Календарі</span></span>
+  <span style="flex: 1;"></span>
+  <span style="background: #fff; border-radius: 999px; height: 38px; width: 240px; display: block;"></span>
+  <span style="background: #111827; color: #fff; border-radius: 999px; height: 38px; padding: 0 16px; font-size: 13px; font-weight: 600; display: flex; align-items: center;">+ Створити</span>
+  <span style="width: 38px; height: 38px; border-radius: 50%; background: #fff; display: block;"></span>
+</header>
+
+<div class="bd" aria-hidden="true" style="display: flex; align-items: center; gap: 10px;">
+  <span style="display: flex; background: #fff; border-radius: 999px; padding: 4px; gap: 2px; font-size: 13px;"><span style="height: 30px; padding: 0 14px; display: flex; align-items: center;">День</span><span style="height: 30px; padding: 0 14px; display: flex; align-items: center; background: #111827; color: #fff; border-radius: 999px; font-weight: 600;">Тиждень</span><span style="height: 30px; padding: 0 14px; display: flex; align-items: center;">Місяць</span><span style="height: 30px; padding: 0 14px; display: flex; align-items: center;">Рік</span></span>
+  <span style="font-size: 17px; font-weight: 700; margin-left: 10px;">2 – 8 листопада 2026 <span style="color: #6B7280; font-weight: 500;">· тиждень 45</span></span>
+</div>
+
+<div class="bd" aria-hidden="true" style="display: flex; gap: 10px; align-items: stretch;">
+  <div style="flex: 0 0 44px;"><div style="height: 70px;"></div><div style="height: 432px; display: flex; flex-direction: column; font-size: 10px; color: #6B7280;"><span style="height: 36px;">08:00</span><span style="height: 36px;">09:00</span><span style="height: 36px;">10:00</span><span style="height: 36px;">11:00</span><span style="height: 36px;">12:00</span><span style="height: 36px;">13:00</span><span style="height: 36px;">14:00</span><span style="height: 36px;">15:00</span><span style="height: 36px;">16:00</span><span style="height: 36px;">17:00</span><span style="height: 36px;">18:00</span><span style="height: 36px;">19:00</span></div></div>
+  <div class="day"><div class="dh"><div><span class="w">Пн</span><span class="n">2</span></div></div><div class="grid"><span class="ev" style="top: 36px; height: 54px; background: #EEEBFB; color: #4C3DB2;">Лекція: Алгоритми<small>09:00 – 10:30</small></span><span class="ev" style="top: 144px; height: 36px; background: #FEF3E2; color: #9A4B00;">Стендап<small>12:00 – 13:00</small></span><span class="ev" style="top: 360px; height: 54px; background: #E6F6EE; color: #046C4E;">Зал<small>18:00 – 19:30</small></span></div><div style="height: 36px;"></div></div>
+  <div class="day"><div class="dh"><div><span class="w">Вт</span><span class="n">3</span></div></div><div class="grid"><span class="ev" style="top: 72px; height: 54px; background: #EEEBFB; color: #4C3DB2;">Практика: БД<small>10:00 – 11:30</small></span><span class="ev" style="top: 288px; height: 36px; background: #FEF3E2; color: #9A4B00;">Code review<small>16:00 – 17:00</small></span></div><div style="height: 36px;"></div></div>
+  <div class="day"><div class="dh"><div><span class="w">Ср</span><span class="n">4</span></div></div><div class="grid"><span class="ev" style="top: 36px; height: 54px; background: #EEEBFB; color: #4C3DB2;">Лекція: Алгоритми<small>09:00 – 10:30</small></span><span class="ev" style="top: 180px; height: 36px; background: #F1F2F4;">Обід з Олею<small>13:00 – 14:00</small></span></div><div style="height: 36px;"></div></div>
+  <div class="day" style="box-shadow: 0 0 0 2px #111827;"><div class="dh" style="background: #111827; color: #fff;"><div><span class="w" style="color: #fff; opacity: .7;">Чт · сьогодні</span><span class="n">5</span></div></div><div class="grid"><span class="ev" style="top: 108px; height: 36px; background: #FEF3E2; color: #9A4B00;">Дзвінок з ментором<small>11:00 – 12:00</small></span><span class="ev" style="top: 180px; height: 54px; background: #FEF3E2; color: #9A4B00;">Стендап + демо<small>13:00 – 14:30</small></span><span class="ev" style="top: 234px; height: 54px; background: #EEEBFB; color: #4C3DB2;">Робота над Chronos<small>14:30 – 16:00</small></span><span class="ev" style="top: 288px; height: 36px; background: #F7F9FF; color: #2563EB; border: 2px dashed #2563EB; justify-content: center;">Нова подія · 16:00</span><span class="ev" style="top: 324px; height: 36px; background: #FAFAFB; border: 1px solid #E5E7EB;">☐ Тести для /events</span><span class="ev" style="top: 378px; height: 54px; background: #E6F6EE; color: #046C4E;">Зал<small>18:30 – 20:00</small></span></div><div style="height: 36px;"></div></div>
+  <div class="day"><div class="dh"><div><span class="w">Пт</span><span class="n">6</span></div></div><div class="grid"><span class="ev" style="top: 18px; height: 36px; background: #E6F6EE; color: #046C4E;">Пробіжка<small>08:30 – 09:30</small></span><span class="ev" style="top: 324px; height: 36px; background: #EEEBFB; color: #4C3DB2;">Воркшоп: Docker<small>17:00 – 18:00</small></span></div><div style="height: 36px;"></div></div>
+  <div class="day"><div class="dh"><div><span class="w">Сб</span><span class="n">7</span></div></div><div class="grid"><span class="ev" style="top: 36px; height: 54px; background: #E6F6EE; color: #046C4E;">Пробіжка та кава<small>09:00 – 10:30</small></span><span class="ev" style="top: 396px; height: 36px; background: #F1F2F4;">Кіно з друзями<small>19:00 – 20:00</small></span></div><div style="height: 36px;"></div></div>
+  <div class="day"><div class="dh"><div><span class="w">Нд</span><span class="n">8</span></div></div><div class="grid"><span class="ev" style="top: 324px; height: 36px; background: #F1F2F4;">Планування тижня<small>17:00 – 18:00</small></span></div><div style="height: 36px;"></div></div>
+</div>
+
+<div aria-hidden="true" style="position: absolute; inset: 0; background: rgba(17, 24, 39, 0.22);"></div>
+
+<form role="dialog" aria-modal="true" aria-label="Швидке створення події" style="position: absolute; left: 50%; top: 130px; transform: translateX(-50%); width: 480px; max-width: calc(100% - 32px); box-sizing: border-box; background: #fff; border-radius: 18px; padding: 20px; box-shadow: 0 24px 60px rgba(17, 24, 39, 0.25); display: flex; flex-direction: column; gap: 14px;">
+  <div style="display: flex; align-items: center; justify-content: space-between;">
+    <span style="font-size: 12px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.06em;">Нова подія · Чт, 5 листопада</span>
+    <a href="02-week-cards.html" aria-label="Закрити" style="width: 28px; height: 28px; border-radius: 8px; background: #F3F4F6; color: #111827; display: flex; align-items: center; justify-content: center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></a>
+  </div>
+  <input type="text" placeholder="Назва події" aria-label="Назва події" style="height: 46px; box-sizing: border-box; border: 0; border-bottom: 2px solid #111827; border-radius: 0; padding: 0 2px; font-family: inherit; font-size: 18px; font-weight: 600; color: #111827; outline: 0; background: transparent;" />
+  <div role="radiogroup" aria-label="Тип" style="display: flex; background: #F3F4F6; border-radius: 999px; padding: 3px; gap: 2px;">
+    <button type="button" role="radio" aria-checked="true" style="flex: 1; border: 0; background: #111827; color: #fff; border-radius: 999px; height: 30px; font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer;">Зустріч</button>
+    <button type="button" role="radio" aria-checked="false" style="flex: 1; border: 0; background: transparent; color: #111827; border-radius: 999px; height: 30px; font-family: inherit; font-size: 12px; font-weight: 500; cursor: pointer;">Нагадування</button>
+    <button type="button" role="radio" aria-checked="false" style="flex: 1; border: 0; background: transparent; color: #111827; border-radius: 999px; height: 30px; font-family: inherit; font-size: 12px; font-weight: 500; cursor: pointer;">Задача</button>
+  </div>
+  <div style="display: flex; align-items: center; gap: 8px;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none;"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+    <input type="text" class="inp" value="Чт, 5 лист." aria-label="Дата" style="flex: 1; min-width: 0;" />
+    <input type="text" class="inp" value="16:00" aria-label="Початок" style="width: 76px; text-align: center;" />
+    <span style="color: #6B7280;">–</span>
+    <input type="text" class="inp" value="17:00" aria-label="Кінець" style="width: 76px; text-align: center;" />
+  </div>
+  <div style="display: flex; align-items: center; gap: 8px;">
+    <span style="width: 16px; display: flex; justify-content: center;"><span style="width: 10px; height: 10px; border-radius: 3px; background: #D97706;"></span></span>
+    <button type="button" style="flex: 1; height: 40px; box-sizing: border-box; border: 1px solid #E5E7EB; border-radius: 10px; background: #fff; color: #111827; padding: 0 12px; font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px;">Робота<span style="font-size: 11px; color: #6B7280;">· спільний</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-left: auto;"><path d="M6 9l6 6 6-6"></path></svg></button>
+    <button type="button" style="height: 40px; box-sizing: border-box; border: 1px solid #E5E7EB; border-radius: 10px; background: #fff; color: #111827; padding: 0 12px; font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2 20a7 7 0 0 1 14 0M16 4a3.5 3.5 0 0 1 0 7M22 20a7 7 0 0 0-5-6.7"></path></svg>Учасники</button>
+  </div>
+  <div style="display: flex; align-items: center; gap: 10px; border-top: 1px solid #F1F2F4; padding-top: 14px;">
+    <a href="02-week-cards.html" style="text-decoration: none; background: #111827; color: #fff; border-radius: 999px; height: 40px; padding: 0 18px; font-size: 13px; font-weight: 600; display: flex; align-items: center;">Створити</a>
+    <a href="10-event-create.html" style="font-size: 13px; font-weight: 600; text-decoration: none;">Більше опцій →</a>
+    <span style="margin-left: auto; font-size: 11px; color: #6B7280;">Enter — створити · Esc — закрити</span>
+  </div>
+</form>
+</div>
+</body>
+</html>

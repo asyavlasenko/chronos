@@ -1,0 +1,57 @@
+/* CalendarsPage. Дизайн: 08-calendars.html. Лише змінні з src/styles/tokens.css. */
+.layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-page);
+  align-items: flex-start;
+}
+.list {
+  flex: 1 1 420px;
+  max-width: 640px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.titles {
+  display: flex;
+  flex-direction: column;
+}
+.h1 {
+  font-size: var(--fs-22);
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.01em;
+}
+.sub {
+  font-size: var(--fs-13);
+  color: var(--ink-secondary);
+}
+.card {
+  overflow: hidden;
+}
+.note {
+  font-size: var(--fs-12);
+  color: var(--ink-secondary);
+  padding: 0 4px;
+}
+.side {
+  flex: 1 1 360px;
+  max-width: 520px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-page);
+}
+@media (max-width: 1000px) {
+  .list,
+  .side {
+    max-width: none;
+  }
+}

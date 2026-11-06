@@ -1,0 +1,158 @@
+/* WeekTimelinePage. Дизайн: design/screens/03-week-timeline.html. Лише змінні з src/styles/tokens.css. */
+.layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-page);
+  align-items: flex-start;
+}
+
+/* --- стрічка: біла картка 18px, шапка годин 40px, рядки днів, легенда --- */
+.board {
+  flex: 999 1 640px;
+  min-width: 0;
+  overflow: hidden;
+}
+.scroller {
+  overflow-x: auto;
+}
+.inner {
+  min-width: 0;
+}
+.head {
+  display: flex;
+  align-items: flex-end;
+  height: 40px;
+}
+.headDay {
+  flex: 0 0 132px;
+  box-sizing: border-box;
+  padding: 0 0 8px 18px;
+  font-size: var(--fs-10);
+  font-weight: var(--fw-semibold);
+  color: var(--ink-secondary);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.hours {
+  flex: 1;
+  display: flex;
+  padding-bottom: 8px;
+  min-width: 0;
+}
+.hour {
+  flex: 1;
+  font-size: var(--fs-10);
+  color: var(--ink-secondary);
+  white-space: nowrap;
+}
+.rows {
+  position: relative;
+}
+
+/* Лінія «зараз»: вертикальна, через усі рядки; left — інлайн (обчислюється з хвилин) */
+.now {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--accent);
+  z-index: 4;
+  pointer-events: none;
+}
+.nowLabel {
+  position: absolute;
+  top: -2px;
+  left: -18px;
+  font-size: var(--fs-10);
+  font-weight: var(--fw-semibold);
+  color: var(--ink-on-dark);
+  background: var(--accent);
+  border-radius: 4px;
+  padding: 2px 5px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* Легенда під стрічкою */
+.legend {
+  padding: 12px 18px;
+  border-top: 1px solid var(--line-grid);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: var(--fs-11);
+  color: var(--ink-secondary);
+  flex-wrap: wrap;
+}
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.legendHint {
+  margin-left: auto;
+}
+.swatchMeeting,
+.swatchReminder,
+.swatchTask {
+  width: 14px;
+  height: 10px;
+  box-sizing: border-box;
+  flex: none;
+}
+.swatchMeeting {
+  border-radius: var(--r-dot);
+  background: var(--cal-study-tint);
+}
+.swatchReminder {
+  border-radius: var(--r-pill);
+  border: 1px solid #d1d5db;
+  background: var(--card);
+}
+.swatchTask {
+  border-radius: var(--r-dot);
+  border: 1px solid var(--line);
+  background: var(--card-muted);
+}
+
+/* --- бічна панель --- */
+.side {
+  flex: 1 1 260px;
+  max-width: 300px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-page);
+}
+.nowNext {
+  font-size: var(--fs-13);
+  margin-top: 6px;
+}
+.nowTitle {
+  font-size: var(--fs-13);
+  font-weight: var(--fw-semibold);
+}
+.join {
+  margin-top: 4px;
+}
+.cardTitle {
+  font-size: var(--fs-13);
+  font-weight: var(--fw-bold);
+  margin-bottom: 2px;
+}
+.typeFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+@media (max-width: 1000px) {
+  .side {
+    max-width: none;
+  }
+}
+@media (max-width: 767px) {
+  .inner {
+    min-width: 560px;
+  }
+}

@@ -1,0 +1,11 @@
+node_modules
+dist
+npm-debug.log
+.env
+.env.*
+.eslintrc.json
+.eslintignore
+.prettierrc
+.prettierignore
+Dockerfile
+.dockerignore

@@ -1,0 +1,40 @@
+/* ColorPicker. Дизайн: 08-calendars.html, 10-event-create.html */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.dot {
+  border-radius: 50%;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  flex: none;
+  transition: transform 0.1s ease;
+}
+.dot:hover {
+  transform: scale(1.08);
+}
+.active {
+  outline: 2px solid var(--dark);
+  outline-offset: 2px;
+}
+.inherit {
+  position: relative;
+}
+.inherit::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: var(--card);
+  opacity: 0.85;
+}
+.dot:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+.dot:disabled:hover {
+  transform: none;
+}

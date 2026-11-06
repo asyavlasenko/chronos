@@ -1,0 +1,35 @@
+# Dev-режим з hot reload: bind-mount вихідників, nodemon і Vite HMR.
+# Запуск:  docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+# Фронт: http://localhost:5173 (Vite проксує /api на backend), API: http://localhost:4000/api
+#
+# Файл НЕ названо docker-compose.override.yml навмисно: override підхоплюється автоматично,
+# і тоді звичайний `docker compose up` для перевіряльника запускав би dev-режим замість збірки.
+
+services:
+  backend:
+    build:
+      context: ./backend
+      target: dev
+    environment:
+      NODE_ENV: development
+      CLIENT_URL: http://localhost:5173
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/tests:/app/tests
+    healthcheck:
+      start_period: 30s
+
+  frontend:
+    build:
+      context: ./frontend
+      target: dev
+    environment:
+      VITE_API_PROXY: http://backend:4000
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/index.html:/app/index.html
+    ports: !override
+      - "5173:5173"

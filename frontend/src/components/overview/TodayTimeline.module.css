@@ -1,0 +1,31 @@
+/* TodayTimeline. Дизайн: 01-overview.html (картка «Сьогодні») */
+.timeline {
+  position: relative;
+  display: flex;
+  padding-top: 6px;
+}
+.grid {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Зустріч ≤ 1 год (блок 44px): назва й мета в один рядок, padding 6px 10px — як у мокапі.
+   Кит (EventBlock overview) має лише колонковий лейаут, тому локальне перевизначення. */
+.timeline .compact {
+  padding: 6px 10px;
+  align-items: center;
+}
+.timeline .compact > span:first-child {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+.timeline .compact > span:first-child > span:last-child {
+  flex: none;
+}
+
+/* «через 48 хв» — біла пілюля 11/600 кольором тексту блоку */
+.timeline .soon {
+  font-weight: var(--fw-semibold);
+  color: inherit;
+}

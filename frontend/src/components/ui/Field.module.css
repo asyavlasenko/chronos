@@ -1,0 +1,28 @@
+/* Field. Дизайн: 10-event-create.html, 13-auth.html */
+.field {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.labelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.label {
+  display: block;
+  font-size: var(--fs-12);
+  font-weight: var(--fw-semibold);
+  color: var(--ink-secondary);
+}
+.hint {
+  font-size: var(--fs-11);
+  color: var(--ink-secondary);
+  margin-top: 6px;
+}
+.error {
+  font-size: var(--fs-12);
+  color: var(--danger);
+  margin-top: 6px;
+}

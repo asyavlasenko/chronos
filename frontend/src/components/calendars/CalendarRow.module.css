@@ -1,0 +1,71 @@
+/* CalendarRow. Дизайн: 08-calendars.html (.cal: 14px 16px, border-top --line-soft; вибраний — --accent-tint-soft + смужка --dark) */
+.cal {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-top: 1px solid var(--line-soft);
+  color: var(--ink);
+}
+.cal:first-child {
+  border-top: 0;
+}
+.selected {
+  background: var(--accent-tint-soft);
+  box-shadow: inset 3px 0 0 var(--dark);
+}
+.hidden {
+  color: var(--ink-secondary);
+}
+.hidden .sw {
+  opacity: 0.5;
+}
+.body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  color: inherit;
+  font-family: var(--font);
+}
+.body:hover .nm {
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+}
+.sw {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  flex: none;
+}
+.text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.nm {
+  font-size: var(--fs-14);
+  font-weight: var(--fw-semibold);
+}
+.ds {
+  font-size: var(--fs-12);
+  color: var(--ink-secondary);
+}
+.lockBadge {
+  gap: 4px;
+}
+.count {
+  font-size: var(--fs-12);
+  color: var(--ink-secondary);
+  flex: none;
+}
+@media (max-width: 480px) {
+  .ds {
+    display: none;
+  }
+}

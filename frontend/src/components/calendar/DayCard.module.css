@@ -1,0 +1,80 @@
+/* DayCard. Дизайн: 02-week-cards.html */
+.card {
+  flex: 1 1 150px;
+  min-width: 150px;
+  background: var(--card);
+  border-radius: var(--r-card-sm);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.today {
+  box-shadow: var(--ring-today);
+}
+.head {
+  height: 70px;
+  box-sizing: border-box;
+  padding: 12px 14px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.today .head {
+  background: var(--dark);
+  color: var(--ink-on-dark);
+}
+.w {
+  display: block;
+  font-size: var(--fs-11);
+  font-weight: var(--fw-semibold);
+  color: var(--ink-secondary);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.today .w {
+  color: var(--ink-on-dark);
+  opacity: 0.7;
+}
+.n {
+  font-size: var(--fs-22);
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.02em;
+}
+.right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  padding-top: 4px;
+}
+.h {
+  font-size: var(--fs-11);
+  color: var(--ink-secondary);
+}
+.today .h {
+  color: var(--ink-on-dark);
+  opacity: 0.8;
+}
+.grid {
+  margin: 0 8px;
+}
+.add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  color: var(--ink-secondary);
+  font-size: var(--fs-12);
+  font-weight: var(--fw-medium);
+  border: 0;
+  background: transparent;
+  font-family: var(--font);
+  cursor: pointer;
+}
+.add:hover {
+  color: var(--ink);
+}
+.addToday {
+  color: var(--accent);
+  font-weight: var(--fw-semibold);
+}

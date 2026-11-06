@@ -1,0 +1,56 @@
+/* NextEventCard. Дизайн: 01-overview.html («Наступна через 48 хв»), 16-mobile.html */
+.next .people {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+.names {
+  font-size: var(--fs-12);
+  opacity: 0.8;
+}
+.next .join {
+  height: 36px;
+}
+
+/* Мобільний рядок: eyebrow 10px · назва 15/700 · мета 11, праворуч біла кнопка 36px */
+.row {
+  background: var(--dark);
+  color: var(--ink-on-dark);
+  border-radius: var(--r-card);
+  padding: 16px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.rowText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.rowEyebrow {
+  font-size: var(--fs-10);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.7;
+}
+.rowTitle {
+  font-size: var(--fs-15);
+  font-weight: var(--fw-bold);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rowMeta {
+  font-size: var(--fs-11);
+  opacity: 0.8;
+}
+.row .rowBtn {
+  height: 36px;
+  padding: 0 14px;
+  flex: none;
+}

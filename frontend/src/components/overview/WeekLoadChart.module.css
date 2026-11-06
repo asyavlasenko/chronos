@@ -1,0 +1,43 @@
+/* WeekLoadChart. Дизайн: 01-overview.html (картка «Тиждень 45») */
+.bars {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+  align-items: end;
+}
+.day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink);
+  text-decoration: none;
+}
+.day:hover {
+  color: var(--ink);
+}
+.hours {
+  font-size: var(--fs-11);
+  color: var(--ink-secondary);
+}
+.bar {
+  width: 100%;
+  border-radius: var(--r-chip);
+  background: var(--line);
+  display: block;
+}
+.label {
+  font-size: var(--fs-12);
+  font-weight: var(--fw-medium);
+}
+.today .hours {
+  font-weight: var(--fw-semibold);
+  color: var(--accent);
+}
+.today .bar {
+  background: var(--accent);
+}
+.today .label {
+  font-weight: var(--fw-bold);
+  color: var(--accent);
+}

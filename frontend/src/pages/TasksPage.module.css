@@ -1,0 +1,204 @@
+/* TasksPage. Дизайн: design/screens/07-tasks.html. Лише змінні з src/styles/tokens.css. */
+
+/* --- Лейаут: основна колонка + бічна панель (нижче 1000px — на всю ширину) --- */
+.layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-page);
+  align-items: flex-start;
+}
+.main {
+  flex: 999 1 520px;
+  max-width: 820px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.side {
+  flex: 1 1 260px;
+  max-width: 300px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-page);
+}
+@media (max-width: 1000px) {
+  .side {
+    max-width: none;
+  }
+}
+
+/* --- Заголовок і фільтри-пілюлі --- */
+.titleRow {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.h1 {
+  font-size: var(--fs-22);
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.01em;
+}
+.subtitle {
+  font-size: var(--fs-13);
+  color: var(--ink-secondary);
+}
+.spacer {
+  flex: 1;
+}
+.filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.filters .filterOff {
+  font-weight: var(--fw-medium);
+}
+
+/* --- Швидке додавання --- */
+.form:focus-within {
+  box-shadow: 0 0 0 3px var(--accent-tint);
+}
+.formRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.plus {
+  color: var(--ink-secondary);
+  flex: none;
+}
+.form .titleInput {
+  flex: 1 1 200px;
+  width: auto;
+  min-width: 0;
+  height: 36px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  font-size: var(--fs-14);
+  box-shadow: none;
+}
+.form .titleInput:focus {
+  border: 0;
+  box-shadow: none;
+}
+.form .dateInput {
+  width: 150px;
+  flex: none;
+}
+.calSelect {
+  flex: none;
+}
+.form .calSelect select {
+  border-radius: var(--r-pill);
+  padding-left: 26px;
+}
+.form .dateOff {
+  color: var(--ink-secondary);
+}
+.error {
+  font-size: var(--fs-12);
+  color: var(--danger);
+  padding-left: 26px;
+}
+
+/* --- Групи задач --- */
+.group {
+  overflow: hidden;
+}
+.groupHead {
+  padding: 14px 16px 10px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.groupTitle {
+  font-size: var(--fs-15);
+  font-weight: var(--fw-bold);
+}
+.groupTitleMuted {
+  color: var(--ink-secondary);
+}
+.groupSub {
+  font-size: var(--fs-12);
+  color: var(--ink-secondary);
+}
+.groupHead .count {
+  margin-left: auto;
+  font-size: var(--fs-12);
+  padding: 3px 9px;
+}
+.link {
+  margin-left: auto;
+  font-size: var(--fs-12);
+  font-weight: var(--fw-semibold);
+  color: var(--accent);
+}
+.link:hover {
+  color: var(--accent-strong);
+}
+.empty {
+  padding: 12px 16px;
+  border-top: 1px solid var(--line-soft);
+  font-size: var(--fs-12);
+  color: var(--ink-secondary);
+}
+
+/* --- Квадратик кольору календаря (8px, r2) --- */
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  display: inline-block;
+  flex: none;
+}
+
+/* --- Бічна панель --- */
+.valueSub {
+  font-size: var(--fs-14);
+  font-weight: var(--fw-medium);
+  opacity: 0.8;
+  letter-spacing: normal;
+}
+.bar {
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--dark-soft);
+  display: flex;
+  margin-top: 2px;
+}
+.barFill {
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--ink-on-dark);
+  display: block;
+}
+.darkMeta {
+  font-size: var(--fs-12);
+  opacity: 0.8;
+}
+.sideTitle {
+  font-size: var(--fs-14);
+  font-weight: var(--fw-bold);
+}
+.calRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-13);
+}
+.calName {
+  flex: 1;
+  min-width: 0;
+}
+.calCount {
+  color: var(--ink-secondary);
+}
+.sideEmpty {
+  font-size: var(--fs-12);
+  color: var(--ink-secondary);
+}

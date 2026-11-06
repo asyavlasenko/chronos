@@ -1,0 +1,24 @@
+/* PageShell. Дизайн: 01-overview.html, 16-mobile.html */
+.page {
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: var(--page-pad);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-page);
+}
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-page);
+  min-width: 0;
+}
+@media (max-width: 767px) {
+  .page {
+    padding: 16px 16px 110px;
+    gap: 12px;
+  }
+  .main {
+    gap: 12px;
+  }
+}

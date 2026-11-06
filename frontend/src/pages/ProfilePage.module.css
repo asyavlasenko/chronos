@@ -1,0 +1,184 @@
+/* ProfilePage. Дизайн: design/screens/14-profile.html. Лише змінні з src/styles/tokens.css. */
+.layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: center;
+}
+.main {
+  flex: 1 1 520px;
+  max-width: 720px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.side {
+  flex: 1 1 240px;
+  max-width: 300px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Акаунт */
+.main .account {
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+}
+.accountText {
+  flex: 1;
+  min-width: 0;
+}
+.name {
+  margin: 0 0 2px;
+  font-size: var(--fs-20);
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.01em;
+}
+.email {
+  font-size: var(--fs-13);
+  color: var(--ink-secondary);
+}
+.main .photoBtn {
+  height: 36px;
+  font-weight: var(--fw-semibold);
+}
+
+/* Секції з рядками налаштувань */
+.section {
+  overflow: hidden;
+}
+.sectionHead {
+  padding: 14px 20px 6px;
+}
+.sectionTitle {
+  font-size: var(--fs-12);
+  font-weight: var(--fw-semibold);
+  color: var(--ink-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--line-soft);
+}
+.rowText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.rowTitle {
+  font-size: var(--fs-14);
+  font-weight: var(--fw-semibold);
+}
+.rowHint {
+  font-size: var(--fs-12);
+  color: var(--ink-secondary);
+}
+/* Кнопки в рядках «Безпека» — як .sel у мокапі: 36px, radius 10 */
+.section .row .rowCtl {
+  height: 36px;
+  border-radius: var(--r-input);
+}
+
+/* Розкрита форма зміни пароля */
+.passwordForm {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 0 20px 16px;
+}
+.passwordActions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 8px;
+}
+
+/* Низ: зберегти · вийти */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 4px;
+}
+.actions .save {
+  height: 42px;
+  padding: 0 20px;
+  font-size: var(--fs-14);
+}
+.saved {
+  font-size: var(--fs-13);
+  color: var(--success);
+}
+.logout {
+  margin-left: auto;
+  font-size: var(--fs-13);
+  font-weight: var(--fw-semibold);
+  color: var(--ink-secondary);
+}
+.logout:hover {
+  color: var(--ink);
+}
+
+/* Праворуч: головний календар, статистика */
+.heroEyebrow {
+  font-size: var(--fs-11);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.7;
+}
+.heroName {
+  font-size: var(--fs-16);
+  font-weight: var(--fw-bold);
+}
+.heroText {
+  font-size: var(--fs-12);
+  opacity: 0.8;
+  line-height: 1.45;
+}
+.statsTitle {
+  font-size: var(--fs-14);
+  font-weight: var(--fw-bold);
+}
+.stat {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: var(--fs-13);
+}
+.stat span {
+  color: var(--ink-secondary);
+}
+.stat b {
+  font-weight: var(--fw-semibold);
+}
+
+@media (max-width: 1000px) {
+  .side {
+    max-width: none;
+  }
+}
+@media (max-width: 767px) {
+  .row {
+    flex-wrap: wrap;
+  }
+  .rowText {
+    flex-basis: 100%;
+  }
+  .passwordForm {
+    grid-template-columns: 1fr;
+  }
+  .main .account {
+    flex-wrap: wrap;
+  }
+}

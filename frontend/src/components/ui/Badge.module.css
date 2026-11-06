@@ -1,0 +1,70 @@
+/* Badge. Дизайн: 08-calendars.html, 02-week-cards.html, 07-tasks.html, 12-event-details.html */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--r-pill);
+  font-weight: var(--fw-semibold);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.sm {
+  font-size: var(--fs-10);
+  padding: 2px 7px;
+}
+.md {
+  font-size: var(--fs-11);
+  padding: 3px 8px;
+}
+.lg {
+  font-size: var(--fs-12);
+  padding: 7px 12px;
+  gap: 8px;
+}
+
+.muted {
+  background: var(--bg);
+  color: var(--ink-secondary);
+  font-weight: var(--fw-medium);
+}
+.white {
+  background: var(--card);
+  color: var(--ink);
+  font-weight: var(--fw-medium);
+}
+.dark {
+  background: var(--dark);
+  color: var(--ink-on-dark);
+}
+.accent {
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+.success {
+  background: var(--success-tint);
+  color: var(--success);
+}
+.danger {
+  background: var(--danger-tint);
+  color: var(--danger);
+}
+.outline {
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px #d1d5db;
+  font-weight: var(--fw-medium);
+}
+.tint {
+  font-weight: var(--fw-semibold);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+.square {
+  border-radius: 2px;
+}

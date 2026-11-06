@@ -1,0 +1,38 @@
+# Власники по папках. GitHub автоматично призначає їх рев'юерами PR.
+# Формат: <шлях> <@github-handle>. Підстав реальні логіни замість заглушок.
+
+# За замовчуванням — тех-лід
+*                                               @nastia
+
+# --- Backend: auth, users, calendars, sharing/invites, Docker, README ---
+/backend/src/app.js                             @nastia
+/backend/src/server.js                          @nastia
+/backend/src/config/                            @nastia
+/backend/src/modules/auth/                      @nastia
+/backend/src/modules/users/                     @nastia
+/backend/src/modules/calendars/                 @nastia
+/backend/src/modules/invites/                   @nastia
+/backend/src/middlewares/auth.js                @nastia
+/backend/src/middlewares/calendarAccess.js      @nastia
+/backend/Dockerfile                             @nastia
+/frontend/Dockerfile                            @nastia
+/frontend/nginx.conf                            @nastia
+/docker-compose.yml                             @nastia
+/docker-compose.dev.yml                         @nastia
+/README.md                                      @nastia
+/docs/team.md                                   @nastia
+/docs/data-model.md                             @nastia
+
+# --- Backend: events, holidays, пошук/фільтри, пошта, тести ---
+/backend/src/modules/events/                    @teammate1
+/backend/src/modules/holidays/                  @teammate1
+/backend/src/middlewares/validate.js            @teammate1
+/backend/src/middlewares/errorHandler.js        @teammate1
+/backend/src/utils/mailer.js                    @teammate1
+/backend/src/utils/dates.js                     @teammate1
+/backend/tests/                                 @teammate1
+/backend/jest.config.js                         @teammate1
+/docs/api.md                                    @teammate1
+
+# --- Frontend: усі подання, модалки, форми ---
+/frontend/                                      @teammate2
