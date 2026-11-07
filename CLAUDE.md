@@ -53,14 +53,3 @@
   JWT access у пам'яті фронту + refresh у httpOnly cookie; власник календаря теж є записом у `members[]`
   (роль `owner`), права перевіряє `calendarAccess(minRole)`; свята — віртуальний календар `holidays` з кешу
   `HolidayCache` по `country+year`, не події в БД; стан подання календаря — в URL (`?date=`, `?event=`).
-
-## Хто за що відповідає
-
-- `@nastia` — backend: `modules/auth`, `modules/users`, `modules/calendars`, `modules/invites`, `middlewares/auth.js`,
-  `middlewares/calendarAccess.js`, `config/`; Docker, README, `docs/team.md`, `docs/data-model.md`. Тех-лід.
-- `@teammate1` — backend: `modules/events`, `modules/holidays`, `utils/mailer.js`, `utils/dates.js`,
-  `middlewares/validate.js`, `middlewares/errorHandler.js`, `tests/`, `docs/api.md`.
-- `@teammate2` — увесь `frontend/`: подання день/тиждень/місяць/рік, модалки, форми, адаптив.
-- Кожна заглушка в коді має `TODO(@власник)`. Не змінюй чужі модулі без узгодження в PR; спільні зміни
-  (constants, ApiError, формат відповіді API) обговорюються в PR із рев'ю власника.
-- Гілки `feature/<area>-<short>` від `main`, PR з рев'ю одного з команди, conventional commits (`feat(events): …`).
