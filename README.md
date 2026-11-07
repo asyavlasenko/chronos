@@ -131,6 +131,7 @@ chronos/
 
 ## Документація
 
+- [docs/STATUS.md](docs/STATUS.md) — що вже зроблено і що лишилось, по частинах і власниках
 - [docs/00-cbl-progress.md](docs/00-cbl-progress.md) — прогрес за етапами CBL (Engage / Investigate / Act / Document / Share)
 - [docs/algorithm.md](docs/algorithm.md) — алгоритм роботи програми
 - [docs/api.md](docs/api.md) — усі ендпоінти з тілами запитів і відповідей
