@@ -1,16 +1,25 @@
 import Joi from 'joi';
+import { email, password, timezone } from '../../utils/validation.js';
 
-// Схеми-заготовки. Поки описані поля — у коментарях; .unknown(true) пропускає тіло як є.
-// Коли опишеш поля — прибери .unknown(true), щоб validate() відкидав зайве.
+export const registerSchema = Joi.object({
+  email: email().required(),
+  password: password().required(),
+  name: Joi.string().trim().min(2).max(80).required().label('Ім’я'),
+  country: Joi.string().trim().uppercase().length(2).label('Країна'),
+  timezone: timezone(),
+});
 
-// { email, password (min 8), name (2..80), country? ('UA'), timezone? ('Europe/Kyiv') }
-export const registerSchema = Joi.object().unknown(true); // TODO(@nastia)
+export const loginSchema = Joi.object({
+  email: email().required(),
+  password: Joi.string().max(128).required().label('Пароль'),
+  remember: Joi.boolean().default(true).label('Запам’ятати мене'),
+});
 
-// { email, password, remember? (boolean) }
-export const loginSchema = Joi.object().unknown(true); // TODO(@nastia)
+export const passwordResetRequestSchema = Joi.object({
+  email: email().required(),
+});
 
-// { email }
-export const passwordResetRequestSchema = Joi.object().unknown(true); // TODO(@nastia)
-
-// { token, password (min 8) }
-export const passwordResetConfirmSchema = Joi.object().unknown(true); // TODO(@nastia)
+export const passwordResetConfirmSchema = Joi.object({
+  token: Joi.string().hex().length(64).required().label('Токен'),
+  password: password().required(),
+});

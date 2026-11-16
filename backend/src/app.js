@@ -14,10 +14,9 @@ import eventRoutes from './modules/events/event.routes.js';
 import inviteRoutes from './modules/invites/invite.routes.js';
 import holidayRoutes from './modules/holidays/holidays.routes.js';
 
-// app.js не підключає БД (це робить server.js), тому його можна імпортувати в тестах без Mongo.
 const app = express();
 
-app.set('trust proxy', 1); // за nginx у Docker
+app.set('trust proxy', 1);
 app.use(helmet());
 app.use(cors({ origin: env.clientUrl, credentials: true }));
 app.use(express.json({ limit: '1mb' }));

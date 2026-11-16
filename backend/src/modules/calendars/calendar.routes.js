@@ -11,6 +11,8 @@ import {
   shareCalendarSchema,
   updateMemberSchema,
   calendarIdParams,
+  memberParams,
+  inviteParams,
 } from './calendar.validation.js';
 
 const router = Router();
@@ -39,7 +41,6 @@ router.delete(
   controller.remove,
 );
 
-// Налаштування поточного учасника: сховати для себе / мій колір (будь-яка роль)
 router.patch(
   '/:id/visibility',
   validate({ params: calendarIdParams, body: visibilitySchema }),
@@ -47,19 +48,31 @@ router.patch(
   controller.updateVisibility,
 );
 
-// Спільний доступ (лише owner)
 router.post(
   '/:id/share',
   validate({ params: calendarIdParams, body: shareCalendarSchema }),
   calendarAccess(ROLES.OWNER),
   controller.share,
 );
+
 router.patch(
   '/:id/members/:userId',
-  validate({ body: updateMemberSchema }),
+  validate({ params: memberParams, body: updateMemberSchema }),
   calendarAccess(ROLES.OWNER),
   controller.updateMember,
 );
-router.delete('/:id/members/:userId', calendarAccess(ROLES.OWNER), controller.removeMember);
+router.delete(
+  '/:id/members/:userId',
+  validate({ params: memberParams }),
+  calendarAccess(ROLES.VIEWER),
+  controller.removeMember,
+);
+
+router.delete(
+  '/:id/invites/:inviteId',
+  validate({ params: inviteParams }),
+  calendarAccess(ROLES.OWNER),
+  controller.cancelInvite,
+);
 
 export default router;

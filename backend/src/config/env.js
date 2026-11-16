@@ -1,6 +1,5 @@
 import dotenv from 'dotenv';
 
-// Локально читає backend/.env; у Docker змінні приходять з docker-compose
 dotenv.config();
 
 const { env: e } = process;
@@ -11,6 +10,7 @@ const env = Object.freeze({
   isTest: e.NODE_ENV === 'test',
   port: Number(e.PORT) || 4000,
   mongoUri: e.MONGO_URI || 'mongodb://localhost:27017/chronos',
+  mongoUriTest: e.MONGO_URI_TEST || 'mongodb://localhost:27017',
   clientUrl: e.CLIENT_URL || 'http://localhost:5173',
   jwt: {
     accessSecret: e.JWT_ACCESS_SECRET || 'dev-only-access-secret',
@@ -18,6 +18,10 @@ const env = Object.freeze({
     accessTtl: e.JWT_ACCESS_TTL || '15m',
     refreshTtl: e.JWT_REFRESH_TTL || '30d',
   },
+  cookie: {
+    secure: e.COOKIE_SECURE === 'true',
+  },
+  passwordResetTtlMinutes: Number(e.PASSWORD_RESET_TTL_MINUTES) || 60,
   smtp: {
     host: e.SMTP_HOST || '',
     port: Number(e.SMTP_PORT) || 587,

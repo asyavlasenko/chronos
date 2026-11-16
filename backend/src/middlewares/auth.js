@@ -1,17 +1,27 @@
-// Перевірка JWT access-токена з заголовка Authorization: Bearer <token>.
-// Успіх: req.user = { id, email } і next(). Інакше — 401 через ApiError.
+import User from '../modules/users/user.model.js';
+import ApiError from '../utils/ApiError.js';
+import { verifyAccessToken } from '../utils/tokens.js';
 
-/**
- * TODO(@nastia):
- *   1. Дістати токен з req.headers.authorization ('Bearer …').
- *   2. jwt.verify(token, env.jwt.accessSecret) → payload { sub, email, tokenVersion }.
- *   3. (опційно) звірити tokenVersion з User, щоб працювало «Вийти на всіх пристроях».
- *   4. req.user = { id: payload.sub, email: payload.email }; next().
- *   5. Помилки → next(new ApiError(401, 'Потрібна авторизація')).
- *
- * ЗАГЛУШКА: пропускає всі запити без перевірки. Прибрати до першого деплою.
- */
-export default function auth(req, res, next) {
-  req.user = null;
-  next();
+const UNAUTHORIZED = 'Сесія недійсна або закінчилась, увійди знову';
+
+export default async function auth(req, res, next) {
+  try {
+    const [scheme, token] = (req.headers.authorization || '').split(' ');
+    if (scheme !== 'Bearer' || !token) throw new ApiError(401, 'Потрібна авторизація');
+
+    let payload;
+    try {
+      payload = verifyAccessToken(token);
+    } catch {
+      throw new ApiError(401, UNAUTHORIZED);
+    }
+
+    const user = await User.findById(payload.sub);
+    if (!user || user.tokenVersion !== payload.tv) throw new ApiError(401, UNAUTHORIZED);
+
+    req.user = user;
+    next();
+  } catch (err) {
+    next(err);
+  }
 }

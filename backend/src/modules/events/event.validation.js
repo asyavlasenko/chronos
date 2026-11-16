@@ -1,20 +1,103 @@
 import Joi from 'joi';
+import { EVENT_TYPES, PRIORITIES } from '../../constants/index.js';
+import { colorKey, email, isoDate, objectId } from '../../utils/validation.js';
+import { TYPE_RULE_MESSAGES } from './event.model.js';
 
-// GET /api/events?from&to&calendars&types&q
-// { from: ISO date, to: ISO date (> from, максимум ~1 рік), calendars?: 'id1,id2', types?: 'arrangement,task', q?: string (..100) }
-export const listEventsQuery = Joi.object().unknown(true); // TODO(@teammate1)
+const DAY_MS = 24 * 60 * 60 * 1000;
+const MAX_RANGE_DAYS = 400;
+const MAX_PARTICIPANTS = 20;
+const TYPES = Object.values(EVENT_TYPES);
 
-// POST /api/events
-// { title (1..120), type (EVENT_TYPES), calendar (ObjectId), startAt (ISO), endAt? (ISO, > startAt, лише arrangement),
-//   allDay?, color? (COLOR_KEYS|null), location? (..200), description? (..2000), reminderMinutesBefore? (0..10080),
-//   priority? (PRIORITIES, task), participants?: [email] }
-export const createEventSchema = Joi.object().unknown(true); // TODO(@teammate1)
+const commaList = (allowed) =>
+  Joi.custom((value, helpers) => {
+    if (typeof value !== 'string') return helpers.error('string.base');
 
-// PATCH /api/events/:id — ті самі поля, усі опційні, + isCompleted? (task)
-export const updateEventSchema = Joi.object().unknown(true); // TODO(@teammate1)
+    const items = value
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+    if (allowed && items.some((item) => !allowed.includes(item))) return helpers.error('any.only');
 
-// POST /api/events/:id/invite — { emails: [email] (1..20) }
-export const inviteToEventSchema = Joi.object().unknown(true); // TODO(@teammate1)
+    return [...new Set(items)];
+  });
 
-// params: { id: ObjectId }
-export const eventIdParams = Joi.object().unknown(true); // TODO(@teammate1)
+const rangeLimit = (from) => new Date(from.getTime() + MAX_RANGE_DAYS * DAY_MS);
+
+export const listEventsQuery = Joi.object({
+  from: isoDate(),
+  to: isoDate()
+    .when('from', {
+      is: isoDate().required(),
+      then: Joi.date()
+        .greater(Joi.ref('from'))
+        .max(Joi.ref('from', { adjust: rangeLimit })),
+    })
+    .messages({
+      'date.greater': 'Параметр «to» має бути пізніше за «from»',
+      'date.max': `Діапазон не може перевищувати ${MAX_RANGE_DAYS} днів`,
+    }),
+  calendars: commaList(),
+  types: commaList(TYPES),
+  q: Joi.string().trim().max(100).empty(''),
+  includeHidden: Joi.boolean().default(false),
+})
+  .and('from', 'to')
+  .messages({ 'object.and': 'Параметри «from» і «to» потрібно передавати разом' });
+
+const title = () => Joi.string().trim().max(120).label('Назва');
+const type = () =>
+  Joi.string()
+    .valid(...TYPES)
+    .label('Тип');
+const calendar = () => objectId().label('Календар');
+const participants = () => Joi.array().items(email()).max(MAX_PARTICIPANTS).label('Учасники');
+
+const details = {
+  allDay: Joi.boolean().label('Весь день'),
+  color: colorKey().allow(null),
+  location: Joi.string().trim().max(200).allow('').label('Місце'),
+  description: Joi.string().trim().max(2000).allow('').label('Опис'),
+  reminderMinutesBefore: Joi.number().integer().min(0).max(10080).label('Нагадування'),
+  priority: Joi.string()
+    .valid(...Object.values(PRIORITIES))
+    .label('Пріоритет'),
+};
+
+export const createEventSchema = Joi.object({
+  title: title().required(),
+  type: type().required(),
+  calendar: calendar().required(),
+  startAt: Joi.when('type', {
+    is: EVENT_TYPES.TASK,
+    then: isoDate().allow(null),
+    otherwise: isoDate().required(),
+  }).label('Початок'),
+  endAt: Joi.when('type', {
+    is: EVENT_TYPES.ARRANGEMENT,
+    then: isoDate()
+      .allow(null)
+      .when('startAt', {
+        is: isoDate().required(),
+        then: Joi.date().greater(Joi.ref('startAt')),
+      })
+      .messages({ 'date.greater': TYPE_RULE_MESSAGES.endAfterStart }),
+    otherwise: Joi.any().strip(),
+  }).label('Кінець'),
+  ...details,
+  participants: participants(),
+});
+
+export const updateEventSchema = Joi.object({
+  title: title(),
+  type: type(),
+  calendar: calendar(),
+  startAt: isoDate().allow(null).label('Початок'),
+  endAt: isoDate().allow(null).label('Кінець'),
+  ...details,
+  isCompleted: Joi.boolean().label('Виконано'),
+  participants: participants(),
+}).min(1);
+
+export const inviteToEventSchema = Joi.object({
+  emails: Joi.array().items(email()).min(1).max(MAX_PARTICIPANTS).required().label('Email-адреси'),
+});

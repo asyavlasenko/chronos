@@ -22,7 +22,6 @@ function shutdown(signal) {
   setTimeout(() => process.exit(1), SHUTDOWN_TIMEOUT_MS).unref();
 }
 
-// Вимога ТЗ: «сервіс не має падати за жодних умов» — логуємо й коректно завершуємось
 process.on('SIGINT', () => shutdown('SIGINT'));
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('unhandledRejection', (reason) => {

@@ -1,19 +1,47 @@
 import Joi from 'joi';
+import { ROLES } from '../../constants/index.js';
+import { colorKey, email, idParams, objectId } from '../../utils/validation.js';
 
-// { name (1..60), description? (..300), color? (один із COLOR_KEYS) }
-export const createCalendarSchema = Joi.object().unknown(true); // TODO(@nastia)
+const name = () => Joi.string().trim().min(1).max(60).label('Назва');
 
-// { name?, description?, color? }
-export const updateCalendarSchema = Joi.object().unknown(true); // TODO(@nastia)
+const description = () => Joi.string().trim().max(300).allow('').label('Опис');
 
-// { isHidden: boolean, color?: COLOR_KEYS } — налаштування ПОТОЧНОГО учасника
-export const visibilitySchema = Joi.object().unknown(true); // TODO(@nastia)
+const memberRole = () => Joi.string().valid(ROLES.EDITOR, ROLES.VIEWER).label('Роль');
 
-// { email, role: 'editor'|'viewer' }
-export const shareCalendarSchema = Joi.object().unknown(true); // TODO(@nastia)
+export const createCalendarSchema = Joi.object({
+  name: name().required(),
+  description: description(),
+  color: colorKey().default('blue'),
+});
 
-// { role: 'editor'|'viewer' }
-export const updateMemberSchema = Joi.object().unknown(true); // TODO(@nastia)
+export const updateCalendarSchema = Joi.object({
+  name: name(),
+  description: description(),
+  color: colorKey(),
+}).min(1);
 
-// params: { id: ObjectId }
-export const calendarIdParams = Joi.object().unknown(true); // TODO(@nastia)
+export const visibilitySchema = Joi.object({
+  isHidden: Joi.boolean().label('Прихований'),
+  color: colorKey().allow(null),
+}).min(1);
+
+export const shareCalendarSchema = Joi.object({
+  email: email().required(),
+  role: memberRole().required(),
+});
+
+export const updateMemberSchema = Joi.object({
+  role: memberRole().required(),
+});
+
+export const calendarIdParams = idParams;
+
+export const memberParams = Joi.object({
+  id: objectId().required(),
+  userId: objectId().required(),
+});
+
+export const inviteParams = Joi.object({
+  id: objectId().required(),
+  inviteId: objectId().required(),
+});

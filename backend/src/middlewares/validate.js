@@ -1,15 +1,8 @@
 import ApiError from '../utils/ApiError.js';
+import { messages } from '../utils/validation.js';
 
 const SEGMENTS = ['params', 'query', 'body'];
 
-/**
- * Валідація запиту Joi-схемами.
- *
- *   router.post('/', validate({ body: createEventSchema }), controller.create);
- *
- * Невідомі поля відкидаються (stripUnknown), усі помилки збираються разом (abortEarly: false)
- * і повертаються як 400 { message: 'Помилка валідації', details: [{ field, message }] }.
- */
 export default function validate(schemas) {
   return (req, res, next) => {
     const details = [];
@@ -22,6 +15,7 @@ export default function validate(schemas) {
         abortEarly: false,
         stripUnknown: true,
         errors: { wrap: { label: '' } },
+        messages,
       });
 
       if (error) {

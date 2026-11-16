@@ -1,28 +1,52 @@
+import mongoose from 'mongoose';
+import jwt from 'jsonwebtoken';
 import env from '../config/env.js';
 import ApiError from '../utils/ApiError.js';
 
-/**
- * Централізований обробник помилок. Усі помилки з контролерів/сервісів потрапляють сюди через next(err).
- * Формат відповіді: { status: 'error', message, details? }
- */
-// eslint-disable-next-line no-unused-vars
-export default function errorHandler(err, req, res, next) {
-  let error = err;
+function toApiError(err) {
+  if (err instanceof ApiError) return err;
 
-  if (!(error instanceof ApiError)) {
-    // TODO(@teammate1): мапити типові помилки —
-    //   mongoose.Error.ValidationError → 400 з details по полях
-    //   mongoose.Error.CastError → 400 «Некоректний id»
-    //   MongoServerError code 11000 → 409 «Вже існує»
-    //   jsonwebtoken JsonWebTokenError / TokenExpiredError → 401
-    //   SyntaxError від express.json() → 400 «Некоректний JSON»
-    error = new ApiError(
-      err.statusCode || err.status || 500,
-      err.message || 'Внутрішня помилка сервера',
-    );
+  if (err instanceof mongoose.Error.ValidationError) {
+    const details = Object.values(err.errors).map((e) => ({ field: e.path, message: e.message }));
+    return new ApiError(400, 'Помилка валідації', details);
   }
 
-  if (error.statusCode >= 500) {
+  if (err instanceof mongoose.Error.CastError) {
+    return new ApiError(400, 'Некоректний ідентифікатор або значення поля');
+  }
+
+  if (err?.code === 11000) {
+    const field = Object.keys(err.keyPattern || err.keyValue || {})[0];
+    const details = field ? [{ field, message: 'Таке значення вже використовується' }] : undefined;
+    return new ApiError(409, 'Такий запис уже існує', details);
+  }
+
+  if (err instanceof jwt.JsonWebTokenError) {
+    return new ApiError(401, 'Сесія недійсна або закінчилась, увійди знову');
+  }
+
+  if (err?.type === 'entity.parse.failed') {
+    return new ApiError(400, 'Некоректний JSON у тілі запиту');
+  }
+
+  if (err?.type === 'entity.too.large') {
+    return new ApiError(413, 'Запит завеликий');
+  }
+
+  const status = err?.statusCode || err?.status || 500;
+  const message = status >= 500 && env.isProduction ? 'Внутрішня помилка сервера' : err?.message;
+  return new ApiError(status, message || 'Внутрішня помилка сервера');
+}
+
+export default function errorHandler(err, req, res, next) {
+  if (res.headersSent) {
+    next(err);
+    return;
+  }
+
+  const error = toApiError(err);
+
+  if (error.statusCode >= 500 && !env.isTest) {
     console.error(err);
   }
 
@@ -30,6 +54,6 @@ export default function errorHandler(err, req, res, next) {
     status: 'error',
     message: error.message,
     ...(error.details ? { details: error.details } : {}),
-    ...(env.isProduction ? {} : { stack: err.stack }),
+    ...(env.nodeEnv === 'development' ? { stack: err?.stack } : {}),
   });
 }

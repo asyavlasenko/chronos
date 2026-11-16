@@ -3,16 +3,12 @@ import { ROLES, COLOR_KEYS } from '../../constants/index.js';
 
 const { Schema } = mongoose;
 
-/**
- * Членство в календарі. Власник теж є записом тут (role: 'owner'),
- * тому перевірка прав і персональні налаштування (колір, прихованість) — в одному місці.
- */
 const memberSchema = new Schema(
   {
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     role: { type: String, enum: Object.values(ROLES), required: true },
-    color: { type: String, enum: COLOR_KEYS, default: null }, // «мій колір подій тут»; null = колір календаря
-    isHidden: { type: Boolean, default: false }, // ховає календар ЛИШЕ для цього учасника
+    color: { type: String, enum: COLOR_KEYS, default: null },
+    isHidden: { type: Boolean, default: false },
     joinedAt: { type: Date, default: Date.now },
   },
   { _id: false },
@@ -24,7 +20,7 @@ const calendarSchema = new Schema(
     description: { type: String, trim: true, maxlength: 300, default: '' },
     color: { type: String, enum: COLOR_KEYS, required: true, default: 'graphite' },
     owner: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-    isMain: { type: Boolean, default: false }, // головний: створюється при реєстрації, не видаляється й не ховається
+    isMain: { type: Boolean, default: false },
     members: { type: [memberSchema], default: [] },
   },
   {
@@ -41,19 +37,15 @@ const calendarSchema = new Schema(
   },
 );
 
-// Один головний календар на користувача
 calendarSchema.index(
   { owner: 1, isMain: 1 },
   { unique: true, partialFilterExpression: { isMain: true } },
 );
-// Пошук «усі календарі, де я учасник»
 calendarSchema.index({ 'members.user': 1 });
 
 calendarSchema.virtual('isShared').get(function isShared() {
   return this.members.length > 1;
 });
-
-// TODO(@nastia): calendarSchema.methods.getMember(userId), calendarSchema.statics.findForUser(userId)
 
 const Calendar = mongoose.model('Calendar', calendarSchema);
 

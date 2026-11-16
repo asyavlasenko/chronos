@@ -1,24 +1,43 @@
-// TODO(@nastia): контролери auth. Кожен — заглушка 501; замінюй по одному, логіка — в auth.service.js.
-// Refresh-токен кладеться в httpOnly cookie (SameSite=Lax, secure у production), access — у тілі відповіді.
+import asyncHandler from '../../utils/asyncHandler.js';
+import { REFRESH_COOKIE, clearRefreshCookie, setRefreshCookie } from './auth.cookies.js';
+import * as authService from './auth.service.js';
 
-export const register = (req, res) =>
-  res.status(501).json({ status: 'error', message: 'TODO(@nastia): POST /api/auth/register' });
+export const register = asyncHandler(async (req, res) => {
+  const { user, accessToken, refreshToken } = await authService.register(req.body);
+  setRefreshCookie(res, refreshToken, true);
+  res.status(201).json({ user, accessToken });
+});
 
-export const login = (req, res) =>
-  res.status(501).json({ status: 'error', message: 'TODO(@nastia): POST /api/auth/login' });
+export const login = asyncHandler(async (req, res) => {
+  const { remember, ...credentials } = req.body;
+  const { user, accessToken, refreshToken } = await authService.login(credentials, { remember });
+  setRefreshCookie(res, refreshToken, remember);
+  res.json({ user, accessToken });
+});
 
-export const logout = (req, res) =>
-  res.status(501).json({ status: 'error', message: 'TODO(@nastia): POST /api/auth/logout' });
+export const refresh = asyncHandler(async (req, res) => {
+  try {
+    const result = await authService.refresh(req.cookies[REFRESH_COOKIE]);
+    setRefreshCookie(res, result.refreshToken, result.remember);
+    res.json({ user: result.user, accessToken: result.accessToken });
+  } catch (err) {
+    clearRefreshCookie(res);
+    throw err;
+  }
+});
 
-export const refresh = (req, res) =>
-  res.status(501).json({ status: 'error', message: 'TODO(@nastia): POST /api/auth/refresh' });
+export const logout = (req, res) => {
+  clearRefreshCookie(res);
+  res.status(204).end();
+};
 
-export const requestPasswordReset = (req, res) =>
-  res
-    .status(501)
-    .json({ status: 'error', message: 'TODO(@nastia): POST /api/auth/password-reset' });
+export const requestPasswordReset = asyncHandler(async (req, res) => {
+  await authService.requestPasswordReset(req.body.email);
+  res.status(202).json({ message: 'Якщо такий email існує, лист уже в дорозі' });
+});
 
-export const confirmPasswordReset = (req, res) =>
-  res
-    .status(501)
-    .json({ status: 'error', message: 'TODO(@nastia): POST /api/auth/password-reset/confirm' });
+export const confirmPasswordReset = asyncHandler(async (req, res) => {
+  await authService.confirmPasswordReset(req.body);
+  clearRefreshCookie(res);
+  res.status(204).end();
+});

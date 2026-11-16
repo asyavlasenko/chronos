@@ -9,10 +9,6 @@ const sleep = (ms) =>
     setTimeout(resolve, ms);
   });
 
-/**
- * Підключення до MongoDB з повторними спробами
- * (контейнер mongo може стартувати довше за backend).
- */
 export async function connectDb(attempt = 1) {
   mongoose.set('strictQuery', true);
   try {

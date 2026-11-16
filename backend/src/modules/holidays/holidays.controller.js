@@ -1,5 +1,7 @@
-// TODO(@teammate1): GET /api/holidays?year=2026&country=UA (country за замовчуванням — з профілю користувача)
-// Відповідь: { country, year, holidays: [{ date, localName, name }] }
+import asyncHandler from '../../utils/asyncHandler.js';
+import { getHolidays } from './holidays.service.js';
 
-export const list = (req, res) =>
-  res.status(501).json({ status: 'error', message: 'TODO(@teammate1): GET /api/holidays' });
+export const list = asyncHandler(async (req, res) => {
+  const { year = new Date().getUTCFullYear(), country = req.user.country } = req.query;
+  res.json(await getHolidays({ country, year }));
+});

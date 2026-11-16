@@ -1,39 +1,42 @@
+import mongoose from 'mongoose';
+import Calendar from '../modules/calendars/calendar.model.js';
+import ApiError from '../utils/ApiError.js';
 import { ROLE_RANK } from '../constants/index.js';
 
-/**
- * Перевірка ролі користувача в календарі.
- *
- *   router.delete('/:id', auth, calendarAccess(ROLES.OWNER), controller.remove);
- *
- * Правила (див. design/screens/08-calendars.html):
- *   owner  — усе, включно з видаленням будь-яких подій і керуванням учасниками
- *   editor — створює події; редагує/видаляє ЛИШЕ свої
- *   viewer — тільки читає
- * Власник теж є записом у calendar.members[] з role = 'owner', тому пошук один для всіх.
- *
- * TODO(@nastia):
- *   1. Знайти Calendar за req.params.id (404, якщо немає).
- *   2. member = calendar.members.find(m => m.user.equals(req.user.id)) (403, якщо немає).
- *   3. ROLE_RANK[member.role] >= ROLE_RANK[minRole] інакше 403.
- *   4. req.calendar = calendar; req.membership = member; next().
- *
- * ЗАГЛУШКА: лише зберігає необхідну роль у req і пропускає далі.
- */
-export default function calendarAccess(minRole) {
-  return (req, res, next) => {
-    req.requiredRole = minRole;
-    req.requiredRoleRank = ROLE_RANK[minRole];
-    next();
-  };
+export function findMember(calendar, userId) {
+  return calendar.members.find((m) => String(m.user?._id ?? m.user) === String(userId)) || null;
 }
 
-/**
- * Та сама перевірка для сервісів подій, де id календаря береться з події або тіла запиту.
- * @param {string} userId
- * @param {string} calendarId
- * @param {'owner'|'editor'|'viewer'} minRole
- * @returns {Promise<{ calendar: object, membership: object }>}
- */
-export async function assertCalendarRole() {
-  throw new Error('TODO(@nastia): calendarAccess.assertCalendarRole');
+export function hasRole(membership, minRole) {
+  return Boolean(membership) && ROLE_RANK[membership.role] >= ROLE_RANK[minRole];
+}
+
+export async function assertCalendarRole(userId, calendarId, minRole) {
+  if (!mongoose.isValidObjectId(calendarId)) throw new ApiError(404, 'Календар не знайдено');
+
+  const calendar = await Calendar.findById(calendarId);
+  if (!calendar) throw new ApiError(404, 'Календар не знайдено');
+
+  const membership = findMember(calendar, userId);
+  if (!membership) throw new ApiError(403, 'У тебе немає доступу до цього календаря');
+  if (!hasRole(membership, minRole)) throw new ApiError(403, 'Недостатньо прав для цієї дії');
+
+  return { calendar, membership };
+}
+
+export default function calendarAccess(minRole) {
+  return async (req, res, next) => {
+    try {
+      const { calendar, membership } = await assertCalendarRole(
+        req.user.id,
+        req.params.id,
+        minRole,
+      );
+      req.calendar = calendar;
+      req.membership = membership;
+      next();
+    } catch (err) {
+      next(err);
+    }
+  };
 }

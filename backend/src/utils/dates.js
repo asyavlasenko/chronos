@@ -1,45 +1,56 @@
-// Утиліти дат. Усе в UTC; локальний час — справа фронту.
-// Номери тижнів — ISO 8601: тиждень починається з понеділка, перший тиждень року містить 4 січня.
+const DAY_MS = 24 * 60 * 60 * 1000;
+const WEEK_MS = 7 * DAY_MS;
 
-/**
- * Номер ISO-тижня для дати.
- * @param {Date} date
- * @returns {{ year: number, week: number }} ISO-рік може відрізнятись від календарного (напр., 1 січня → тиждень 53 минулого року)
- */
-export function getIsoWeek() {
-  // TODO(@teammate1): алгоритм через «четвер цього тижня» (date + 4 − isoDay)
-  throw new Error('TODO(@teammate1): dates.getIsoWeek');
+const toTime = (value) => new Date(value).getTime();
+
+const startOfUtcDay = (date) => new Date(Math.floor(toTime(date) / DAY_MS) * DAY_MS);
+
+export function startOfIsoWeek(date) {
+  const dayStart = startOfUtcDay(date);
+  const isoDay = dayStart.getUTCDay() || 7;
+  return new Date(dayStart.getTime() - (isoDay - 1) * DAY_MS);
 }
 
-/**
- * Початок ISO-тижня (понеділок 00:00 UTC) для дати.
- * @param {Date} date
- * @returns {Date}
- */
-export function startOfIsoWeek() {
-  throw new Error('TODO(@teammate1): dates.startOfIsoWeek');
+export function getIsoWeek(date) {
+  const thursday = new Date(startOfIsoWeek(date).getTime() + 3 * DAY_MS);
+  const year = thursday.getUTCFullYear();
+  const week = Math.floor((thursday.getTime() - Date.UTC(year, 0, 1)) / WEEK_MS) + 1;
+  return { year, week };
 }
 
-/**
- * Межі періоду для запиту подій.
- * @param {'day'|'week'|'month'|'year'} view
- * @param {Date} anchor
- * @returns {{ from: Date, to: Date }}
- */
-export function getRangeForView() {
-  throw new Error('TODO(@teammate1): dates.getRangeForView');
+export function getRangeForView(view, anchor) {
+  const date = new Date(anchor);
+  const year = date.getUTCFullYear();
+  const month = date.getUTCMonth();
+
+  switch (view) {
+    case 'day': {
+      const from = startOfUtcDay(date);
+      return { from, to: new Date(from.getTime() + DAY_MS) };
+    }
+    case 'week': {
+      const from = startOfIsoWeek(date);
+      return { from, to: new Date(from.getTime() + WEEK_MS) };
+    }
+    case 'month':
+      return {
+        from: new Date(Date.UTC(year, month, 1)),
+        to: new Date(Date.UTC(year, month + 1, 1)),
+      };
+    case 'year':
+      return {
+        from: new Date(Date.UTC(year, 0, 1)),
+        to: new Date(Date.UTC(year + 1, 0, 1)),
+      };
+    default:
+      throw new RangeError(`Невідоме подання календаря: ${view}`);
+  }
 }
 
-/**
- * Чи перетинаються два інтервали [aStart, aEnd) і [bStart, bEnd).
- */
-export function intervalsOverlap() {
-  throw new Error('TODO(@teammate1): dates.intervalsOverlap');
+export function intervalsOverlap(aStart, aEnd, bStart, bEnd) {
+  return toTime(aStart) < toTime(bEnd) && toTime(bStart) < toTime(aEnd);
 }
 
-/**
- * Кількість повних днів між двома датами (завдання з Investigate у ТЗ).
- */
-export function daysBetween() {
-  throw new Error('TODO(@teammate1): dates.daysBetween');
+export function daysBetween(a, b) {
+  return Math.trunc((toTime(b) - toTime(a)) / DAY_MS) || 0;
 }

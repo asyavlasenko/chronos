@@ -8,7 +8,27 @@ import {
 
 const { Schema } = mongoose;
 
-/** Учасник події. user = null, доки запрошений не зареєструється. */
+export const TYPE_RULE_MESSAGES = Object.freeze({
+  startRequired: 'Для зустрічі та нагадування потрібні дата й час початку',
+  endAfterStart: 'Кінець має бути пізніше за початок',
+  completedTaskOnly: 'Позначити виконаною можна лише задачу',
+});
+
+const TYPE_RULE_PATHS = ['type', 'startAt', 'endAt', 'isCompleted', 'completedAt'];
+
+export function typeRuleViolations({ type, startAt, endAt }) {
+  const violations = [];
+
+  if (type !== EVENT_TYPES.TASK && !startAt) {
+    violations.push({ field: 'startAt', message: TYPE_RULE_MESSAGES.startRequired });
+  }
+  if (type === EVENT_TYPES.ARRANGEMENT && startAt && endAt && endAt <= startAt) {
+    violations.push({ field: 'endAt', message: TYPE_RULE_MESSAGES.endAfterStart });
+  }
+
+  return violations;
+}
+
 const participantSchema = new Schema(
   {
     user: { type: Schema.Types.ObjectId, ref: 'User', default: null },
@@ -24,13 +44,6 @@ const participantSchema = new Schema(
   { _id: false },
 );
 
-/**
- * Подія трьох типів (design/README.md, таблиця типів):
- *   arrangement — startAt + endAt (за замовчуванням startAt + user.defaultArrangementDuration)
- *   reminder    — лише startAt (момент)
- *   task        — startAt = дедлайн (може бути null → «без дати»), isCompleted, priority
- * Усі дати — UTC. Обов'язкові для будь-якого типу: title, type, calendar, creator.
- */
 const eventSchema = new Schema(
   {
     title: { type: String, required: true, trim: true, maxlength: 120 },
@@ -40,15 +53,14 @@ const eventSchema = new Schema(
     calendar: { type: Schema.Types.ObjectId, ref: 'Calendar', required: true },
     creator: { type: Schema.Types.ObjectId, ref: 'User', required: true },
 
-    startAt: { type: Date, default: null }, // для arrangement/reminder обов'язкова (перевіряє валідація)
-    endAt: { type: Date, default: null }, // лише arrangement; > startAt
+    startAt: { type: Date, default: null },
+    endAt: { type: Date, default: null },
     allDay: { type: Boolean, default: false },
 
-    color: { type: String, enum: COLOR_KEYS, default: null }, // null = колір календаря (або учасника у спільному)
-    location: { type: String, trim: true, maxlength: 200, default: '' }, // адреса, кімната або посилання на Meet
+    color: { type: String, enum: COLOR_KEYS, default: null },
+    location: { type: String, trim: true, maxlength: 200, default: '' },
     reminderMinutesBefore: { type: Number, min: 0, max: 10080, default: 10 },
 
-    // task
     isCompleted: { type: Boolean, default: false },
     completedAt: { type: Date, default: null },
     priority: { type: String, enum: Object.values(PRIORITIES), default: PRIORITIES.MEDIUM },
@@ -68,17 +80,25 @@ const eventSchema = new Schema(
   },
 );
 
-// Основний запит: події календарів користувача в діапазоні дат
 eventSchema.index({ calendar: 1, startAt: 1 });
 eventSchema.index({ calendar: 1, endAt: 1 });
 eventSchema.index({ creator: 1, type: 1 });
-// Пошук (?q=) по назві й опису
 eventSchema.index({ title: 'text', description: 'text' }, { default_language: 'none' });
-// Учасник бачить події, куди його запросили
 eventSchema.index({ 'participants.user': 1 });
 
-// TODO(@teammate1): pre('validate') — для arrangement вимагати startAt і endAt > startAt;
-// для reminder — startAt; для task endAt не зберігати.
+eventSchema.pre('validate', function applyTypeRules() {
+  if (!this.isNew && !this.isModified(TYPE_RULE_PATHS)) return;
+
+  if (this.type !== EVENT_TYPES.ARRANGEMENT) {
+    this.endAt = null;
+  }
+  if (this.type !== EVENT_TYPES.TASK) {
+    this.isCompleted = false;
+    this.completedAt = null;
+  }
+
+  typeRuleViolations(this).forEach(({ field, message }) => this.invalidate(field, message));
+});
 
 const Event = mongoose.model('Event', eventSchema);
 
