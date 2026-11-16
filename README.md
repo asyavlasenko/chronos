@@ -4,8 +4,8 @@
 з ролями, запрошення на email і державні свята твоєї країни. Проєкт виконується в межах
 ucode connect, трек Full Stack (challenge «Chronos», Innovation Campus NTU «KhPI»).
 
-> Стан: **фронтенд зверстано за всіма 16 мокапами** і працює на мок-даних; бекенд — каркас зі схемами моделей
-> і маршрутами `501 Not Implemented`, бізнес-логіка пишеться командою по фічах (див. [docs/team.md](docs/team.md)).
+> Стан: **Act: Basic реалізовано.** Бекенд і фронтенд працюють разом: реєстрація, календарі з ролями, події трьох типів,
+> запрошення по email, свята за країною. Що лишилось до здачі, описано в [docs/STATUS.md](docs/STATUS.md).
 
 ## Стек
 
@@ -47,6 +47,24 @@ docker compose up --build
 - API: <http://localhost:4000/api/health> → `{"status":"ok"}`
 - MongoDB: `mongodb://localhost:27017/chronos`
 
+### Демо-дані
+
+Після реєстрації акаунт порожній. Щоб одразу побачити наповнений календар, створи демо-дані:
+
+```bash
+docker compose exec -e SEED_ALLOW_PRODUCTION=true backend npm run seed
+```
+
+Скрипт створює трьох користувачів (`asia@chronos.demo`, `maksym@chronos.demo`, `olia@chronos.demo`), спільний календар
+«Робота» з ролями та події на поточний тиждень. Пароль для всіх трьох: `chronos-demo` (або значення змінної `SEED_PASSWORD`).
+Повторний запуск перестворює лише ці демо-акаунти, інших користувачів не чіпає.
+
+Листи (запрошення, скидання пароля) без налаштованого SMTP не надсилаються, а друкуються в лог бекенду разом із посиланням:
+
+```bash
+docker compose logs -f backend
+```
+
 Крок із `.env` необов'язковий: без нього compose підставляє dev-значення за замовчуванням.
 Для реального розгортання задай власні `JWT_*_SECRET` і `SMTP_*` у `.env` (він у `.gitignore`).
 
@@ -65,7 +83,7 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 cp .env.example backend/.env
 ```
 
-У `backend/.env` зміни `MONGO_URI` на `mongodb://localhost:27017/chronos`, потім у двох терміналах:
+У `backend/.env` зміни `MONGO_URI` на `mongodb://localhost:27017/chronos`. Базу можна підняти окремо командою `docker compose up -d mongo`. Потім у двох терміналах:
 
 ```bash
 cd backend && npm install && npm run dev
@@ -83,7 +101,8 @@ cd frontend && npm install && npm run dev
 |-------------------------------|-----------|---------------------------------------------|
 | `npm run lint` / `lint:fix`   | обидва    | ESLint за Airbnb                            |
 | `npm run format`              | обидва    | Prettier                                    |
-| `npm test`                    | backend   | Jest + supertest (smoke-тест `/api/health`) |
+| `npm test`                    | backend   | Jest + supertest, 222 тести; потрібна MongoDB на `localhost:27017` |
+| `npm run seed`                | backend   | Демо-дані для локальної бази                |
 | `npm run build`               | frontend  | Продакшн-збірка Vite у `dist/`              |
 
 ## Структура репозиторію
@@ -111,23 +130,29 @@ chronos/
 
 ## Скріншоти
 
-Зняті з фронту на мок-даних (`docs/screenshots/`). Повний набір мокапів — у `design/screens/`.
+Зняті зі справжнього застосунку на демо-даних.
 
 | Огляд | Календар · Тиждень |
 |---|---|
 | ![Огляд](docs/screenshots/01-overview.jpg) | ![Тиждень](docs/screenshots/02-week.jpg) |
 
-| Календар · Місяць | Календар · Рік |
+| Календар · День | Календар · Місяць |
 |---|---|
-| ![Місяць](docs/screenshots/05-month.jpg) | ![Рік](docs/screenshots/06-year.jpg) |
+| ![День](docs/screenshots/04-day.jpg) | ![Місяць](docs/screenshots/05-month.jpg) |
 
-| Створення події | Спільний календар |
+| Календар · Рік | Задачі |
 |---|---|
-| ![Нова подія](docs/screenshots/10-event-create.jpg) | ![Спільний календар](docs/screenshots/09-shared-calendar.jpg) |
+| ![Рік](docs/screenshots/06-year.jpg) | ![Задачі](docs/screenshots/07-tasks.jpg) |
 
-| Деталі події | Мобільна версія |
+| Календарі | Спільний календар |
 |---|---|
-| ![Деталі події](docs/screenshots/12-event-details.jpg) | <img src="docs/screenshots/16-mobile.jpg" width="260" alt="Мобільний огляд"> |
+| ![Календарі](docs/screenshots/08-calendars.jpg) | ![Спільний календар](docs/screenshots/09-shared-calendar.jpg) |
+
+| Створення події | Деталі події |
+|---|---|
+| ![Нова подія](docs/screenshots/10-event-create.jpg) | ![Деталі події](docs/screenshots/12-event-details.jpg) |
+
+<img src="docs/screenshots/16-mobile.jpg" width="280" alt="Мобільний огляд">
 
 ## Документація
 
