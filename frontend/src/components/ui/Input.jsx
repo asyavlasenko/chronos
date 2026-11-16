@@ -1,9 +1,7 @@
-// Дизайн: 10-event-create.html (.inp h40 r10 рамка --line 13px), 13-auth.html (h44 14px), 01 (email h32 r8 12px)
 import PropTypes from 'prop-types';
 import cx from '../../utils/cx';
 import styles from './Input.module.css';
 
-/** size: lg 44 · md 40 · sm 36 · xs 32. invalid — червона рамка. trailing — кнопка всередині (показати пароль). */
 export default function Input({
   size = 'md',
   invalid = false,

@@ -1,4 +1,3 @@
-/* PageShell. Дизайн: 01-overview.html, 16-mobile.html */
 .page {
   box-sizing: border-box;
   min-height: 100vh;
@@ -21,4 +20,17 @@
   .main {
     gap: 12px;
   }
+}
+.state {
+  height: 60vh;
+  overflow: hidden;
+  border-radius: var(--r-card);
+}
+.error {
+  max-width: 460px;
+  align-items: flex-start;
+}
+.errorText {
+  font-size: var(--fs-13);
+  color: var(--ink-secondary);
 }

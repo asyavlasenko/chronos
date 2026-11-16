@@ -2,12 +2,11 @@ import { createContext, useCallback, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useSearchParams } from 'react-router-dom';
 
-// Модалки: швидке створення (локальний стан) і деталі події (?event=<id> в URL, щоб посилання працювали).
 export const ModalsContext = createContext(null);
 
 export default function ModalsProvider({ children }) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [quickCreate, setQuickCreate] = useState(null); // { date: Date, startAt?: Date, endAt?: Date, calendarId?: string }
+  const [quickCreate, setQuickCreate] = useState(null);
 
   const openQuickCreate = useCallback((opts = {}) => {
     setQuickCreate({ date: opts.date || new Date(), ...opts });

@@ -1,9 +1,7 @@
-// Дизайн: 02-week-cards.html (2px --accent через колонку сьогодні), 04-day.html і 01 (мітка часу зліва)
 import PropTypes from 'prop-types';
 import { formatTime } from '../../utils/dates';
 import styles from './NowLine.module.css';
 
-/** Лінія «зараз». top — зсув у px усередині сітки; showLabel — мітка часу зліва (labelLeft px). */
 export default function NowLine({
   top,
   now = new Date(),

@@ -1,9 +1,7 @@
-// Підрахунки для підсумків: групування по днях, зайнятість, наступна подія, задачі тижня.
 import { durationMinutes, isToday, toDate } from './dates';
 
 export const addMinutes = (date, minutes) => new Date(toDate(date).getTime() + minutes * 60000);
 
-/** Map<dateString, event[]> за локальним днем startAt (події без дати пропускаються). */
 export function groupEventsByDay(events) {
   const map = new Map();
   events.forEach((e) => {
@@ -17,11 +15,10 @@ export function groupEventsByDay(events) {
 
 export function busyMinutes(events) {
   return events
-    .filter((e) => e.type === 'arrangement')
+    .filter((e) => e.type === 'arrangement' && !e.allDay)
     .reduce((sum, e) => sum + durationMinutes(e.startAt, e.endAt), 0);
 }
 
-/** Найближча майбутня зустріч/нагадування відносно now. */
 export function nextUpcoming(events, now = new Date()) {
   return (
     events
@@ -32,11 +29,15 @@ export function nextUpcoming(events, now = new Date()) {
   );
 }
 
-/** Поточна подія (now усередині [startAt, endAt)). */
 export function currentEvent(events, now = new Date()) {
   return (
     events.find(
-      (e) => e.type === 'arrangement' && toDate(e.startAt) <= now && toDate(e.endAt) > now,
+      (e) =>
+        e.type === 'arrangement' &&
+        Boolean(e.startAt) &&
+        Boolean(e.endAt) &&
+        toDate(e.startAt) <= now &&
+        toDate(e.endAt) > now,
     ) || null
   );
 }
@@ -56,11 +57,10 @@ export function weekSummary(events) {
   };
 }
 
-/** Учасники події → елементи для AvatarStack, використовуючи довідник людей. */
 export function participantsToAvatars(participants = [], people = {}) {
-  return participants.map((p) => {
+  return (participants || []).map((p) => {
     const person = p.user ? people[p.user] : null;
-    const name = p.name || person?.name || p.email;
+    const name = p.name || person?.name || p.email || '';
     return {
       id: p.user || p.email,
       initials: person?.initials || name.slice(0, 2).toUpperCase(),
@@ -70,10 +70,6 @@ export function participantsToAvatars(participants = [], people = {}) {
   });
 }
 
-/**
- * Вільні вікна ≥ minMinutes між подіями дня в межах [startHour, endHour); для сьогодні — від «зараз».
- * @returns {Array<{ start: Date, end: Date }>}
- */
 export function findFreeSlots(
   day,
   events,

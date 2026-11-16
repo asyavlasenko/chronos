@@ -1,14 +1,8 @@
-// Дизайн: 08-calendars.html (бейджі), 02 (чіпи-підсумки), 07 (пріоритети), 12 (статуси учасників)
 import PropTypes from 'prop-types';
 import cx from '../../utils/cx';
 import { colorVars, COLOR_KEYS } from '../../utils/colors';
 import styles from './Badge.module.css';
 
-/**
- * variant: muted (сірий) · tint (кольори календаря, color обов'язковий) · dark · accent · success · outline · danger · white
- * size: sm 10px · md 11px · lg 12px (підсумки над тижнем).
- * dot — кольорова крапка/квадратик ліворуч (ключ кольору або 'accent').
- */
 export default function Badge({
   children,
   variant = 'muted',

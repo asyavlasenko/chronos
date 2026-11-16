@@ -1,4 +1,3 @@
-/* EventCreatePage. Дизайн: design/screens/10-event-create.html. Лише змінні з src/styles/tokens.css. */
 .back {
   display: inline-flex;
   align-items: center;
@@ -19,7 +18,6 @@
   justify-content: center;
 }
 
-/* --- форма --- */
 .card {
   flex: 999 1 560px;
   max-width: 720px;
@@ -126,6 +124,10 @@
   align-items: center;
   height: 40px;
 }
+.formError {
+  font-size: var(--fs-12);
+  color: var(--danger);
+}
 .footer {
   display: flex;
   flex-wrap: wrap;
@@ -140,7 +142,6 @@
   color: var(--ink-secondary);
 }
 
-/* --- бічна панель: прев'ю і «цей час вільний» --- */
 .aside {
   flex: 1 1 300px;
   max-width: 360px;

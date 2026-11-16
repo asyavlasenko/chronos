@@ -1,4 +1,3 @@
-/* WeekTimelinePage. Дизайн: design/screens/03-week-timeline.html. Лише змінні з src/styles/tokens.css. */
 .layout {
   display: flex;
   flex-wrap: wrap;
@@ -6,7 +5,6 @@
   align-items: flex-start;
 }
 
-/* --- стрічка: біла картка 18px, шапка годин 40px, рядки днів, легенда --- */
 .board {
   flex: 999 1 640px;
   min-width: 0;
@@ -49,7 +47,6 @@
   position: relative;
 }
 
-/* Лінія «зараз»: вертикальна, через усі рядки; left — інлайн (обчислюється з хвилин) */
 .now {
   position: absolute;
   top: 0;
@@ -73,7 +70,6 @@
   white-space: nowrap;
 }
 
-/* Легенда під стрічкою */
 .legend {
   padding: 12px 18px;
   border-top: 1px solid var(--line-grid);
@@ -115,7 +111,6 @@
   background: var(--card-muted);
 }
 
-/* --- бічна панель --- */
 .side {
   flex: 1 1 260px;
   max-width: 300px;

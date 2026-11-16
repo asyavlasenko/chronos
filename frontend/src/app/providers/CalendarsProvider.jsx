@@ -1,69 +1,265 @@
-import { createContext, useCallback, useMemo, useState } from 'react';
+import { createContext, useCallback, useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
-import { calendars as mockCalendars } from '../../mocks/data';
+import * as calendarsApi from '../../api/calendars.api';
+import { parseApiError } from '../../api/errors';
+import useAuth from '../../hooks/useAuth';
+import useToast from '../../hooks/useToast';
+import { normalizeCalendar } from '../../utils/normalize';
 
-// Календарі користувача + віртуальний 'holidays'. Видимість (isHidden) — налаштування учасника.
-// TODO(@teammate2): замінити мок на calendars.api (GET /calendars, PATCH /calendars/:id/visibility …)
 export const CalendarsContext = createContext(null);
 
-export default function CalendarsProvider({ children }) {
-  const [calendars, setCalendars] = useState(mockCalendars);
-  const [isLoading] = useState(false);
+export const HOLIDAYS_CALENDAR_ID = 'holidays';
 
-  const patch = useCallback((id, changes) => {
-    setCalendars((list) =>
-      list.map((c) =>
-        c.id === id ? { ...c, ...(typeof changes === 'function' ? changes(c) : changes) } : c,
-      ),
-    );
+const COUNTRY_GENITIVE = {
+  UA: 'України',
+  PL: 'Польщі',
+  DE: 'Німеччини',
+  US: 'США',
+  GB: 'Великої Британії',
+};
+
+const EDITABLE_FIELDS = ['name', 'description', 'color'];
+
+function holidaysCalendar(user) {
+  const country = COUNTRY_GENITIVE[user.country];
+  return {
+    id: HOLIDAYS_CALENDAR_ID,
+    name: country ? `Свята ${country}` : `Свята (${user.country})`,
+    description: 'Автоматично за країною з профілю',
+    color: 'holidays',
+    owner: null,
+    isMain: false,
+    isShared: false,
+    isReadOnly: true,
+    myRole: 'viewer',
+    myColor: null,
+    isHidden: !user.showHolidays,
+    members: [],
+    pendingInvites: [],
+    eventsCount: 0,
+  };
+}
+
+export default function CalendarsProvider({ children }) {
+  const { user, updateUser } = useAuth();
+  const { notifyError } = useToast();
+  const [items, setItems] = useState([]);
+  const [loadedFor, setLoadedFor] = useState(null);
+  const [error, setError] = useState(null);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [revision, setRevision] = useState(0);
+  const userId = user?.id || null;
+
+  useEffect(() => {
+    if (!userId) {
+      setItems([]);
+      setError(null);
+      setLoadedFor(null);
+      return undefined;
+    }
+
+    let isActive = true;
+    calendarsApi
+      .listCalendars()
+      .then((list) => {
+        if (!isActive) return;
+        setItems(list.map(normalizeCalendar));
+        setError(null);
+      })
+      .catch((err) => {
+        if (isActive) setError(parseApiError(err).message);
+      })
+      .finally(() => {
+        if (isActive) setLoadedFor(userId);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [userId, reloadKey]);
+
+  const replace = useCallback((calendar) => {
+    const next = normalizeCalendar(calendar);
+    setItems((list) => list.map((c) => (c.id === next.id ? next : c)));
+    return next;
   }, []);
+
+  const patchLocal = useCallback((id, changes) => {
+    setItems((list) => list.map((c) => (c.id === id ? { ...c, ...changes } : c)));
+  }, []);
+
+  const reload = useCallback(() => {
+    setLoadedFor(null);
+    setReloadKey((key) => key + 1);
+  }, []);
+
+  const reloadSilently = useCallback(async () => {
+    try {
+      const list = await calendarsApi.listCalendars();
+      setItems(list.map(normalizeCalendar));
+    } catch {
+      setReloadKey((key) => key + 1);
+    }
+  }, []);
+
+  const refresh = useCallback(async () => {
+    await reloadSilently();
+    setRevision((value) => value + 1);
+  }, [reloadSilently]);
 
   const toggleVisibility = useCallback(
-    (id) => patch(id, (c) => (c.isMain ? c : { isHidden: !c.isHidden })),
-    [patch],
+    async (id) => {
+      if (id === HOLIDAYS_CALENDAR_ID) {
+        try {
+          await updateUser({ showHolidays: !user.showHolidays });
+        } catch (err) {
+          notifyError(err);
+        }
+        return;
+      }
+
+      const current = items.find((c) => c.id === id);
+      if (!current || current.isMain) return;
+
+      const isHidden = !current.isHidden;
+      patchLocal(id, { isHidden });
+      try {
+        replace(await calendarsApi.updateVisibility(id, { isHidden }));
+      } catch (err) {
+        patchLocal(id, { isHidden: current.isHidden });
+        notifyError(err);
+      }
+    },
+    [items, user, updateUser, patchLocal, replace, notifyError],
   );
 
-  const createCalendar = useCallback((dto) => {
-    const id = `cal-${Date.now()}`;
-    setCalendars((list) => [
-      ...list,
-      {
-        id,
-        name: dto.name,
-        description: dto.description || '',
-        color: dto.color || 'blue',
-        owner: 'u-me',
-        isMain: false,
-        isShared: false,
-        myRole: 'owner',
-        myColor: null,
-        isHidden: false,
-        members: [{ user: 'u-me', name: 'Ти', email: 'asia@mail.com', role: 'owner', color: null, isHidden: false }],
-        eventsCount: 0,
-      },
-    ]);
-    return id;
+  const setMyColor = useCallback(
+    async (id, color) => {
+      const current = items.find((c) => c.id === id);
+      if (!current) return;
+
+      patchLocal(id, {
+        myColor: color,
+        members: current.members.map((m) => (m.user === userId ? { ...m, color } : m)),
+      });
+      try {
+        replace(await calendarsApi.updateVisibility(id, { color }));
+      } catch (err) {
+        patchLocal(id, { myColor: current.myColor, members: current.members });
+        notifyError(err);
+      }
+    },
+    [items, userId, patchLocal, replace, notifyError],
+  );
+
+  const updateCalendar = useCallback(
+    async (id, patch) => {
+      const payload = {};
+      EDITABLE_FIELDS.forEach((key) => {
+        if (patch[key] !== undefined) payload[key] = patch[key];
+      });
+      return replace(await calendarsApi.updateCalendar(id, payload));
+    },
+    [replace],
+  );
+
+  const createCalendar = useCallback(async (dto) => {
+    const created = normalizeCalendar(await calendarsApi.createCalendar(dto));
+    setItems((list) => [...list, created]);
+    return created.id;
   }, []);
 
-  const removeCalendar = useCallback((id) => {
-    setCalendars((list) => list.filter((c) => c.id !== id || c.isMain));
+  const removeCalendar = useCallback(async (id) => {
+    await calendarsApi.deleteCalendar(id);
+    setItems((list) => list.filter((c) => c.id !== id));
+    setRevision((value) => value + 1);
   }, []);
+
+  const reloadOne = useCallback(
+    async (id) => replace(await calendarsApi.getCalendar(id)),
+    [replace],
+  );
+
+  const shareCalendar = useCallback(
+    async (id, { email, role }) => {
+      const invite = await calendarsApi.shareCalendar(id, { email, role });
+      await reloadOne(id);
+      return invite;
+    },
+    [reloadOne],
+  );
+
+  const updateMemberRole = useCallback(
+    async (id, memberId, role) => replace(await calendarsApi.updateMemberRole(id, memberId, role)),
+    [replace],
+  );
+
+  const removeMember = useCallback(
+    async (id, memberId) => {
+      await calendarsApi.removeMember(id, memberId);
+      if (memberId === userId) {
+        setItems((list) => list.filter((c) => c.id !== id));
+      } else {
+        await reloadOne(id);
+      }
+      setRevision((value) => value + 1);
+    },
+    [userId, reloadOne],
+  );
+
+  const cancelInvite = useCallback(
+    async (id, inviteId) => {
+      await calendarsApi.cancelInvite(id, inviteId);
+      await reloadOne(id);
+    },
+    [reloadOne],
+  );
 
   const value = useMemo(() => {
+    const calendars = user ? [...items, holidaysCalendar(user)] : [];
     const byId = Object.fromEntries(calendars.map((c) => [c.id, c]));
     return {
       calendars,
-      isLoading,
       byId,
       getCalendar: (id) => byId[id],
       visibleIds: calendars.filter((c) => !c.isHidden).map((c) => c.id),
+      mainCalendar: calendars.find((c) => c.isMain) || null,
+      isLoading: Boolean(userId) && loadedFor !== userId,
+      error,
+      revision,
+      reload,
+      reloadSilently,
+      refresh,
       toggleVisibility,
-      updateCalendar: patch,
+      setMyColor,
+      updateCalendar,
       createCalendar,
       removeCalendar,
-      reload: async () => {},
+      shareCalendar,
+      updateMemberRole,
+      removeMember,
+      cancelInvite,
     };
-  }, [calendars, isLoading, toggleVisibility, patch, createCalendar, removeCalendar]);
+  }, [
+    user,
+    userId,
+    items,
+    loadedFor,
+    error,
+    revision,
+    reload,
+    reloadSilently,
+    refresh,
+    toggleVisibility,
+    setMyColor,
+    updateCalendar,
+    createCalendar,
+    removeCalendar,
+    shareCalendar,
+    updateMemberRole,
+    removeMember,
+    cancelInvite,
+  ]);
 
   return <CalendarsContext.Provider value={value}>{children}</CalendarsContext.Provider>;
 }

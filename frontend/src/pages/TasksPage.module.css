@@ -1,6 +1,3 @@
-/* TasksPage. Дизайн: design/screens/07-tasks.html. Лише змінні з src/styles/tokens.css. */
-
-/* --- Лейаут: основна колонка + бічна панель (нижче 1000px — на всю ширину) --- */
 .layout {
   display: flex;
   flex-wrap: wrap;
@@ -29,7 +26,6 @@
   }
 }
 
-/* --- Заголовок і фільтри-пілюлі --- */
 .titleRow {
   display: flex;
   align-items: baseline;
@@ -57,7 +53,6 @@
   font-weight: var(--fw-medium);
 }
 
-/* --- Швидке додавання --- */
 .form:focus-within {
   box-shadow: 0 0 0 3px var(--accent-tint);
 }
@@ -106,7 +101,6 @@
   padding-left: 26px;
 }
 
-/* --- Групи задач --- */
 .group {
   overflow: hidden;
 }
@@ -148,7 +142,6 @@
   color: var(--ink-secondary);
 }
 
-/* --- Квадратик кольору календаря (8px, r2) --- */
 .dot {
   width: 8px;
   height: 8px;
@@ -157,7 +150,6 @@
   flex: none;
 }
 
-/* --- Бічна панель --- */
 .valueSub {
   font-size: var(--fs-14);
   font-weight: var(--fw-medium);

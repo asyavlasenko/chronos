@@ -1,4 +1,3 @@
-// Дизайн: design/screens/16-mobile.html (список дня: колонка часу 40px + блоки подій, вільні вікна, задача з чекбоксом)
 import PropTypes from 'prop-types';
 import { formatTime, toDate } from '../../utils/dates';
 import { eventShape, calendarShape } from '../../utils/propTypes';
@@ -25,7 +24,6 @@ export default function MobileDayList({
     ...slots.map((s) => ({ kind: 'slot', at: s.start, slot: s })),
   ].sort((a, b) => a.at - b.at);
 
-  // «Робота · Google Meet · Максим, Оля»; задача — «задача · Навчання»
   const metaFor = (e) => {
     const cal = calendarsById[e.calendar]?.name;
     if (e.type === 'task') return ['задача', cal].filter(Boolean).join(' · ');

@@ -1,4 +1,3 @@
-/* QuickCreateModal. Дизайн: design/screens/11-event-quick-modal.html. Лише змінні з src/styles/tokens.css. */
 .form {
   display: flex;
   flex-direction: column;
@@ -22,7 +21,6 @@
   gap: 6px;
 }
 
-/* назва: без рамки, лише підкреслення 2px --dark */
 .form .titleInput {
   height: 46px;
   padding: 0 2px;
@@ -46,7 +44,6 @@
   color: var(--danger);
 }
 
-/* дата · початок – кінець */
 .timeRow {
   display: flex;
   align-items: center;
@@ -69,7 +66,6 @@
   color: var(--ink-secondary);
 }
 
-/* календар · учасники */
 .calRow {
   display: flex;
   align-items: center;

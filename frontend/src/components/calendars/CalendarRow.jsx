@@ -1,6 +1,3 @@
-// Дизайн: design/screens/08-calendars.html
-// Рядок календаря: чекбокс «показувати», квадратик кольору, назва + опис, аватари учасників (спільний),
-// бейджі (головний / спільний / прихований / тільки читання), кількість подій. Клік по рядку — вибрати календар.
 import PropTypes from 'prop-types';
 import cx from '../../utils/cx';
 import { colorVars } from '../../utils/colors';
@@ -38,7 +35,7 @@ export default function CalendarRow({
         onChange={() => onToggleVisibility(calendar.id)}
         color={calendar.color}
         label={`Показувати ${calendar.name}`}
-        disabled={isMain}
+        locked={isMain}
       />
       <button type="button" className={styles.body} onClick={() => onSelect(calendar.id)}>
         <span className={styles.sw} style={{ background: colorVars(calendar.color).base }} />

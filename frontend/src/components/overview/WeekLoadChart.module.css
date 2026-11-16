@@ -1,4 +1,3 @@
-/* WeekLoadChart. Дизайн: 01-overview.html (картка «Тиждень 45») */
 .bars {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));

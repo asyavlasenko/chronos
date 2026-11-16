@@ -1,4 +1,3 @@
-// Дизайн: 14-profile.html (перемикачі сповіщень і номерів тижнів)
 import PropTypes from 'prop-types';
 import cx from '../../utils/cx';
 import styles from './Toggle.module.css';

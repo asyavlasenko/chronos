@@ -1,5 +1,3 @@
-// Дизайн: 02-week-cards.html (.ev/.rem у картках тижня), 04-day.html (великі блоки 64px/год),
-// 01-overview.html (блоки 44px/год), 03-week-timeline.html (стрічка), 05-month.html (рядки), 16-mobile.html
 import PropTypes from 'prop-types';
 import cx from '../../utils/cx';
 import { resolveEventColors } from '../../utils/colors';
@@ -10,13 +8,6 @@ import Checkbox from '../ui/Checkbox';
 import { AvatarStack } from '../ui/Avatar';
 import styles from './EventBlock.module.css';
 
-/**
- * Подія у сітці або списку. Вигляд за типом (design/README.md):
- *   arrangement — тінт календаря, висота = тривалість; reminder — біла пілюля з дзвіночком;
- *   task — блок --card-muted з рамкою і чекбоксом; holiday — тінт свят.
- * variant: week · day · overview · timeline · list (рядок «час · крапка · назва») · chip (міні-чіп) · mobile.
- * top/height — абсолютне позиціонування в HourGrid (для week/day/overview/timeline).
- */
 export default function EventBlock({
   event,
   calendar = null,
@@ -33,6 +24,7 @@ export default function EventBlock({
   action = null,
   onClick = null,
   onToggleComplete = null,
+  completable = true,
   className = '',
 }) {
   const colors = resolveEventColors(event, calendar);
@@ -63,7 +55,6 @@ export default function EventBlock({
     className,
   );
 
-  // --- Плоскі рядки для місяця: нагадування / задача без фону ---
   if (variant === 'list' && (isTask || isReminder)) {
     return (
       <span
@@ -75,6 +66,7 @@ export default function EventBlock({
             onChange={() => onToggleComplete?.(event)}
             size={11}
             label={`Виконано: ${event.title}`}
+            disabled={!completable}
             className={styles.listBox}
           />
         ) : (
@@ -90,7 +82,6 @@ export default function EventBlock({
     );
   }
 
-  // --- Задача: чекбокс + назва ---
   if (isTask) {
     return (
       <div className={cx(base, styles.task)} style={posStyle}>
@@ -99,6 +90,7 @@ export default function EventBlock({
           onChange={() => onToggleComplete?.(event)}
           size={variant === 'week' || variant === 'list' || variant === 'chip' ? 13 : 18}
           label={`Виконано: ${event.title}`}
+          disabled={!completable}
           className={styles.taskBox}
         />
         <button type="button" className={styles.taskBody} onClick={() => onClick?.(event)}>
@@ -114,7 +106,6 @@ export default function EventBlock({
     );
   }
 
-  // --- Нагадування: біла пілюля з дзвіночком ---
   if (isReminder) {
     return (
       <button
@@ -132,7 +123,6 @@ export default function EventBlock({
     );
   }
 
-  // --- Зустріч / свято: тінт-блок ---
   const style = { ...posStyle, background: colors.tint, color: colors.text };
   if (variant === 'list') {
     return (
@@ -212,5 +202,6 @@ EventBlock.propTypes = {
   action: PropTypes.node,
   onClick: PropTypes.func,
   onToggleComplete: PropTypes.func,
+  completable: PropTypes.bool,
   className: PropTypes.string,
 };

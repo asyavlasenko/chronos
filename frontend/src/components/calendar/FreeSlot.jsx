@@ -1,11 +1,8 @@
-// Дизайн: 02-week-cards.html (у колонці сьогодні: «+ 16:00 – 17:00 вільно», пунктир --accent-dashed),
-// 04-day.html / 01-overview.html («Вільно 16:00 – 17:00 · + Додати», пунктир #D1D5DB)
 import PropTypes from 'prop-types';
 import cx from '../../utils/cx';
 import { formatTimeRange } from '../../utils/dates';
 import styles from './FreeSlot.module.css';
 
-/** variant: week (компактний синій) · day (12px радіус, 13px) · overview (10px радіус, 12px) · list (без позиціонування, h40). */
 export default function FreeSlot({
   start,
   end,

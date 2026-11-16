@@ -1,4 +1,3 @@
-/* EventBlock. Дизайн: 02-week-cards.html, 04-day.html, 01-overview.html, 03-week-timeline.html, 05-month.html */
 .block {
   box-sizing: border-box;
   border: 0;
@@ -48,7 +47,6 @@
   white-space: nowrap;
 }
 
-/* --- тиждень: 36px/год, radius 8, 11/600 + 10 --- */
 .week {
   border-radius: var(--r-chip);
   padding: 4px 7px;
@@ -61,7 +59,6 @@
   font-size: var(--fs-10);
 }
 
-/* --- день: 64px/год, radius 12, 15/700 + 12 --- */
 .day {
   border-radius: var(--r-block);
   padding: 12px 14px;
@@ -81,7 +78,6 @@
   font-size: var(--fs-12);
 }
 
-/* --- огляд: 44px/год, radius 10, 13/600 + 12 --- */
 .overview {
   border-radius: var(--r-input);
   padding: 8px 10px;
@@ -98,7 +94,6 @@
   font-size: var(--fs-12);
 }
 
-/* --- стрічка часу: блок колонкою (назва 12/600 + час 11) --- */
 .timeline {
   border-radius: var(--r-input);
   padding: 7px 10px;
@@ -116,7 +111,6 @@
   opacity: 0.85;
 }
 
-/* --- мобільний: rows 12px radius --- */
 .mobile {
   border-radius: var(--r-block);
   padding: 10px 12px;
@@ -173,7 +167,6 @@
   margin-left: auto;
 }
 
-/* --- нагадування: біла пілюля --- */
 .reminder {
   border: 1px solid #d1d5db;
   border-radius: var(--r-pill);
@@ -216,7 +209,6 @@
   text-overflow: ellipsis;
 }
 
-/* --- задача: блок з чекбоксом --- */
 .task {
   background: var(--card-muted);
   color: var(--ink);
@@ -313,7 +305,6 @@
   font-weight: var(--fw-medium);
 }
 
-/* --- рядок у місяці: час · крапка · назва --- */
 .listRow {
   background: transparent;
   padding: 2px 0;
@@ -345,7 +336,6 @@
   white-space: nowrap;
 }
 
-/* --- чіп: «08:30 Пробіжка» --- */
 .chip {
   border-radius: 6px;
   padding: 3px 7px;
@@ -358,7 +348,6 @@
   justify-content: center;
 }
 
-/* плоскі рядки місяця для нагадувань/задач */
 .listBox {
   flex: none;
 }

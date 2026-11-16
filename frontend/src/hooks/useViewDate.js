@@ -2,7 +2,6 @@ import { useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { parseDateParam, toDateParam, startOfDay } from '../utils/dates';
 
-/** Дата подання календаря живе в URL: ?date=YYYY-MM-DD. За замовчуванням — сьогодні. */
 export default function useViewDate() {
   const [searchParams, setSearchParams] = useSearchParams();
   const param = searchParams.get('date');
@@ -21,7 +20,6 @@ export default function useViewDate() {
     [setSearchParams],
   );
 
-  /** Рядок для збереження ?date= у посиланнях між поданнями */
   const dateSearch = param ? `?date=${param}` : '';
 
   return {

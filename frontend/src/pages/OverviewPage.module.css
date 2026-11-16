@@ -1,6 +1,3 @@
-/* OverviewPage. Дизайн: 01-overview.html (десктоп), 16-mobile.html (мобільний ≤768px). Лише змінні з tokens.css. */
-
-/* --- Десктоп: привітання + сітка 4 колонки --- */
 .desktop {
   display: flex;
   flex-direction: column;
@@ -45,7 +42,6 @@
   }
 }
 
-/* --- Мобільний: дата · тиждень, привітання, смужка днів, «Наступна», список дня --- */
 .mobile {
   display: none;
 }

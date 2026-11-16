@@ -1,4 +1,3 @@
-/* ProfilePage. Дизайн: design/screens/14-profile.html. Лише змінні з src/styles/tokens.css. */
 .layout {
   display: flex;
   flex-wrap: wrap;
@@ -23,7 +22,6 @@
   gap: 16px;
 }
 
-/* Акаунт */
 .main .account {
   flex-direction: row;
   align-items: center;
@@ -48,7 +46,6 @@
   font-weight: var(--fw-semibold);
 }
 
-/* Секції з рядками налаштувань */
 .section {
   overflow: hidden;
 }
@@ -84,18 +81,25 @@
   font-size: var(--fs-12);
   color: var(--ink-secondary);
 }
-/* Кнопки в рядках «Безпека» — як .sel у мокапі: 36px, radius 10 */
+.rowError {
+  font-size: var(--fs-12);
+  color: var(--danger);
+}
 .section .row .rowCtl {
   height: 36px;
   border-radius: var(--r-input);
 }
 
-/* Розкрита форма зміни пароля */
 .passwordForm {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   padding: 0 20px 16px;
+}
+.passwordError {
+  grid-column: 1 / -1;
+  font-size: var(--fs-12);
+  color: var(--danger);
 }
 .passwordActions {
   grid-column: 1 / -1;
@@ -103,9 +107,9 @@
   gap: 8px;
 }
 
-/* Низ: зберегти · вийти */
 .actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 10px;
   padding: 0 4px;
@@ -119,6 +123,10 @@
   font-size: var(--fs-13);
   color: var(--success);
 }
+.failed {
+  font-size: var(--fs-13);
+  color: var(--danger);
+}
 .logout {
   margin-left: auto;
   font-size: var(--fs-13);
@@ -128,8 +136,11 @@
 .logout:hover {
   color: var(--ink);
 }
+.logout:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
-/* Праворуч: головний календар, статистика */
 .heroEyebrow {
   font-size: var(--fs-11);
   font-weight: var(--fw-semibold);

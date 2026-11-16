@@ -1,5 +1,3 @@
-// Дизайн: 02-week-cards.html (пілюлі День · Тиждень · Місяць · Рік, стрілки, заголовок, «Сьогодні»,
-// праворуч Картки | Стрічка часу), 04-day.html (праворуч — смужка днів тижня)
 import PropTypes from 'prop-types';
 import useViewDate from '../../hooks/useViewDate';
 import useAuth from '../../hooks/useAuth';

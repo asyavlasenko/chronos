@@ -1,6 +1,3 @@
-// Дизайн: design/screens/04-day.html
-// Календар · День: сітка 64px/год з великими блоками (опис, аватари, «Приєднатись · 48 хв»), вільні вікна
-// пунктиром, лінія «зараз»; праворуч — «Наступна», міні-місяць і «Далі цього тижня».
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import useViewDate from '../hooks/useViewDate';
@@ -8,7 +5,8 @@ import useAuth from '../hooks/useAuth';
 import useEvents from '../hooks/useEvents';
 import useCalendars from '../hooks/useCalendars';
 import useModals from '../hooks/useModals';
-import { people } from '../mocks/data';
+import useNow from '../hooks/useNow';
+import usePeople from '../hooks/usePeople';
 import {
   addMinutes,
   currentEvent,
@@ -47,6 +45,7 @@ import EventBlock from '../components/calendar/EventBlock';
 import FreeSlot from '../components/calendar/FreeSlot';
 import NowLine from '../components/calendar/NowLine';
 import MiniMonth from '../components/calendar/MiniMonth';
+import { canModifyEvent } from '../modals/eventFormUtils';
 import styles from './DayPage.module.css';
 
 const START_HOUR = 8;
@@ -57,18 +56,8 @@ const TASK_H = 56;
 const REMINDER_H = 36;
 const TASK_MINUTES = 60;
 const FREE_MIN = 60;
+const NOW_TICK_MS = 30000;
 
-/** «Зараз», що оновлюється раз на пів хвилини (лінія «зараз», «через 48 хв»). */
-function useNow(intervalMs = 30000) {
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), intervalMs);
-    return () => clearInterval(id);
-  }, [intervalMs]);
-  return now;
-}
-
-/** «Google Meet» для meet.google.com/…, «Zoom» для zoom.us/…, інакше — як є. */
 function locationLabel(location) {
   if (!location) return '';
   if (/meet\.google\.com/.test(location)) return 'Google Meet';
@@ -77,7 +66,6 @@ function locationLabel(location) {
   return location;
 }
 
-/** Посилання для «Приєднатись»: meet.google.com/… або будь-який http(s)-адрес у полі «місце». */
 function meetingHref(location) {
   if (!location) return null;
   if (/^https?:\/\//.test(location)) return location;
@@ -87,7 +75,6 @@ function meetingHref(location) {
   return null;
 }
 
-/** Вільні вікна ≥ 60 хв між зайнятими інтервалами дня в межах сітки (задача без кінця — 60 хв). */
 function findFreeSlots(day, busyEvents, startHour, endHour) {
   const dayStart = new Date(day.getFullYear(), day.getMonth(), day.getDate(), startHour);
   const dayEnd = new Date(day.getFullYear(), day.getMonth(), day.getDate(), endHour);
@@ -105,7 +92,6 @@ function findFreeSlots(day, busyEvents, startHour, endHour) {
   return slots;
 }
 
-/** Підпис «Приєднатись · 48 хв» / «Приєднатись · зараз» для найближчої або поточної зустрічі. */
 function joinLabel(event, now) {
   const relative = formatRelative(event.startAt, now).replace(/^через /, '');
   return `Приєднатись · ${relative}`;
@@ -116,18 +102,17 @@ export default function DayPage() {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const q = searchParams.get('q') || '';
-  const now = useNow();
+  const now = useNow(NOW_TICK_MS);
+  const people = usePeople();
   const weekStartsOn = user?.weekStartsOn ?? 1;
   const today = isTodayFn(date);
   const isPast = date < startOfDay(now) && !today;
 
-  // Події тижня: з них — сітка дня і список «Далі цього тижня»
   const weekRange = useMemo(() => getViewRange('week', date, weekStartsOn), [date, weekStartsOn]);
   const { events: weekEvents, toggleCompleted } = useEvents({ ...weekRange, q });
   const { byId } = useCalendars();
   const { openDetails, openQuickCreate, detailsEventId } = useModals();
 
-  // Міні-місяць: окремий курсор місяця, дні з подіями — з подій цього місяця
   const [month, setMonth] = useState(() => startOfMonth(date));
   useEffect(() => {
     setMonth(startOfMonth(date));
@@ -147,13 +132,11 @@ export default function DayPage() {
   const reminders = timed.filter((e) => e.type === 'reminder');
   const tasks = dayEvents.filter((e) => e.type === 'task');
 
-  // Найближча/поточна зустріч (лише сьогодні) — «Приєднатись · 48 хв» і обведення
   const nextArrangement = arrangements
     .filter((e) => toDate(e.startAt) > now)
     .sort((a, b) => toDate(a.startAt) - toDate(b.startAt))[0];
   const highlight = today ? currentEvent(arrangements, now) || nextArrangement || null : null;
 
-  // Вільні вікна: не для минулих днів; сьогодні — лише ті, що ще не минули
   let freeSlots = [];
   if (!isPast) {
     freeSlots = findFreeSlots(
@@ -185,6 +168,7 @@ export default function DayPage() {
     .join(' · ');
 
   const defaultDuration = user?.defaultArrangementDuration ?? 60;
+  const canComplete = (e) => canModifyEvent(e, byId[e.calendar], user?.id);
   const onSlotClick = (start) =>
     openQuickCreate({ date: start, startAt: start, endAt: addMinutes(start, defaultDuration) });
   const onFreeSlotClick = (start, end) =>
@@ -202,7 +186,6 @@ export default function DayPage() {
       .join(' · ');
   };
 
-  /** Чіп події для «Далі цього тижня» і подій «весь день»: дедлайн — темний чіп кольору календаря. */
   const renderChip = (e) => {
     if (e.type === 'task' && e.isDeadline) {
       return (
@@ -225,6 +208,7 @@ export default function DayPage() {
         variant="chip"
         onClick={() => openDetails(e.id)}
         onToggleComplete={() => toggleCompleted(e.id)}
+        completable={canComplete(e)}
       />
     );
   };
@@ -279,7 +263,11 @@ export default function DayPage() {
                   gridStartHour: START_HOUR,
                   hourHeight: HOUR_H,
                 });
-                const morning = i === 0 && s.start.getHours() === START_HOUR;
+                const fromStart = i === 0 && s.start.getHours() === START_HOUR;
+                const wholeDay = fromStart && s.end.getHours() === END_HOUR;
+                let label = null;
+                if (wholeDay) label = 'День вільний ·';
+                else if (fromStart) label = `Ранок вільний до ${formatTime(s.end)} ·`;
                 return (
                   <FreeSlot
                     key={s.start.toISOString()}
@@ -288,7 +276,7 @@ export default function DayPage() {
                     end={s.end}
                     top={top + 4}
                     height={height - 8}
-                    label={morning ? `Ранок вільний до ${formatTime(s.end)} ·` : null}
+                    label={label}
                     onClick={onFreeSlotClick}
                   />
                 );
@@ -321,6 +309,7 @@ export default function DayPage() {
                       selected={e.id === detailsEventId}
                       onClick={() => openDetails(e.id)}
                       onToggleComplete={() => toggleCompleted(e.id)}
+                      completable={canComplete(e)}
                     />
                   );
                 }
@@ -348,7 +337,7 @@ export default function DayPage() {
                     top={clampedTop}
                     height={blockHeight}
                     meta={arrangementMeta(e)}
-                    description={e.description || null}
+                    description={blockHeight >= 90 ? e.description || null : null}
                     participants={avatars.length ? avatars : null}
                     action={
                       isHighlight ? (

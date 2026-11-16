@@ -1,4 +1,3 @@
-/* Modal. Дизайн: 11-event-quick-modal.html, 12-event-details.html */
 .overlay {
   position: fixed;
   inset: 0;
@@ -22,7 +21,6 @@
   flex-direction: column;
   animation: rise 0.16s ease-out;
 }
-/* Лише transform: анімація opacity у фоновій вкладці може «зависнути» на 0 і сховати модалку */
 @keyframes rise {
   from {
     transform: translateY(8px);

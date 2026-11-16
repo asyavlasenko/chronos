@@ -1,13 +1,11 @@
-// Дизайн: design/screens/03-week-timeline.html
-// Календар · Тиждень (стрічка часу): дні рядками, години колонками, довжина блоку = тривалість,
-// вертикальна лінія «зараз» через усі дні; праворуч — «Зараз», список календарів і фільтр типів.
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import useViewDate from '../hooks/useViewDate';
 import useAuth from '../hooks/useAuth';
 import useEvents from '../hooks/useEvents';
 import useCalendars from '../hooks/useCalendars';
 import useModals from '../hooks/useModals';
+import useNow from '../hooks/useNow';
 import { addMinutes, groupEventsByDay, nextUpcoming } from '../utils/eventStats';
 import {
   formatDate,
@@ -24,28 +22,19 @@ import DarkCard from '../components/ui/DarkCard';
 import Chip from '../components/ui/Chip';
 import PillButton from '../components/ui/PillButton';
 import TimelineRow from '../components/calendar/TimelineRow';
+import { canModifyEvent } from '../modals/eventFormUtils';
 import styles from './WeekTimelinePage.module.css';
 
 const START_HOUR = 8;
 const END_HOUR = 20;
 const DAY_COL_W = 132;
+const NOW_TICK_MS = 30000;
 const TYPE_OPTIONS = [
   { value: 'arrangement', label: 'Зустрічі' },
   { value: 'reminder', label: 'Нагадування' },
   { value: 'task', label: 'Задачі' },
 ];
 
-/** «Зараз», що оновлюється раз на пів хвилини (для годинника в картці й лінії «зараз»). */
-function useNow(intervalMs = 30000) {
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), intervalMs);
-    return () => clearInterval(id);
-  }, [intervalMs]);
-  return now;
-}
-
-/** Посилання для «Приєднатись»: meet.google.com/… або будь-який http(s)-адрес у полі «місце». */
 function meetingHref(location) {
   if (!location) return null;
   if (/^https?:\/\//.test(location)) return location;
@@ -60,7 +49,7 @@ export default function WeekTimelinePage() {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const q = searchParams.get('q') || '';
-  const now = useNow();
+  const now = useNow(NOW_TICK_MS);
   const weekStartsOn = user?.weekStartsOn ?? 1;
   const days = useMemo(() => getWeekDays(date, weekStartsOn), [date, weekStartsOn]);
   const { from, to } = useMemo(
@@ -93,6 +82,7 @@ export default function WeekTimelinePage() {
       ? null
       : `calc(${DAY_COL_W}px + (100% - ${DAY_COL_W}px) * ${nowMin / ((END_HOUR - START_HOUR) * 60)})`;
 
+  const canComplete = (e) => canModifyEvent(e, byId[e.calendar], user?.id);
   const onSlotClick = (start) =>
     openQuickCreate({
       date: start,
@@ -143,6 +133,7 @@ export default function WeekTimelinePage() {
                   onEventClick={(e) => openDetails(e.id)}
                   onSlotClick={onSlotClick}
                   onToggleComplete={(e) => toggleCompleted(e.id)}
+                  canComplete={canComplete}
                 />
               ))}
             </div>
@@ -205,6 +196,7 @@ export default function WeekTimelinePage() {
               label={c.name}
               checked={!c.isHidden}
               onChange={() => toggleVisibility(c.id)}
+              disabled={c.isMain}
               color={c.color}
               hint={c.isShared ? 'спільний' : null}
             />

@@ -1,14 +1,8 @@
-// Дизайн: 02-week-cards.html (День · Тиждень · Місяць · Рік; Картки | Стрічка часу), 11 (тип події)
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import cx from '../../utils/cx';
 import styles from './SegmentedControl.module.css';
 
-/**
- * options: [{ value, label, to? }]. Якщо є to — рендериться посилання (навігація між поданнями).
- * size: md (30px, контейнер 4px) · sm (28px, контейнер 3px). bg: white | muted (#F3F4F6, тип події).
- * stretch — пункти розтягуються на всю ширину (radiogroup у модалці).
- */
 export default function SegmentedControl({
   options,
   value,

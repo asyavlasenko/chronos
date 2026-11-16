@@ -1,6 +1,7 @@
-// Дизайн: 02-week-cards.html (картка дня: шапка 70px, сітка 36px/год, події, «+ Додати»; сьогодні — темна шапка + --ring-today)
 import PropTypes from 'prop-types';
+import { Link } from 'react-router-dom';
 import cx from '../../utils/cx';
+import { resolveEventColor } from '../../utils/colors';
 import {
   eventToGridPosition,
   formatHours,
@@ -10,6 +11,7 @@ import {
   weekdayIndex,
   WEEKDAYS_SHORT,
   toDate,
+  toDateParam,
 } from '../../utils/dates';
 import { eventShape, calendarShape } from '../../utils/propTypes';
 import HourGrid from './HourGrid';
@@ -20,22 +22,32 @@ import Badge from '../ui/Badge';
 import styles from './DayCard.module.css';
 
 const HOUR_H = 36;
+const FREE_MS = 60 * 60000;
+const STEP_MS = 30 * 60000;
+const MAX_BADGES = 2;
 
-/** Вільні вікна ≥ 60 хв між подіями дня в межах сітки (лише для сьогодні, як у мокапі). */
+function badgeLabel(event) {
+  return event.type === 'task' && event.isDeadline ? 'Дедлайн' : event.title;
+}
+
+function badgeColor(event, calendar) {
+  if (event.type === 'holiday') return 'holidays';
+  return resolveEventColor(event, calendar).key;
+}
+
 function findFreeSlots(day, timed, startHour, endHour, now) {
   const slots = [];
   const dayStart = new Date(day.getFullYear(), day.getMonth(), day.getDate(), startHour);
   const dayEnd = new Date(day.getFullYear(), day.getMonth(), day.getDate(), endHour);
-  let cursor =
-    now > dayStart ? new Date(Math.ceil(now.getTime() / (30 * 60000)) * 30 * 60000) : dayStart;
+  let cursor = now > dayStart ? new Date(Math.ceil(now.getTime() / STEP_MS) * STEP_MS) : dayStart;
   const sorted = [...timed].sort((a, b) => toDate(a.startAt) - toDate(b.startAt));
   sorted.forEach((e) => {
     const s = toDate(e.startAt);
     const en = e.endAt ? toDate(e.endAt) : s;
-    if (s - cursor >= 60 * 60000) slots.push({ start: new Date(cursor), end: new Date(s) });
+    if (s - cursor >= FREE_MS) slots.push({ start: new Date(cursor), end: new Date(s) });
     if (en > cursor) cursor = en;
   });
-  if (dayEnd - cursor >= 60 * 60000) slots.push({ start: new Date(cursor), end: dayEnd });
+  if (dayEnd - cursor >= FREE_MS) slots.push({ start: new Date(cursor), end: dayEnd });
   return slots.slice(0, 2);
 }
 
@@ -49,8 +61,10 @@ export default function DayCard({
   onEventClick,
   onSlotClick,
   onToggleComplete = null,
+  canComplete = null,
   showFreeSlots = true,
   authorsById = null,
+  currentUserId = null,
   className = '',
 }) {
   const today = isTodayFn(date);
@@ -60,11 +74,17 @@ export default function DayCard({
   const busyMinutes = timed
     .filter((e) => e.type === 'arrangement')
     .reduce((sum, e) => sum + durationMinutes(e.startAt, e.endAt), 0);
-  const deadline = allDay.find((e) => e.type === 'task' && e.isDeadline);
-  const holiday = allDay.find((e) => e.type === 'holiday');
+  const dated = allDay.filter((e) => e.startAt);
+  const badges = [
+    ...dated.filter((e) => e.type === 'holiday'),
+    ...dated.filter((e) => e.type !== 'holiday'),
+  ];
+  const shownBadges = badges.length > MAX_BADGES ? badges.slice(0, MAX_BADGES - 1) : badges;
+  const hiddenBadges = badges.length - shownBadges.length;
   const nowMin = today ? nowOffsetMinutes(now, startHour, endHour) : null;
   const freeSlots =
     showFreeSlots && today ? findFreeSlots(date, timed, startHour, endHour, now) : [];
+  const gridHeight = (endHour - startHour) * HOUR_H;
 
   return (
     <section
@@ -72,7 +92,7 @@ export default function DayCard({
       aria-label={`${WEEKDAYS_SHORT[weekdayIndex(date)]} ${date.getDate()}${today ? ', сьогодні' : ''}`}
     >
       <div className={styles.head}>
-        <div>
+        <div className={styles.day}>
           <span className={styles.w}>
             {WEEKDAYS_SHORT[weekdayIndex(date)]}
             {today ? ' · сьогодні' : ''}
@@ -80,21 +100,33 @@ export default function DayCard({
           <span className={styles.n}>{date.getDate()}</span>
         </div>
         <span className={styles.right}>
-          {holiday ? (
-            <Badge variant="tint" color="holidays" size="sm">
-              {holiday.title}
-            </Badge>
-          ) : null}
-          {deadline ? (
+          {shownBadges.map((e) => (
             <Badge
+              key={e.id}
+              as="button"
+              type="button"
               variant="tint"
-              color={calendarsById[deadline.calendar]?.color || 'purple'}
+              color={badgeColor(e, calendarsById[e.calendar])}
               size="sm"
+              title={e.title}
+              className={styles.badge}
+              onClick={() => onEventClick(e)}
             >
-              Дедлайн
+              {badgeLabel(e)}
+            </Badge>
+          ))}
+          {hiddenBadges > 0 ? (
+            <Badge
+              as={Link}
+              to={`/calendar/day?date=${toDateParam(date)}`}
+              variant="muted"
+              size="sm"
+              className={styles.badge}
+            >
+              + ще {hiddenBadges}
             </Badge>
           ) : null}
-          {!holiday && !deadline && busyMinutes > 0 ? (
+          {badges.length === 0 && busyMinutes > 0 ? (
             <span className={styles.h}>{formatHours(busyMinutes)}</span>
           ) : null}
         </span>
@@ -113,12 +145,11 @@ export default function DayCard({
             gridStartHour: startHour,
             hourHeight: HOUR_H,
           });
-          const author =
-            authorsById && e.creator && e.creator !== 'u-me' ? authorsById[e.creator] : null;
+          const isForeign = Boolean(e.creator) && e.creator !== currentUserId;
+          const author = authorsById && isForeign ? authorsById[e.creator] || null : null;
           let blockHeight = 22;
           if (e.type === 'arrangement') blockHeight = height;
           else if (e.type === 'task') blockHeight = HOUR_H;
-          const gridHeight = (endHour - startHour) * HOUR_H;
           const clampedTop = Math.max(0, Math.min(top, gridHeight - blockHeight));
           return (
             <EventBlock
@@ -132,6 +163,7 @@ export default function DayCard({
               author={author}
               onClick={onEventClick}
               onToggleComplete={onToggleComplete}
+              completable={canComplete ? canComplete(e) : true}
             />
           );
         })}
@@ -178,6 +210,7 @@ DayCard.propTypes = {
   onEventClick: PropTypes.func.isRequired,
   onSlotClick: PropTypes.func.isRequired,
   onToggleComplete: PropTypes.func,
+  canComplete: PropTypes.func,
   showFreeSlots: PropTypes.bool,
   authorsById: PropTypes.objectOf(
     PropTypes.shape({
@@ -186,5 +219,6 @@ DayCard.propTypes = {
       color: PropTypes.string,
     }),
   ),
+  currentUserId: PropTypes.string,
   className: PropTypes.string,
 };

@@ -1,4 +1,3 @@
-// Дизайн: 02-week-cards.html — лейаут маршрутів /calendar/*: тулбар + подання. Дата — ?date=, подання — з URL.
 import { Outlet, useLocation } from 'react-router-dom';
 import CalendarToolbar from './CalendarToolbar';
 

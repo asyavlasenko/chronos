@@ -1,4 +1,3 @@
-// Дизайн: design/screens/01-overview.html (темна картка «Наступна»), 16-mobile.html (темний рядок «Наступна · через 48 хв»)
 import PropTypes from 'prop-types';
 import cx from '../../utils/cx';
 import { formatRelative, formatTimeRange } from '../../utils/dates';
@@ -12,7 +11,6 @@ import styles from './NextEventCard.module.css';
 
 const EMPTY_TEXT = 'Сьогодні більше нічого';
 
-/** variant: card (темна картка в сітці) · row (рядок на мобільному). event = null → «Сьогодні більше нічого». */
 export default function NextEventCard({
   event = null,
   now,

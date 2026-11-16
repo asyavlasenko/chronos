@@ -1,14 +1,21 @@
-/** GET /users/me → { user } */
+import client from './client';
+
 export async function getMe() {
-  throw new Error('TODO(@teammate2): users.api.getMe');
+  const { data } = await client.get('/users/me');
+  return data;
 }
 
-/** PATCH /users/me { name?, country?, timezone?, defaultArrangementDuration?, weekStartsOn?, … } → { user } */
-export async function updateMe() {
-  throw new Error('TODO(@teammate2): users.api.updateMe');
+export async function updateMe(patch) {
+  const { data } = await client.patch('/users/me', patch);
+  return data;
 }
 
-/** POST /users/me/password { currentPassword, newPassword } → 204 */
-export async function changePassword() {
-  throw new Error('TODO(@teammate2): users.api.changePassword');
+export async function changePassword({ currentPassword, newPassword }) {
+  const { data } = await client.post('/users/me/password', { currentPassword, newPassword });
+  return data;
+}
+
+export async function logoutEverywhere() {
+  const { data } = await client.post('/users/me/logout-everywhere');
+  return data;
 }

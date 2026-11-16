@@ -1,13 +1,10 @@
-// Дизайн: design/screens/03-week-timeline.html
-// Рядок дня у стрічці часу: ліворуч посилання на день («Пн 2» + підпис), праворуч 72px-смуга з годинами
-// колонками. Довжина блоку = тривалість (left/width у %). Сьогодні — фон --accent-tint-soft, підпис --accent.
-import { useRef } from 'react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import cx from '../../utils/cx';
 import { resolveEventColors } from '../../utils/colors';
 import {
   durationMinutes,
+  formatDate,
   formatHours,
   isToday as isTodayFn,
   toDate,
@@ -32,13 +29,11 @@ const TASK_MINUTES = 60;
 const FREE_MIN = 60;
 const STEP = 30;
 
-/** Хвилини від початку сітки до startAt події (може бути від'ємним — подія почалась раніше за сітку). */
 function minutesFromGridStart(value, startHour) {
   const d = toDate(value);
   return d.getHours() * 60 + d.getMinutes() - startHour * 60;
 }
 
-/** Підпис під назвою дня: «3 події · 4 год» · «2 події · 1 нагад.» · «сьогодні · 5,5 год» · «дедлайн · 1 подія». */
 function daySummary({ today, arrangements, reminders, hasDeadline, busy }) {
   if (today) return `сьогодні · ${formatHours(busy)}`;
   if (hasDeadline) return `дедлайн · ${pluralEvents(arrangements)}`;
@@ -47,7 +42,6 @@ function daySummary({ today, arrangements, reminders, hasDeadline, busy }) {
   return `${pluralEvents(arrangements)} · ${formatHours(busy)}`;
 }
 
-/** Вільні вікна ≥ 60 хв від «зараз» до кінця сітки (лише для сьогодні, як «+ вільно» у мокапі). */
 function findFreeSlots(day, busyEvents, startHour, endHour, now) {
   const dayStart = new Date(day.getFullYear(), day.getMonth(), day.getDate(), startHour);
   const dayEnd = new Date(day.getFullYear(), day.getMonth(), day.getDate(), endHour);
@@ -77,9 +71,9 @@ export default function TimelineRow({
   onEventClick,
   onSlotClick,
   onToggleComplete = null,
+  canComplete = null,
   showFreeSlots = true,
 }) {
-  const rowRef = useRef(null);
   const today = isTodayFn(date);
   const totalMinutes = (endHour - startHour) * 60;
   const pct = (minutes) => (minutes / totalMinutes) * 100;
@@ -121,11 +115,14 @@ export default function TimelineRow({
         )
       : [];
 
-  const handleRowClick = (e) => {
-    if (e.target !== rowRef.current) return;
-    const rect = rowRef.current.getBoundingClientRect();
-    const fraction = Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1);
-    const minutes = Math.floor((fraction * totalMinutes) / STEP) * STEP;
+  const handleTrackClick = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const position = e.detail === 0 ? 0 : (e.clientX - rect.left) / rect.width;
+    const fraction = Math.min(Math.max(position, 0), 1);
+    const minutes = Math.min(
+      Math.floor((fraction * totalMinutes) / STEP) * STEP,
+      totalMinutes - STEP,
+    );
     onSlotClick(new Date(date.getFullYear(), date.getMonth(), date.getDate(), startHour, minutes));
   };
 
@@ -146,16 +143,20 @@ export default function TimelineRow({
         <span className={styles.daySummary}>{summary}</span>
       </Link>
 
-      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
       <div
-        ref={rowRef}
         className={styles.track}
         style={{
           height: ROW_H,
           backgroundImage: `repeating-linear-gradient(to right, var(--line-soft) 0, var(--line-soft) 1px, transparent 1px, transparent calc(100% / ${endHour - startHour}))`,
         }}
-        onClick={handleRowClick}
       >
+        <button
+          type="button"
+          tabIndex={-1}
+          className={styles.slots}
+          aria-label={`Створити подію: ${formatDate(date, 'weekday-long')}`}
+          onClick={handleTrackClick}
+        />
         {allDay.length ? (
           <div className={styles.allDayRow}>
             {allDay.map((e) => (
@@ -209,6 +210,7 @@ export default function TimelineRow({
               selected={e.id === selectedEventId}
               onClick={onEventClick}
               onToggleComplete={onToggleComplete}
+              completable={canComplete ? canComplete(e) : true}
               className={cx(styles.block, compact && styles.blockCompact)}
             />
           );
@@ -256,5 +258,6 @@ TimelineRow.propTypes = {
   onEventClick: PropTypes.func.isRequired,
   onSlotClick: PropTypes.func.isRequired,
   onToggleComplete: PropTypes.func,
+  canComplete: PropTypes.func,
   showFreeSlots: PropTypes.bool,
 };

@@ -1,25 +1,60 @@
-// Дизайн: design/screens/01-overview.html (картка «Спільні календарі»: квадратик кольору, назва, стек аватарів, ролі, запрошення по email)
 import { Fragment, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
+import { parseApiError } from '../../api/errors';
+import useCalendars from '../../hooks/useCalendars';
+import useToast from '../../hooks/useToast';
 import { colorVars } from '../../utils/colors';
-import { participantsToAvatars } from '../../utils/eventStats';
 import { calendarShape } from '../../utils/propTypes';
 import Card from '../ui/Card';
 import Input from '../ui/Input';
 import PillButton from '../ui/PillButton';
 import { AvatarStack } from '../ui/Avatar';
+import { membersToAvatars } from '../calendars/members';
 import { membersSummary, peopleShape } from './overviewUtils';
 import styles from './SharedCalendarsCard.module.css';
 
-export default function SharedCalendarsCard({ calendars, people = {}, className = '' }) {
-  const [email, setEmail] = useState('');
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const INVITE_ROLE = 'viewer';
 
-  const submit = (e) => {
+export default function SharedCalendarsCard({
+  calendars,
+  people = {},
+  meId = null,
+  className = '',
+}) {
+  const { shareCalendar } = useCalendars();
+  const { notifySuccess, notifyError } = useToast();
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const target = calendars.find((c) => c.myRole === 'owner') || null;
+
+  const submit = async (e) => {
     e.preventDefault();
-    if (!email.trim() || !calendars.length) return;
-    // TODO(@teammate2): calendars.api.shareCalendar(calendars[0].id, { email, role: 'viewer' })
-    setEmail('');
+    if (busy || !target) return;
+    const value = email.trim().toLowerCase();
+    if (!EMAIL_RE.test(value)) {
+      setError('Введи email учасника');
+      return;
+    }
+
+    setBusy(true);
+    setError(null);
+    try {
+      await shareCalendar(target.id, { email: value, role: INVITE_ROLE });
+      setEmail('');
+      notifySuccess(`Запрошення в «${target.name}» надіслано`);
+    } catch (err) {
+      const parsed = parseApiError(err);
+      if (parsed.status === 409 || parsed.status === 400) {
+        setError(parsed.fields.email || parsed.message);
+      } else {
+        notifyError(err);
+      }
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -30,29 +65,49 @@ export default function SharedCalendarsCard({ calendars, people = {}, className 
             <span className={styles.dot} style={{ background: colorVars(c.color).base }} />
             <span className={styles.name}>{c.name}</span>
             <AvatarStack
-              items={participantsToAvatars(c.members || [], people)}
+              items={membersToAvatars(c.members || [], people)}
               size={22}
               ring="var(--card)"
             />
           </Link>
-          <span className={styles.roles}>{membersSummary(c.members || [])}</span>
+          <span className={styles.roles}>{membersSummary(c.members || [], meId)}</span>
         </Fragment>
       ))}
       {!calendars.length ? <span className={styles.roles}>Немає спільних календарів</span> : null}
-      <form className={styles.invite} onSubmit={submit}>
-        <Input
-          type="email"
-          size="xs"
-          placeholder="email"
-          aria-label="Email для запрошення"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className={styles.email}
-        />
-        <PillButton type="submit" shape="rounded" size="xs">
-          Запросити
-        </PillButton>
-      </form>
+      {target ? (
+        <form className={styles.invite} onSubmit={submit} noValidate>
+          <div className={styles.inviteRow}>
+            <Input
+              type="email"
+              size="xs"
+              placeholder="email"
+              aria-label={`Email для запрошення в календар «${target.name}»`}
+              title={`Запросити в календар «${target.name}»`}
+              value={email}
+              invalid={Boolean(error)}
+              aria-invalid={Boolean(error)}
+              disabled={busy}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (error) setError(null);
+              }}
+              className={styles.email}
+            />
+            <PillButton type="submit" shape="rounded" size="xs" disabled={busy}>
+              Запросити
+            </PillButton>
+          </div>
+          {error ? (
+            <span className={styles.error} role="alert">
+              {error}
+            </span>
+          ) : null}
+        </form>
+      ) : (
+        <Link to="/calendars" className={styles.create}>
+          Створити спільний календар →
+        </Link>
+      )}
     </Card>
   );
 }
@@ -60,5 +115,6 @@ export default function SharedCalendarsCard({ calendars, people = {}, className 
 SharedCalendarsCard.propTypes = {
   calendars: PropTypes.arrayOf(calendarShape).isRequired,
   people: peopleShape,
+  meId: PropTypes.string,
   className: PropTypes.string,
 };

@@ -1,8 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// У dev усі запити на /api проксуються на backend (локально — localhost:4000,
-// у docker-compose.dev.yml — http://backend:4000 через VITE_API_PROXY).
 export default defineConfig({
   plugins: [react()],
   server: {

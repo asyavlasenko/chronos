@@ -1,4 +1,3 @@
-/* TimelineRow. Дизайн: design/screens/03-week-timeline.html (.dl, .row, .ev, .rem, смужка «Весь день») */
 .row {
   display: flex;
 }
@@ -6,7 +5,6 @@
   background: var(--accent-tint-soft);
 }
 
-/* --- колонка дня (посилання на /calendar/day) --- */
 .dayLink {
   flex: 0 0 132px;
   box-sizing: border-box;
@@ -49,17 +47,24 @@
   font-weight: var(--fw-semibold);
 }
 
-/* --- смуга годин: колонки через repeating-linear-gradient (інлайн, бо кількість годин — проп) --- */
 .track {
   position: relative;
   flex: 1;
   min-width: 0;
   box-sizing: border-box;
   border-top: 1px solid var(--line-grid);
+}
+.slots {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  padding: 0;
+  background: transparent;
   cursor: cell;
 }
 
-/* Зустріч/задача: top 8, height 56, radius 10, padding 7px 10px (мокап .ev) */
 .row .block {
   border-radius: var(--r-input);
   padding: 7px 10px;
@@ -68,7 +73,6 @@
   padding: 4px 10px;
 }
 
-/* Нагадування: пілюля шириною за вмістом (без розтягування до правого краю), ближче до кінця — від правого краю */
 .row .track .rem {
   right: auto;
   width: auto;
@@ -81,7 +85,6 @@
   right: 8px;
 }
 
-/* Подія «весь день»: тонка смужка зверху рядка кольором календаря */
 .allDayRow {
   position: absolute;
   left: 0;
@@ -114,7 +117,6 @@
   filter: brightness(0.95);
 }
 
-/* Вільне вікно «+ вільно» (лише сьогодні): обгортка задає left/width у %, FreeSlot заповнює її */
 .freeWrap {
   position: absolute;
   box-sizing: border-box;

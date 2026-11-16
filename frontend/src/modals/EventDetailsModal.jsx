@@ -1,13 +1,12 @@
-// Дизайн: design/screens/12-event-details.html
-// Деталі події (?event=<id>, 560px, top 90): бейдж календаря, Редагувати/Видалити, час, посилання,
-// нагадування, опис, учасники зі статусами, запросити по email. Свято — лише назва, дата й примітка.
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
+import { parseApiError } from '../api/errors';
 import useModals from '../hooks/useModals';
 import useEvents from '../hooks/useEvents';
 import useCalendars from '../hooks/useCalendars';
 import useAuth from '../hooks/useAuth';
-import { people } from '../mocks/data';
+import usePeople from '../hooks/usePeople';
+import useToast from '../hooks/useToast';
 import cx from '../utils/cx';
 import {
   durationMinutes,
@@ -31,12 +30,13 @@ import PillButton from '../components/ui/PillButton';
 import IconButton from '../components/ui/IconButton';
 import Icon from '../components/ui/Icon';
 import {
-  REMINDER_OPTIONS,
   TYPE_LABELS,
+  canModifyEvent,
   isValidEmail,
   looksLikeUrl,
-  participantFromEmail,
+  normalizeEmail,
   reminderLabel,
+  reminderOptions,
   reminderToValue,
   valueToReminder,
   withProtocol,
@@ -52,10 +52,10 @@ const STATUS = {
     plural: ['відхилив', 'відхилили', 'відхилили'],
   },
 };
-const HOLIDAY_NOTE = 'Державне свято · календар «Свята України» (тільки читання)';
 const CLOSE_ID = 'ev-details-close';
+const CANCEL_DELETE_ID = 'ev-details-cancel-delete';
+const HOLIDAY_ID_PREFIX = 'holiday-';
 
-/** «2 прийняли · 1 очікує» за статусами (без організатора). */
 function statusSummary(participants) {
   return Object.keys(STATUS)
     .map((key) => {
@@ -66,15 +66,14 @@ function statusSummary(participants) {
     .join(' · ');
 }
 
-/** Рядки учасників: організатор (creator) завжди перший, навіть якщо його немає в participants. */
-function participantRows(event) {
+function participantRows(event, people) {
   const list = event.participants || [];
   if (!event.creator || list.some((p) => p.user === event.creator)) return list;
   const person = people[event.creator];
   return [
     {
       user: event.creator,
-      name: person?.name || 'Організатор',
+      name: person?.name || event.creatorName || '',
       email: person?.email || '',
       status: 'accepted',
     },
@@ -82,58 +81,73 @@ function participantRows(event) {
   ];
 }
 
+function metaParts(event) {
+  const start = event.startAt ? toDate(event.startAt) : null;
+  const end = event.endAt ? toDate(event.endAt) : null;
+  const isTask = event.type === 'task';
+
+  if (!start) return [isTask ? 'Без дедлайну' : 'Дата не вказана'];
+  if (isTask) {
+    return [`Дедлайн: ${formatDate(start, 'weekday-long')}`, !event.allDay && formatTime(start)];
+  }
+  if (event.type === 'holiday' || event.allDay) {
+    return [formatDate(start, 'weekday-long'), 'весь день'];
+  }
+  return [
+    formatDate(start, 'weekday-long'),
+    formatTimeRange(start, end),
+    end && formatDuration(durationMinutes(start, end)),
+  ];
+}
+
+function sourceText(event) {
+  const name = event.sourceCalendar?.name;
+  return name ? `Подія з календаря «${name}»` : 'Подія з чужого календаря';
+}
+
 function EventDetails({ event, onClose }) {
   const { byId } = useCalendars();
   const { user } = useAuth();
-  const { deleteEvent, updateEvent, toggleCompleted } = useEvents();
+  const people = usePeople();
+  const { notifySuccess } = useToast();
+  const { deleteEvent, updateEvent, toggleCompleted, inviteToEvent } = useEvents();
   const [editingReminder, setEditingReminder] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteError, setInviteError] = useState(null);
+  const [isInviting, setIsInviting] = useState(false);
+  const isMounted = useRef(true);
+  const inFlight = useRef(false);
 
-  // Modal сам фокусує першу кнопку (це «Видалити»); безпечніше починати з «Закрити».
   useEffect(() => {
-    const t = setTimeout(() => document.getElementById(CLOSE_ID)?.focus(), 0);
-    return () => clearTimeout(t);
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
   }, []);
+
+  useEffect(() => {
+    if (confirmingDelete) document.getElementById(CANCEL_DELETE_ID)?.focus();
+  }, [confirmingDelete]);
 
   const calendar = byId[event.calendar] || null;
   const calendarColor = calendar?.color || 'graphite';
   const isHoliday = event.type === 'holiday';
   const isTask = event.type === 'task';
-  const start = event.startAt ? toDate(event.startAt) : null;
-  const end = event.endAt ? toDate(event.endAt) : null;
+  const canEdit = canModifyEvent(event, calendar, user?.id);
+  const showRelative = Boolean(event.startAt) && !isHoliday && !isTask && !event.allDay;
+  const relative = showRelative ? formatRelative(event.startAt) : '';
 
-  // «Четвер, 5 листопада · 11:00 – 12:00 · 60 хв» + «через 48 хв» окремо (акцент)
-  let metaParts = [];
-  if (!start) metaParts = [isTask ? 'Без дедлайну' : 'Дата не вказана'];
-  else if (isHoliday) metaParts = [formatDate(start, 'weekday-long'), 'весь день'];
-  else if (isTask) {
-    metaParts = [
-      `Дедлайн: ${formatDate(start, 'weekday-long')}`,
-      !event.allDay && formatTime(start),
-    ];
-  } else if (event.allDay) metaParts = [formatDate(start, 'weekday-long'), 'весь день'];
-  else {
-    metaParts = [
-      formatDate(start, 'weekday-long'),
-      formatTimeRange(start, end),
-      end && formatDuration(durationMinutes(start, end)),
-    ];
-  }
-  const showRelative = start && !isHoliday && !isTask && !event.allDay;
-  const relative = showRelative ? formatRelative(start) : '';
-
-  const rows = useMemo(() => participantRows(event), [event]);
-  const avatars = useMemo(() => participantsToAvatars(rows, people), [rows]);
+  const rows = useMemo(() => participantRows(event, people), [event, people]);
+  const avatars = useMemo(() => participantsToAvatars(rows, people), [rows, people]);
   const guests = rows.filter((p) => p.user !== event.creator);
   const summary = statusSummary(guests);
+  const reminderValue = reminderToValue(event.reminderMinutesBefore);
 
   const isUrl = looksLikeUrl(event.location);
   const href = isUrl ? withProtocol(event.location.trim()) : null;
 
   const onDelete = () => {
-    // eslint-disable-next-line no-alert
-    if (!window.confirm(`Видалити подію «${event.title}»?`)) return;
     deleteEvent(event.id);
     onClose();
   };
@@ -143,22 +157,38 @@ function EventDetails({ event, onClose }) {
     setEditingReminder(false);
   };
 
-  const onInvite = (e) => {
+  const onInvite = async (e) => {
     e.preventDefault();
-    const email = inviteEmail.trim().toLowerCase();
+    if (inFlight.current) return;
+
+    const email = normalizeEmail(inviteEmail);
     if (!isValidEmail(email)) {
       setInviteError('Некоректний email');
+      return;
+    }
+    if (email === normalizeEmail(user?.email)) {
+      setInviteError('Свій email додавати не потрібно');
       return;
     }
     if (rows.some((p) => p.email === email)) {
       setInviteError('Уже серед учасників');
       return;
     }
-    updateEvent(event.id, (prev) => ({
-      participants: [...(prev.participants || []), participantFromEmail(email)],
-    }));
-    setInviteEmail('');
+
+    inFlight.current = true;
+    setIsInviting(true);
     setInviteError(null);
+    try {
+      await inviteToEvent(event.id, [email]);
+      notifySuccess(`Запрошення надіслано на ${email}`);
+      if (isMounted.current) setInviteEmail('');
+    } catch (err) {
+      const { message, fields } = parseApiError(err);
+      if (isMounted.current) setInviteError(Object.values(fields)[0] || message);
+    } finally {
+      inFlight.current = false;
+      if (isMounted.current) setIsInviting(false);
+    }
   };
 
   return (
@@ -174,7 +204,23 @@ function EventDetails({ event, onClose }) {
           {calendar?.name || 'Календар'} · {TYPE_LABELS[event.type]}
         </Badge>
         <span className={styles.actions}>
-          {isHoliday ? null : (
+          {canEdit && confirmingDelete ? (
+            <>
+              <span className={styles.confirm}>Видалити подію?</span>
+              <PillButton variant="danger" size="xs" icon="trash" iconSize={13} onClick={onDelete}>
+                Так, видалити
+              </PillButton>
+              <PillButton
+                id={CANCEL_DELETE_ID}
+                variant="secondary"
+                size="xs"
+                onClick={() => setConfirmingDelete(false)}
+              >
+                Скасувати
+              </PillButton>
+            </>
+          ) : null}
+          {canEdit && !confirmingDelete ? (
             <>
               <PillButton
                 variant="secondary"
@@ -185,11 +231,17 @@ function EventDetails({ event, onClose }) {
               >
                 Редагувати
               </PillButton>
-              <PillButton variant="danger" size="xs" icon="trash" iconSize={13} onClick={onDelete}>
+              <PillButton
+                variant="danger"
+                size="xs"
+                icon="trash"
+                iconSize={13}
+                onClick={() => setConfirmingDelete(true)}
+              >
                 Видалити
               </PillButton>
             </>
-          )}
+          ) : null}
           <IconButton
             id={CLOSE_ID}
             icon="x"
@@ -205,7 +257,7 @@ function EventDetails({ event, onClose }) {
       <div>
         <h1 className={styles.title}>{event.title}</h1>
         <span className={styles.meta}>
-          {metaParts.filter(Boolean).join(' · ')}
+          {metaParts(event).filter(Boolean).join(' · ')}
           {relative ? (
             <>
               {' · '}
@@ -215,7 +267,7 @@ function EventDetails({ event, onClose }) {
             </>
           ) : null}
         </span>
-        {isTask ? (
+        {isTask && canEdit ? (
           <label htmlFor="ev-done" className={styles.done}>
             <Checkbox
               id="ev-done"
@@ -226,12 +278,26 @@ function EventDetails({ event, onClose }) {
             Виконано
           </label>
         ) : null}
+        {isTask && !canEdit && event.isCompleted ? (
+          <span className={styles.doneBadge}>
+            <Badge variant="success">виконано</Badge>
+          </span>
+        ) : null}
       </div>
 
       {isHoliday ? (
-        <p className={styles.holidayNote}>{HOLIDAY_NOTE}</p>
+        <p className={styles.holidayNote}>
+          Державне свято · календар «{calendar?.name || 'Свята'}» (тільки читання)
+        </p>
       ) : (
         <div className={styles.rows}>
+          {event.isInvited ? (
+            <div className={styles.row}>
+              <Icon name="calendar" size={16} className={styles.rowIcon} />
+              <span>{sourceText(event)}</span>
+            </div>
+          ) : null}
+
           {event.location ? (
             <div className={styles.row}>
               <Icon name={isUrl ? 'video' : 'map-pin'} size={16} className={styles.rowIcon} />
@@ -258,25 +324,27 @@ function EventDetails({ event, onClose }) {
 
           <div className={styles.row}>
             <Icon name="bell" size={16} className={styles.rowIcon} />
-            {editingReminder ? (
+            {canEdit && editingReminder ? (
               <Select
                 size="xs"
                 aria-label="Нагадати"
-                options={REMINDER_OPTIONS}
-                value={reminderToValue(event.reminderMinutesBefore)}
+                options={reminderOptions(reminderValue)}
+                value={reminderValue}
                 onChange={onReminderChange}
               />
             ) : (
               <span>{reminderLabel(event.reminderMinutesBefore)}</span>
             )}
-            <PillButton
-              variant="accent"
-              size="xs"
-              className={styles.change}
-              onClick={() => setEditingReminder((v) => !v)}
-            >
-              {editingReminder ? 'Готово' : 'Змінити'}
-            </PillButton>
+            {canEdit ? (
+              <PillButton
+                variant="accent"
+                size="xs"
+                className={styles.change}
+                onClick={() => setEditingReminder((v) => !v)}
+              >
+                {editingReminder ? 'Готово' : 'Змінити'}
+              </PillButton>
+            ) : null}
           </div>
 
           {event.description ? (
@@ -295,39 +363,55 @@ function EventDetails({ event, onClose }) {
             {summary ? <span className={styles.summary}>{summary}</span> : null}
           </div>
           {rows.map((p, i) => {
-            const isMe = p.user === user?.id;
+            const person = p.user ? people[p.user] : null;
             const isOrganizer = Boolean(p.user) && p.user === event.creator;
+            const name = person?.isMe ? 'Ти' : p.name || person?.name || '';
+            const note = isOrganizer ? 'організатор' : p.email;
             const status = !isOrganizer && STATUS[p.status];
             return (
               <div key={p.user || p.email} className={styles.row}>
-                <Avatar initials={avatars[i].initials} color={avatars[i].color} size={26} />
+                {avatars[i].initials ? (
+                  <Avatar initials={avatars[i].initials} color={avatars[i].color} size={26} />
+                ) : (
+                  <span className={styles.anon} aria-hidden="true">
+                    <Icon name="user" size={14} />
+                  </span>
+                )}
                 <span className={styles.person}>
-                  {isMe ? 'Ти' : p.name || avatars[i].name}
-                  <span className={styles.muted}> · {isOrganizer ? 'організатор' : p.email}</span>
+                  {name || (isOrganizer ? 'Організатор' : p.email)}
+                  {name ? <span className={styles.muted}> · {note}</span> : null}
                 </span>
                 {status ? <Badge variant={status.variant}>{status.label}</Badge> : null}
               </div>
             );
           })}
-          <form className={styles.invite} onSubmit={onInvite} noValidate>
-            <Input
-              type="email"
-              size="sm"
-              placeholder="Запросити ще по email"
-              aria-label="Email для запрошення"
-              value={inviteEmail}
-              invalid={Boolean(inviteError)}
-              onChange={(e) => {
-                setInviteEmail(e.target.value);
-                if (inviteError) setInviteError(null);
-              }}
-              className={styles.inviteInput}
-            />
-            <PillButton type="submit" variant="secondary" shape="rounded" size="sm">
-              Надіслати
-            </PillButton>
-          </form>
-          {inviteError ? (
+          {canEdit ? (
+            <form className={styles.invite} onSubmit={onInvite} noValidate>
+              <Input
+                type="email"
+                size="sm"
+                placeholder="Запросити ще по email"
+                aria-label="Email для запрошення"
+                value={inviteEmail}
+                invalid={Boolean(inviteError)}
+                onChange={(e) => {
+                  setInviteEmail(e.target.value);
+                  if (inviteError) setInviteError(null);
+                }}
+                className={styles.inviteInput}
+              />
+              <PillButton
+                type="submit"
+                variant="secondary"
+                shape="rounded"
+                size="sm"
+                disabled={isInviting}
+              >
+                {isInviting ? 'Надсилаємо…' : 'Надіслати'}
+              </PillButton>
+            </form>
+          ) : null}
+          {canEdit && inviteError ? (
             <span className={styles.error} role="alert">
               {inviteError}
             </span>
@@ -343,18 +427,22 @@ EventDetails.propTypes = {
   onClose: PropTypes.func.isRequired,
 };
 
-/** Відкрита, коли в URL є ?event=<id> і подія існує (у т.ч. свято). Якщо id є, а події немає — закриваємо. */
 export default function EventDetailsModal() {
   const { detailsEventId, closeDetails } = useModals();
-  const { getEvent, holidayEvents } = useEvents();
+  const { getEvent, holidayEvents, isLoading } = useEvents();
   const event = useMemo(() => {
     if (!detailsEventId) return null;
     return getEvent(detailsEventId) || holidayEvents.find((e) => e.id === detailsEventId) || null;
   }, [detailsEventId, getEvent, holidayEvents]);
+  const isStale =
+    Boolean(detailsEventId) &&
+    !event &&
+    !isLoading &&
+    !detailsEventId.startsWith(HOLIDAY_ID_PREFIX);
 
   useEffect(() => {
-    if (detailsEventId && !event) closeDetails();
-  }, [detailsEventId, event, closeDetails]);
+    if (isStale) closeDetails();
+  }, [isStale, closeDetails]);
 
   if (!event) return null;
   return (
@@ -366,6 +454,7 @@ export default function EventDetailsModal() {
       top={90}
       padding={22}
       gap={16}
+      initialFocus={`#${CLOSE_ID}`}
     >
       <EventDetails key={event.id} event={event} onClose={closeDetails} />
     </Modal>

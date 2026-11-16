@@ -1,4 +1,3 @@
-// Дизайн: design/screens/01-overview.html (картка «Сьогодні»: сітка 44px/год 08:00–20:00, вільні вікна, лінія «зараз»)
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import cx from '../../utils/cx';
@@ -57,7 +56,6 @@ export default function TodayTimeline({
   });
   const nowMin = today ? nowOffsetMinutes(now, START_HOUR, END_HOUR) : null;
 
-  // «11:00 – 12:00 · Робота · Максим, Оля» — час · календар · учасники (без себе)
   const metaFor = (e) =>
     [
       formatTimeRange(e.startAt, e.endAt),

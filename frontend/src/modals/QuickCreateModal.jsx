@@ -1,13 +1,12 @@
-// Дизайн: design/screens/11-event-quick-modal.html
-// Швидке створення по кліку на слот (480px, top 130): назва з підкресленням, тип, дата/час,
-// календар, учасники, «Створити» (Enter), «Більше опцій →» переносить введене на /events/new.
 import { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
+import { parseApiError } from '../api/errors';
 import useModals from '../hooks/useModals';
 import useEvents from '../hooks/useEvents';
 import useCalendars from '../hooks/useCalendars';
 import useAuth from '../hooks/useAuth';
+import useToast from '../hooks/useToast';
 import cx from '../utils/cx';
 import { colorVars } from '../utils/colors';
 import { formatDate, toDate, toDateParam } from '../utils/dates';
@@ -22,31 +21,42 @@ import IconButton from '../components/ui/IconButton';
 import Icon from '../components/ui/Icon';
 import ParticipantsInput from './ParticipantsInput';
 import {
+  TIME_RE,
   TYPE_OPTIONS,
   calendarOptions,
   combineDateTime,
   isWritableCalendar,
+  pickWritableCalendarId,
   roundUpToStep,
+  splitApiErrors,
   toTimeParam,
 } from './eventFormUtils';
 import styles from './QuickCreateModal.module.css';
 
 const TYPE_SEGMENTS = TYPE_OPTIONS.map((t) => ({ value: t.value, label: t.label }));
+const TITLE_SELECTOR = 'input[name="title"]';
+const FIELD_MAP = {
+  title: 'title',
+  startAt: 'time',
+  endAt: 'time',
+  calendar: 'calendar',
+  participants: 'participants',
+};
 
 function QuickCreateForm({ initial, onClose }) {
   const { createEvent } = useEvents();
   const { calendars, byId } = useCalendars();
   const { user } = useAuth();
+  const { notifyError } = useToast();
   const duration = user?.defaultArrangementDuration ?? 60;
-  const formRef = useRef(null);
+  const isMounted = useRef(true);
+  const inFlight = useRef(false);
 
   const [form, setForm] = useState(() => {
-    const writable = calendars.filter(isWritableCalendar);
     const start = initial.startAt
       ? toDate(initial.startAt)
       : roundUpToStep(initial.date || new Date());
     const end = initial.endAt ? toDate(initial.endAt) : addMinutes(start, duration);
-    const fallback = (writable.find((c) => c.isMain) || writable[0])?.id || '';
     return {
       title: '',
       type: 'arrangement',
@@ -54,66 +64,108 @@ function QuickCreateForm({ initial, onClose }) {
       start: toTimeParam(start),
       end: toTimeParam(end),
       endTouched: Boolean(initial.endAt),
-      calendar: writable.some((c) => c.id === initial.calendarId) ? initial.calendarId : fallback,
+      calendar: initial.calendarId || '',
       participants: [],
       showGuests: false,
     };
   });
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Modal сам фокусує перший елемент (це кнопка «Закрити»); переносимо фокус на назву після нього.
   useEffect(() => {
-    const t = setTimeout(() => formRef.current?.elements.namedItem('title')?.focus(), 0);
-    return () => clearTimeout(t);
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
   }, []);
 
   const writable = calendars.filter(isWritableCalendar);
-  const calendar = byId[form.calendar] || null;
+  const calendarId = pickWritableCalendarId(calendars, form.calendar);
+  const calendar = byId[calendarId] || null;
   const isArrangement = form.type === 'arrangement';
+  const isTask = form.type === 'task';
   const headerDate = combineDateTime(form.date) || toDate(initial.date || new Date());
 
-  const set = (patch) => setForm((f) => ({ ...f, ...patch }));
-  const onStartChange = (start) =>
+  const clearErrors = (...keys) =>
+    setErrors((prev) => {
+      const drop = new Set(['form', ...keys]);
+      return Object.fromEntries(Object.entries(prev).filter(([key]) => !drop.has(key)));
+    });
+  const set = (patch, ...errorKeys) => {
+    setForm((f) => ({ ...f, ...patch }));
+    clearErrors(...errorKeys);
+  };
+  const onStartChange = (start) => {
     setForm((f) => {
       if (f.endTouched) return { ...f, start };
       const startAt = combineDateTime(f.date, start);
       return { ...f, start, end: startAt ? toTimeParam(addMinutes(startAt, duration)) : f.end };
     });
-
-  const onSubmit = (e) => {
-    e.preventDefault();
-    const next = {};
-    const title = form.title.trim();
-    if (!title) next.title = 'Вкажи назву';
-    const startAt = combineDateTime(form.date, form.start);
-    if (!startAt) next.time = 'Вкажи дату й час';
-    let endAt = null;
-    if (isArrangement && startAt) {
-      endAt = combineDateTime(form.date, form.end);
-      if (!endAt) next.time = 'Вкажи час кінця';
-      else if (endAt <= startAt) next.time = 'Кінець має бути пізніше за початок';
-    }
-    setErrors(next);
-    if (Object.keys(next).length) return;
-    createEvent({
-      title,
-      type: form.type,
-      calendar: form.calendar,
-      startAt,
-      endAt,
-      allDay: false,
-      participants: form.participants,
-    });
-    onClose();
+    clearErrors('time');
   };
 
-  // «Більше опцій →»: переносимо введене на окрему сторінку (учасники — через state).
+  const validate = () => {
+    const next = {};
+    const title = form.title.trim();
+    const hasTime = TIME_RE.test(form.start);
+    const startAt = combineDateTime(form.date, hasTime ? form.start : '');
+    let endAt = null;
+
+    if (!title) next.title = 'Вкажи назву';
+    if (!calendarId) next.calendar = 'Немає календаря, у який можна додати подію';
+    if (!startAt) next.time = 'Вкажи дату';
+    else if (!hasTime && !isTask) next.time = 'Вкажи час початку';
+    else if (isArrangement && form.end) {
+      endAt = combineDateTime(form.date, form.end);
+      if (endAt <= startAt) next.time = 'Кінець має бути пізніше за початок';
+    }
+
+    return {
+      next,
+      dto: {
+        title,
+        type: form.type,
+        calendar: calendarId,
+        startAt,
+        endAt,
+        allDay: !hasTime,
+        participants: form.participants,
+      },
+    };
+  };
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    if (inFlight.current) return;
+
+    const { next, dto } = validate();
+    setErrors(next);
+    if (Object.keys(next).length > 0) return;
+
+    inFlight.current = true;
+    setIsSubmitting(true);
+    try {
+      await createEvent(dto);
+      if (isMounted.current) onClose();
+    } catch (err) {
+      inFlight.current = false;
+      if (!isMounted.current) {
+        notifyError(err);
+        return;
+      }
+      const { fields, form: formError } = splitApiErrors(parseApiError(err), FIELD_MAP);
+      setErrors(formError ? { ...fields, form: formError } : fields);
+      if (fields.participants) setForm((f) => ({ ...f, showGuests: true }));
+      setIsSubmitting(false);
+    }
+  };
+
   const moreSearch = new URLSearchParams();
   [
     ['date', form.date],
     ['start', form.start],
     ['end', isArrangement ? form.end : ''],
-    ['calendar', form.calendar],
+    ['calendar', calendarId],
     ['title', form.title.trim()],
     ['type', form.type],
   ].forEach(([key, value]) => {
@@ -121,7 +173,7 @@ function QuickCreateForm({ initial, onClose }) {
   });
 
   return (
-    <form ref={formRef} className={styles.form} onSubmit={onSubmit} noValidate>
+    <form className={styles.form} onSubmit={onSubmit} noValidate>
       <div className={styles.head}>
         <span className={styles.eyebrow}>
           Нова подія · {formatDate(headerDate, 'weekday-short')}
@@ -140,8 +192,9 @@ function QuickCreateForm({ initial, onClose }) {
         <Input
           name="title"
           type="text"
+          maxLength={120}
           value={form.title}
-          onChange={(e) => set({ title: e.target.value })}
+          onChange={(e) => set({ title: e.target.value }, 'title')}
           placeholder="Назва події"
           aria-label="Назва події"
           aria-invalid={errors.title ? true : undefined}
@@ -162,7 +215,7 @@ function QuickCreateForm({ initial, onClose }) {
         stretch
         options={TYPE_SEGMENTS}
         value={form.type}
-        onChange={(type) => set({ type })}
+        onChange={(type) => set({ type }, 'time')}
       />
 
       <div className={styles.fieldCol}>
@@ -172,7 +225,8 @@ function QuickCreateForm({ initial, onClose }) {
             type="date"
             aria-label="Дата"
             value={form.date}
-            onChange={(e) => set({ date: e.target.value })}
+            onChange={(e) => set({ date: e.target.value }, 'time')}
+            invalid={Boolean(errors.time)}
             className={styles.date}
           />
           <Input
@@ -180,6 +234,7 @@ function QuickCreateForm({ initial, onClose }) {
             aria-label="Початок"
             value={form.start}
             onChange={(e) => onStartChange(e.target.value)}
+            invalid={Boolean(errors.time)}
             className={styles.time}
           />
           {isArrangement ? (
@@ -189,7 +244,7 @@ function QuickCreateForm({ initial, onClose }) {
                 type="time"
                 aria-label="Кінець"
                 value={form.end}
-                onChange={(e) => set({ end: e.target.value, endTouched: true })}
+                onChange={(e) => set({ end: e.target.value, endTouched: true }, 'time')}
                 invalid={Boolean(errors.time)}
                 className={styles.time}
               />
@@ -203,42 +258,57 @@ function QuickCreateForm({ initial, onClose }) {
         ) : null}
       </div>
 
-      <div className={styles.calRow}>
-        <span className={styles.dotWrap}>
-          <span
-            className={styles.dot}
-            style={{ background: colorVars(calendar?.color || 'graphite').base }}
+      <div className={styles.fieldCol}>
+        <div className={styles.calRow}>
+          <span className={styles.dotWrap}>
+            <span
+              className={styles.dot}
+              style={{ background: colorVars(calendar?.color || 'graphite').base }}
+            />
+          </span>
+          <Select
+            aria-label="Календар"
+            options={calendarOptions(writable)}
+            value={calendarId}
+            onChange={(v) => set({ calendar: v }, 'calendar')}
+            className={styles.calSelect}
           />
-        </span>
-        <Select
-          aria-label="Календар"
-          options={calendarOptions(writable)}
-          value={form.calendar}
-          onChange={(v) => set({ calendar: v })}
-          className={styles.calSelect}
-        />
-        <PillButton
-          variant="secondary"
-          shape="rounded"
-          size="lg"
-          icon="users"
-          aria-expanded={form.showGuests}
-          onClick={() => set({ showGuests: !form.showGuests })}
-        >
-          Учасники
-        </PillButton>
+          <PillButton
+            variant="secondary"
+            shape="rounded"
+            size="lg"
+            icon="users"
+            aria-expanded={form.showGuests}
+            onClick={() => set({ showGuests: !form.showGuests })}
+          >
+            Учасники
+          </PillButton>
+        </div>
+        {errors.calendar ? (
+          <span className={styles.error} role="alert">
+            {errors.calendar}
+          </span>
+        ) : null}
       </div>
 
       {form.showGuests ? (
         <ParticipantsInput
           value={form.participants}
-          onChange={(list) => set({ participants: list })}
+          onChange={(list) => set({ participants: list }, 'participants')}
+          error={errors.participants || null}
+          disabled={isSubmitting}
         />
       ) : null}
 
+      {errors.form ? (
+        <span className={styles.error} role="alert">
+          {errors.form}
+        </span>
+      ) : null}
+
       <div className={styles.footer}>
-        <PillButton type="submit" size="lg">
-          Створити
+        <PillButton type="submit" size="lg" disabled={isSubmitting}>
+          {isSubmitting ? 'Створюємо…' : 'Створити'}
         </PillButton>
         <Link
           to={{ pathname: '/events/new', search: `?${moreSearch}` }}
@@ -264,7 +334,6 @@ QuickCreateForm.propTypes = {
   onClose: PropTypes.func.isRequired,
 };
 
-/** Відкрита, коли useModals().quickCreate !== null. Стан форми живе у QuickCreateForm і скидається при кожному відкритті. */
 export default function QuickCreateModal() {
   const { quickCreate, closeQuickCreate } = useModals();
   if (!quickCreate) return null;
@@ -277,6 +346,7 @@ export default function QuickCreateModal() {
       top={130}
       padding={20}
       gap={14}
+      initialFocus={TITLE_SELECTOR}
     >
       <QuickCreateForm initial={quickCreate} onClose={closeQuickCreate} />
     </Modal>

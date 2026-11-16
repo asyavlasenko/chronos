@@ -1,9 +1,7 @@
-// Дизайн: 10-event-create.html (.lbl 12/600 сірий, .hint 11), 13-auth.html; помилка — 12px --danger під полем
 import PropTypes from 'prop-types';
 import cx from '../../utils/cx';
 import styles from './Field.module.css';
 
-/** Обгортка поля: підпис зверху, підказка/помилка знизу. trailing — елемент праворуч від підпису («Забули пароль?»). */
 export default function Field({
   label,
   htmlFor = undefined,

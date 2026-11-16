@@ -1,4 +1,3 @@
-/* MonthPage. Дизайн: 05-month.html */
 .summary {
   display: flex;
   justify-content: flex-end;
@@ -24,14 +23,12 @@
   gap: var(--gap-page);
 }
 
-/* Темна картка: «32 події · 6 задач» */
 .unit {
   font-size: var(--fs-14);
   font-weight: var(--fw-medium);
   opacity: 0.8;
 }
 
-/* Білі картки: заголовок 14/700 (у мокапі місяця — 14, не 15) */
 .cardTitle {
   font-size: var(--fs-14);
 }
@@ -52,7 +49,6 @@
   color: var(--ink-secondary);
 }
 
-/* Свята цього сезону: квадрат місяць/число + назва + «п'ятниця · вихідний» */
 .holiday {
   display: flex;
   align-items: center;
@@ -62,14 +58,14 @@
   width: 38px;
   height: 38px;
   flex: none;
-  border-radius: 9px; /* з мокапа; токена для 9px немає */
+  border-radius: 9px;
   background: var(--bg);
   color: var(--ink);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 9px; /* з мокапа; токена для 9px немає */
+  font-size: 9px;
   font-weight: var(--fw-semibold);
   line-height: 1.1;
 }
@@ -94,7 +90,6 @@
   color: var(--ink-secondary);
 }
 
-/* Календарі: чіпи без фону, 6px між рядками */
 .calList {
   display: flex;
   flex-direction: column;

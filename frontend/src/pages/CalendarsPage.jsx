@@ -1,9 +1,9 @@
-// Дизайн: design/screens/08-calendars.html
-// Календарі: список рядків із чекбоксом «показувати» (ліворуч) + панель налаштувань вибраного календаря (праворуч).
-// Вибраний календар — локальний стан; ?id= у URL (посилання «Редагувати» з 09) задає початковий вибір.
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import useCalendars from '../hooks/useCalendars';
+import useEvents from '../hooks/useEvents';
+import usePeople from '../hooks/usePeople';
+import useToast from '../hooks/useToast';
 import { plural, pluralCalendars } from '../utils/text';
 import Card from '../components/ui/Card';
 import PillButton from '../components/ui/PillButton';
@@ -14,11 +14,16 @@ import styles from './CalendarsPage.module.css';
 
 const SHARED_FORMS = ['спільний', 'спільні', 'спільних'];
 const HIDDEN_FORMS = ['прихований', 'приховані', 'прихованих'];
+const NEW_CALENDAR = { name: 'Новий календар', color: 'blue' };
 
 export default function CalendarsPage() {
   const { calendars, byId, toggleVisibility, createCalendar } = useCalendars();
+  const { holidayEvents } = useEvents();
+  const people = usePeople();
+  const { notifyError } = useToast();
   const [searchParams] = useSearchParams();
   const [selectedId, setSelectedId] = useState(searchParams.get('id'));
+  const [creating, setCreating] = useState(false);
 
   const selected = byId[selectedId] || calendars.find((c) => c.isShared) || calendars[0] || null;
 
@@ -31,9 +36,22 @@ export default function CalendarsPage() {
     [calendars],
   );
 
-  const onCreate = () => {
-    const id = createCalendar({ name: 'Новий календар', color: 'blue' });
-    setSelectedId(id);
+  const holidaysCount = useMemo(() => {
+    const year = new Date().getFullYear();
+    return holidayEvents.filter((h) => h.startAt.getFullYear() === year).length;
+  }, [holidayEvents]);
+
+  const onCreate = async () => {
+    if (creating) return;
+    setCreating(true);
+    try {
+      const id = await createCalendar(NEW_CALENDAR);
+      setSelectedId(id);
+    } catch (err) {
+      notifyError(err);
+    } finally {
+      setCreating(false);
+    }
   };
 
   return (
@@ -47,7 +65,13 @@ export default function CalendarsPage() {
               {stats.hidden} {plural(stats.hidden, HIDDEN_FORMS)}
             </span>
           </div>
-          <PillButton variant="primary" size="sm" icon="plus" onClick={onCreate}>
+          <PillButton
+            variant="primary"
+            size="sm"
+            icon="plus"
+            disabled={creating}
+            onClick={onCreate}
+          >
             Новий календар
           </PillButton>
         </div>
@@ -56,8 +80,8 @@ export default function CalendarsPage() {
           {calendars.map((c) => (
             <CalendarRow
               key={c.id}
-              calendar={c}
-              members={c.isShared && !c.isHidden ? membersToAvatars(c.members) : []}
+              calendar={c.isReadOnly ? { ...c, eventsCount: holidaysCount } : c}
+              members={c.isShared && !c.isHidden ? membersToAvatars(c.members, people) : []}
               selected={c.id === selected?.id}
               onSelect={setSelectedId}
               onToggleVisibility={toggleVisibility}
@@ -73,7 +97,12 @@ export default function CalendarsPage() {
 
       {selected ? (
         <aside aria-label={`Налаштування календаря ${selected.name}`} className={styles.side}>
-          <CalendarSettingsPanel key={selected.id} calendar={selected} variant="full" />
+          <CalendarSettingsPanel
+            key={selected.id}
+            calendar={selected}
+            variant="full"
+            onRemoved={() => setSelectedId(null)}
+          />
         </aside>
       ) : null}
     </div>

@@ -1,4 +1,3 @@
-// Дизайн: 04-day.html (пілюлі 36×44 у тулбарі), 16-mobile.html (52px на всю ширину)
 import PropTypes from 'prop-types';
 import cx from '../../utils/cx';
 import { isSameDay, isToday, weekdayIndex, WEEKDAYS_SHORT } from '../../utils/dates';

@@ -1,14 +1,8 @@
-// Дизайн: 02-week-cards.html (.grid: лінії кожні 36px --line-soft), 04-day.html (64px, --line-grid)
-import { useRef } from 'react';
 import PropTypes from 'prop-types';
 import cx from '../../utils/cx';
-import { gridOffsetToTime } from '../../utils/dates';
+import { formatDate, gridOffsetToTime } from '../../utils/dates';
 import styles from './HourGrid.module.css';
 
-/**
- * Контейнер годинної сітки: висота = (endHour − startHour) × hourHeight, фон — горизонтальні лінії.
- * Діти позиціонуються абсолютно (EventBlock/FreeSlot/NowLine). Клік по порожньому місцю → onSlotClick(Date).
- */
 export default function HourGrid({
   day,
   startHour = 8,
@@ -20,28 +14,32 @@ export default function HourGrid({
   className = '',
   style = {},
 }) {
-  const ref = useRef(null);
   const height = (endHour - startHour) * hourHeight;
 
   const handleClick = (e) => {
-    if (!onSlotClick || e.target !== ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
-    const offset = e.clientY - rect.top;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const offset = e.detail === 0 ? 0 : Math.min(Math.max(e.clientY - rect.top, 0), height - 1);
     onSlotClick(gridOffsetToTime(day, offset, { gridStartHour: startHour, hourHeight }));
   };
 
   return (
-    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
     <div
-      ref={ref}
-      className={cx(styles.grid, onSlotClick && styles.clickable, className)}
+      className={cx(styles.grid, className)}
       style={{
         height,
         backgroundImage: `repeating-linear-gradient(to bottom, ${lineColor} 0, ${lineColor} 1px, transparent 1px, transparent ${hourHeight}px)`,
         ...style,
       }}
-      onClick={handleClick}
     >
+      {onSlotClick ? (
+        <button
+          type="button"
+          tabIndex={-1}
+          className={styles.slots}
+          aria-label={`Створити подію: ${formatDate(day, 'weekday-long')}`}
+          onClick={handleClick}
+        />
+      ) : null}
       {children}
     </div>
   );

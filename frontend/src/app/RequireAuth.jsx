@@ -1,8 +1,12 @@
-import { Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import useAuth from '../hooks/useAuth';
+import PageLoader from '../components/ui/PageLoader';
 
-// TODO(@teammate2): якщо useAuth().user === null і не isLoading → <Navigate to="/login" state={{ from }} />.
-// Під час isLoading показувати порожній екран/скелетон, а не редіректити.
-// ЗАГЛУШКА: пропускає всіх, щоб роутер можна було перевірити без бекенду.
 export default function RequireAuth() {
+  const { user, isLoading } = useAuth();
+  const location = useLocation();
+
+  if (isLoading) return <PageLoader />;
+  if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
   return <Outlet />;
 }

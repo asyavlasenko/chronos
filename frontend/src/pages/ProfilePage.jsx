@@ -1,14 +1,12 @@
-// Дизайн: design/screens/14-profile.html
-// Профіль: акаунт, налаштування календаря (країна, часовий пояс, тривалість зустрічі, початок тижня,
-// формат часу, номери тижнів), сповіщення, безпека; праворуч — головний календар і статистика.
 import { useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 import useCalendars from '../hooks/useCalendars';
 import useEvents from '../hooks/useEvents';
+import { parseApiError } from '../api/errors';
 import { getViewRange, MONTHS_GENITIVE, toDate } from '../utils/dates';
-import { initials, plural } from '../utils/text';
+import { initials } from '../utils/text';
 import Icon from '../components/ui/Icon';
 import Card from '../components/ui/Card';
 import Avatar from '../components/ui/Avatar';
@@ -46,8 +44,8 @@ const TIME_FORMATS = [
 ];
 
 const MIN_PASSWORD = 8;
+const EMPTY_PASSWORDS = { current: '', next: '' };
 
-/** Поля профілю, які редагуються на цій сторінці (формат = PATCH /users/me). */
 const toForm = (user) => ({
   country: user.country || 'UA',
   timezone: user.timezone || 'Europe/Kyiv',
@@ -63,29 +61,23 @@ const toForm = (user) => ({
   },
 });
 
-/** «Змінено 2 місяці тому» за датою останньої зміни пароля. */
-function passwordChangedLabel(changedAt) {
-  if (!changedAt) return 'Ще не змінювався';
-  const d = toDate(changedAt);
-  const now = new Date();
-  const months = (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth());
-  if (months <= 0) return 'Змінено цього місяця';
-  return `Змінено ${months} ${plural(months, ['місяць', 'місяці', 'місяців'])} тому`;
-}
-
-/** «вересня 2026» для рядка «З нами з». */
 function memberSinceLabel(createdAt) {
   if (!createdAt) return '—';
   const d = toDate(createdAt);
   return `${MONTHS_GENITIVE[d.getMonth()]} ${d.getFullYear()}`;
 }
 
-function Row({ title, hint = null, children }) {
+function Row({ title, hint = null, error = null, children }) {
   return (
     <div className={styles.row}>
       <span className={styles.rowText}>
         <b className={styles.rowTitle}>{title}</b>
-        {hint ? <span className={styles.rowHint}>{hint}</span> : null}
+        {error ? (
+          <span role="alert" className={styles.rowError}>
+            {error}
+          </span>
+        ) : null}
+        {!error && hint ? <span className={styles.rowHint}>{hint}</span> : null}
       </span>
       {children}
     </div>
@@ -95,6 +87,7 @@ function Row({ title, hint = null, children }) {
 Row.propTypes = {
   title: PropTypes.node.isRequired,
   hint: PropTypes.node,
+  error: PropTypes.node,
   children: PropTypes.node.isRequired,
 };
 
@@ -111,18 +104,21 @@ SectionHead.propTypes = {
 };
 
 export default function ProfilePage() {
-  const { user, logout, updateUser } = useAuth();
+  const navigate = useNavigate();
+  const { user, logout, updateUser, changePassword, logoutEverywhere } = useAuth();
   const { calendars } = useCalendars();
   const monthRange = useMemo(() => getViewRange('month', new Date()), []);
   const { events } = useEvents(monthRange);
 
   const [form, setForm] = useState(() => toForm(user || {}));
-  const [saved, setSaved] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [status, setStatus] = useState(null);
+  const [pending, setPending] = useState(null);
   const [passwordOpen, setPasswordOpen] = useState(false);
-  const [passwords, setPasswords] = useState({ current: '', next: '' });
-  const [passwordError, setPasswordError] = useState(null);
+  const [passwords, setPasswords] = useState(EMPTY_PASSWORDS);
+  const [passwordErrors, setPasswordErrors] = useState({});
   const [passwordChanged, setPasswordChanged] = useState(false);
-  const [sessionsEnded, setSessionsEnded] = useState(false);
+  const [sessionsError, setSessionsError] = useState(null);
 
   const mainCalendar = calendars.find((c) => c.isMain) || null;
   const stats = useMemo(
@@ -138,32 +134,96 @@ export default function ProfilePage() {
 
   const patch = (changes) => {
     setForm((f) => ({ ...f, ...changes }));
-    setSaved(false);
+    setFieldErrors({});
+    setStatus(null);
   };
   const patchNotifications = (changes) =>
     patch({ notifications: { ...form.notifications, ...changes } });
 
-  const onSave = () => {
-    updateUser(form);
-    setSaved(true);
-  };
-
-  const onPasswordSubmit = (e) => {
-    e.preventDefault();
-    if (passwords.next.length < MIN_PASSWORD) {
-      setPasswordError(`Мінімум ${MIN_PASSWORD} символів`);
-      return;
+  const onSave = async () => {
+    setPending('save');
+    setFieldErrors({});
+    setStatus(null);
+    try {
+      const nextUser = await updateUser(form);
+      setForm(toForm(nextUser));
+      setStatus({ type: 'success', text: 'Збережено' });
+    } catch (error) {
+      const parsed = parseApiError(error);
+      setFieldErrors(parsed.fields);
+      setStatus({ type: 'error', text: parsed.message });
+    } finally {
+      setPending(null);
     }
-    // TODO(@teammate2): PATCH /users/me/password; зараз — заглушка
-    setPasswordError(null);
-    setPasswords({ current: '', next: '' });
-    setPasswordOpen(false);
-    setPasswordChanged(true);
   };
 
+  const closePasswordForm = () => {
+    setPasswordOpen(false);
+    setPasswords(EMPTY_PASSWORDS);
+    setPasswordErrors({});
+  };
+
+  const setPassword = (key, errorKey) => (e) => {
+    const { value } = e.target;
+    setPasswords((p) => ({ ...p, [key]: value }));
+    setPasswordErrors((er) => ({ ...er, [errorKey]: null, form: null }));
+  };
+
+  const onPasswordSubmit = async (e) => {
+    e.preventDefault();
+    const nextErrors = {};
+    if (!passwords.current) nextErrors.currentPassword = 'Введи поточний пароль';
+    if (passwords.next.length < MIN_PASSWORD) {
+      nextErrors.newPassword = `Мінімум ${MIN_PASSWORD} символів`;
+    }
+    setPasswordErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
+
+    setPending('password');
+    try {
+      await changePassword({ currentPassword: passwords.current, newPassword: passwords.next });
+      closePasswordForm();
+      setPasswordChanged(true);
+    } catch (error) {
+      const { fields, message } = parseApiError(error);
+      const hasFieldError = Boolean(fields.currentPassword || fields.newPassword);
+      setPasswordErrors({
+        currentPassword: fields.currentPassword,
+        newPassword: fields.newPassword,
+        form: hasFieldError ? null : message,
+      });
+    } finally {
+      setPending(null);
+    }
+  };
+
+  const onLogoutEverywhere = async () => {
+    setPending('everywhere');
+    setSessionsError(null);
+    try {
+      await logoutEverywhere();
+      navigate('/login', { replace: true });
+    } catch (error) {
+      setSessionsError(parseApiError(error).message);
+      setPending(null);
+    }
+  };
+
+  const onLogout = async () => {
+    setPending('logout');
+    setStatus(null);
+    try {
+      await logout();
+      navigate('/login', { replace: true });
+    } catch (error) {
+      setStatus({ type: 'error', text: parseApiError(error).message });
+      setPending(null);
+    }
+  };
+
+  const isBusy = pending !== null;
   const emailStatus = user.isEmailVerified ? 'email підтверджено' : 'email не підтверджено';
-  let passwordHint = passwordChangedLabel(user.passwordChangedAt);
-  if (passwordChanged) passwordHint = 'Щойно змінено';
+  const passwordHint = passwordChanged ? 'Щойно змінено' : 'Для зміни потрібен поточний пароль';
 
   return (
     <div className={styles.layout}>
@@ -183,7 +243,11 @@ export default function ProfilePage() {
 
         <Card as="section" aria-label="Календар" padding="0" gap={0} className={styles.section}>
           <SectionHead title="Календар" />
-          <Row title="Країна" hint="Від неї залежить календар державних свят">
+          <Row
+            title="Країна"
+            hint="Від неї залежить календар державних свят"
+            error={fieldErrors.country}
+          >
             <Select
               size="sm"
               aria-label="Країна"
@@ -193,7 +257,11 @@ export default function ProfilePage() {
               onChange={(country) => patch({ country })}
             />
           </Row>
-          <Row title="Часовий пояс" hint="Події зберігаються в UTC і показуються у твоєму часі">
+          <Row
+            title="Часовий пояс"
+            hint="Події зберігаються в UTC і показуються у твоєму часі"
+            error={fieldErrors.timezone}
+          >
             <Select
               size="sm"
               aria-label="Часовий пояс"
@@ -205,6 +273,7 @@ export default function ProfilePage() {
           <Row
             title="Тривалість зустрічі за замовчуванням"
             hint="Підставляється, коли створюєш зустріч"
+            error={fieldErrors.defaultArrangementDuration}
           >
             <SegmentedControl
               role="radiogroup"
@@ -216,7 +285,11 @@ export default function ProfilePage() {
               onChange={(v) => patch({ defaultArrangementDuration: Number(v) })}
             />
           </Row>
-          <Row title="Початок тижня" hint="Нумерація тижнів — за ISO 8601">
+          <Row
+            title="Початок тижня"
+            hint="Нумерація тижнів — за ISO 8601"
+            error={fieldErrors.weekStartsOn}
+          >
             <SegmentedControl
               role="radiogroup"
               label="Початок тижня"
@@ -227,7 +300,7 @@ export default function ProfilePage() {
               onChange={(v) => patch({ weekStartsOn: Number(v) })}
             />
           </Row>
-          <Row title="Формат часу">
+          <Row title="Формат часу" error={fieldErrors.timeFormat}>
             <SegmentedControl
               role="radiogroup"
               label="Формат часу"
@@ -238,7 +311,11 @@ export default function ProfilePage() {
               onChange={(timeFormat) => patch({ timeFormat })}
             />
           </Row>
-          <Row title="Показувати номери тижнів" hint="У тижневому й місячному поданні">
+          <Row
+            title="Показувати номери тижнів"
+            hint="У тижневому й місячному поданні"
+            error={fieldErrors.showWeekNumbers}
+          >
             <Toggle
               label="Показувати номери тижнів"
               checked={form.showWeekNumbers}
@@ -249,14 +326,22 @@ export default function ProfilePage() {
 
         <Card as="section" aria-label="Сповіщення" padding="0" gap={0} className={styles.section}>
           <SectionHead title="Сповіщення" />
-          <Row title="Нагадування на email" hint="За 10 хв до події, якщо не вказано інше">
+          <Row
+            title="Нагадування на email"
+            hint="За 10 хв до події, якщо не вказано інше"
+            error={fieldErrors['notifications.emailReminders']}
+          >
             <Toggle
               label="Нагадування на email"
               checked={form.notifications.emailReminders}
               onChange={(emailReminders) => patchNotifications({ emailReminders })}
             />
           </Row>
-          <Row title="Push у браузері" hint="Потрібен дозвіл браузера">
+          <Row
+            title="Push у браузері"
+            hint="Потрібен дозвіл браузера"
+            error={fieldErrors['notifications.push']}
+          >
             <Toggle
               label="Push у браузері"
               checked={form.notifications.push}
@@ -266,6 +351,7 @@ export default function ProfilePage() {
           <Row
             title="Запрошення та зміни у спільних календарях"
             hint="Лист, коли тебе запрошують або змінюють подію"
+            error={fieldErrors['notifications.sharedCalendarEmails']}
           >
             <Toggle
               label="Листи про запрошення"
@@ -284,7 +370,7 @@ export default function ProfilePage() {
               shape="rounded"
               className={styles.rowCtl}
               aria-expanded={passwordOpen}
-              onClick={() => setPasswordOpen((v) => !v)}
+              onClick={() => (passwordOpen ? closePasswordForm() : setPasswordOpen(true))}
             >
               Змінити пароль
             </PillButton>
@@ -296,37 +382,44 @@ export default function ProfilePage() {
               onSubmit={onPasswordSubmit}
               noValidate
             >
-              <Field label="Поточний пароль" htmlFor="pw-current">
+              <Field
+                label="Поточний пароль"
+                htmlFor="pw-current"
+                error={passwordErrors.currentPassword}
+              >
                 <Input
                   id="pw-current"
                   size="sm"
                   type="password"
                   autoComplete="current-password"
                   value={passwords.current}
-                  onChange={(e) => setPasswords((p) => ({ ...p, current: e.target.value }))}
+                  invalid={Boolean(passwordErrors.currentPassword)}
+                  aria-invalid={Boolean(passwordErrors.currentPassword)}
+                  onChange={setPassword('current', 'currentPassword')}
                 />
               </Field>
-              <Field label="Новий пароль" htmlFor="pw-next" error={passwordError}>
+              <Field label="Новий пароль" htmlFor="pw-next" error={passwordErrors.newPassword}>
                 <Input
                   id="pw-next"
                   size="sm"
                   type="password"
                   autoComplete="new-password"
                   value={passwords.next}
-                  invalid={Boolean(passwordError)}
-                  aria-invalid={Boolean(passwordError)}
-                  onChange={(e) => {
-                    const { value } = e.target;
-                    setPasswords((p) => ({ ...p, next: value }));
-                    setPasswordError(null);
-                  }}
+                  invalid={Boolean(passwordErrors.newPassword)}
+                  aria-invalid={Boolean(passwordErrors.newPassword)}
+                  onChange={setPassword('next', 'newPassword')}
                 />
               </Field>
+              {passwordErrors.form ? (
+                <p role="alert" className={styles.passwordError}>
+                  {passwordErrors.form}
+                </p>
+              ) : null}
               <div className={styles.passwordActions}>
-                <PillButton type="submit" size="sm">
-                  Зберегти
+                <PillButton type="submit" size="sm" disabled={isBusy}>
+                  {pending === 'password' ? 'Зберігаємо…' : 'Зберегти'}
                 </PillButton>
-                <PillButton variant="ghost" size="sm" onClick={() => setPasswordOpen(false)}>
+                <PillButton variant="ghost" size="sm" onClick={closePasswordForm}>
                   Скасувати
                 </PillButton>
               </div>
@@ -334,36 +427,39 @@ export default function ProfilePage() {
           ) : null}
           <Row
             title="Вийти на всіх пристроях"
-            hint={
-              sessionsEnded
-                ? 'Сесії на інших пристроях завершено'
-                : 'Завершить сесії на телефоні та інших браузерах'
-            }
+            hint="Завершить сесії на цьому та інших пристроях"
+            error={sessionsError}
           >
             <PillButton
               variant="danger"
               size="sm"
               shape="rounded"
               className={styles.rowCtl}
-              onClick={() => setSessionsEnded(true)}
+              disabled={isBusy}
+              onClick={onLogoutEverywhere}
             >
-              Вийти всюди
+              {pending === 'everywhere' ? 'Виходимо…' : 'Вийти всюди'}
             </PillButton>
           </Row>
         </Card>
 
         <div className={styles.actions}>
-          <PillButton className={styles.save} onClick={onSave}>
-            Зберегти зміни
+          <PillButton className={styles.save} disabled={isBusy} onClick={onSave}>
+            {pending === 'save' ? 'Зберігаємо…' : 'Зберегти зміни'}
           </PillButton>
-          {saved ? (
+          {status?.type === 'success' ? (
             <span role="status" className={styles.saved}>
-              Збережено
+              {status.text}
             </span>
           ) : null}
-          <Link to="/login" onClick={() => logout()} className={styles.logout}>
-            Вийти з акаунта
-          </Link>
+          {status?.type === 'error' ? (
+            <span role="alert" className={styles.failed}>
+              {status.text}
+            </span>
+          ) : null}
+          <button type="button" className={styles.logout} disabled={isBusy} onClick={onLogout}>
+            {pending === 'logout' ? 'Виходимо…' : 'Вийти з акаунта'}
+          </button>
         </div>
       </div>
 

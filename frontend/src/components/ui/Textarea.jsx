@@ -1,4 +1,3 @@
-// Дизайн: 10-event-create.html (опис події)
 import PropTypes from 'prop-types';
 import cx from '../../utils/cx';
 import styles from './Textarea.module.css';

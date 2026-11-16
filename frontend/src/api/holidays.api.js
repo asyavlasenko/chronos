@@ -1,4 +1,6 @@
-/** GET /holidays?year&country → { country, year, holidays: [{ date, localName, name }] } */
-export async function listHolidays() {
-  throw new Error('TODO(@teammate2): holidays.api.listHolidays');
+import client from './client';
+
+export async function listHolidays({ year, country } = {}) {
+  const { data } = await client.get('/holidays', { params: { year, country } });
+  return data;
 }

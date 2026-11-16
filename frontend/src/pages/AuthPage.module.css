@@ -1,4 +1,3 @@
-/* AuthPage. Дизайн: design/screens/13-auth.html. Лише змінні з src/styles/tokens.css. */
 .page {
   box-sizing: border-box;
   min-height: 100vh;
@@ -19,7 +18,6 @@
   max-width: 100%;
 }
 
-/* Логотип */
 .logo {
   display: flex;
   align-items: center;
@@ -47,7 +45,6 @@
   letter-spacing: -0.01em;
 }
 
-/* Таби Вхід / Реєстрація */
 .tabs {
   display: flex;
   background: var(--bg);
@@ -88,11 +85,25 @@
   color: var(--ink-secondary);
 }
 
+.banner {
+  padding: 10px 12px;
+  border-radius: var(--r-input);
+  font-size: var(--fs-13);
+  font-weight: var(--fw-medium);
+}
+.bannerError {
+  background: var(--danger-tint);
+  color: var(--danger);
+}
+.bannerSuccess {
+  background: var(--success-tint);
+  color: var(--success);
+}
+
 .forgot {
   font-size: var(--fs-12);
   font-weight: var(--fw-semibold);
 }
-/* Кнопка «показати пароль» усередині поля: 32px, radius 8, сіра */
 .form .eye {
   border-radius: var(--r-chip);
   color: var(--ink-secondary);
@@ -109,7 +120,6 @@
   cursor: pointer;
 }
 
-/* Великі кнопки форми: 44px, 14px */
 .form .big {
   height: 44px;
   font-size: var(--fs-14);
@@ -145,7 +155,6 @@
   font-weight: var(--fw-semibold);
 }
 
-/* Права колонка */
 .side {
   display: flex;
   flex-direction: column;

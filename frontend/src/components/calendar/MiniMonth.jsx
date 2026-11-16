@@ -1,4 +1,3 @@
-// Дизайн: 04-day.html (міні-місяць у бічній панелі: 30px пілюлі, дні з подіями — сірий фон, вибраний — темний)
 import PropTypes from 'prop-types';
 import cx from '../../utils/cx';
 import {
@@ -12,7 +11,6 @@ import {
 import IconButton from '../ui/IconButton';
 import styles from './MiniMonth.module.css';
 
-/** month — будь-яка дата місяця; markedDays — Set рядків 'YYYY-MM-DD' з подіями. */
 export default function MiniMonth({
   month,
   selected = null,

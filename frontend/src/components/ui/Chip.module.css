@@ -1,4 +1,3 @@
-/* Chip. Дизайн: 02-week-cards.html, 01-overview.html */
 .chip {
   display: inline-flex;
   align-items: center;
@@ -35,4 +34,8 @@
 .hint {
   font-size: var(--fs-11);
   color: var(--ink-secondary);
+}
+.locked,
+.locked .box {
+  cursor: default;
 }

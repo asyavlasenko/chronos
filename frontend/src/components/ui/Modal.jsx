@@ -1,14 +1,9 @@
-// Дизайн: 11-event-quick-modal.html (480px, top 130), 12-event-details.html (560px, top 90)
 import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import PropTypes from 'prop-types';
 import cx from '../../utils/cx';
 import styles from './Modal.module.css';
 
-/**
- * Модалка: overlay --overlay, картка 18px з тінню --shadow-modal. Esc і клік по overlay закривають.
- * width — ширина картки; top — відступ зверху на десктопі; padding — внутрішній відступ картки.
- */
 export default function Modal({
   open,
   onClose,
@@ -42,8 +37,8 @@ export default function Modal({
   if (!open) return null;
 
   return createPortal(
-    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
     <div
+      role="presentation"
       className={styles.overlay}
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
       style={{ paddingTop: top }}

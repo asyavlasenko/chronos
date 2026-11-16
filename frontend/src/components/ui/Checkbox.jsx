@@ -1,10 +1,8 @@
-// Дизайн: 07-tasks.html (18px, accent --dark), 01-overview.html (15–16px), 13-auth.html («запам'ятати»)
 import PropTypes from 'prop-types';
 import cx from '../../utils/cx';
 import { COLOR_HEX } from '../../utils/colors';
 import styles from './Checkbox.module.css';
 
-/** Нативний чекбокс з accent-color. color — ключ кольору або 'accent'. */
 export default function Checkbox({
   checked,
   onChange,
@@ -12,6 +10,7 @@ export default function Checkbox({
   color = 'graphite',
   label = '',
   className = '',
+  locked = false,
   ...rest
 }) {
   const accent = color === 'accent' ? COLOR_HEX.blue : COLOR_HEX[color] || COLOR_HEX.graphite;
@@ -19,9 +18,12 @@ export default function Checkbox({
     <input
       type="checkbox"
       checked={checked}
-      onChange={(e) => onChange(e.target.checked)}
+      onChange={(e) => {
+        if (!locked) onChange(e.target.checked);
+      }}
       aria-label={label || undefined}
-      className={cx(styles.box, className)}
+      aria-disabled={locked || undefined}
+      className={cx(styles.box, locked && styles.locked, className)}
       style={{ width: size, height: size, accentColor: accent }}
       {...rest}
     />
@@ -35,4 +37,5 @@ Checkbox.propTypes = {
   color: PropTypes.string,
   label: PropTypes.string,
   className: PropTypes.string,
+  locked: PropTypes.bool,
 };

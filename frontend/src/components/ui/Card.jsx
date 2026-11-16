@@ -1,12 +1,7 @@
-// Дизайн: 01-overview.html (білі картки з заголовком 15/700 і дією праворуч)
 import PropTypes from 'prop-types';
 import cx from '../../utils/cx';
 import styles from './Card.module.css';
 
-/**
- * Біла картка (radius 18, padding 18). variant: white | dark | muted.
- * title/subtitle/action — шапка картки; gap — відступ між дочірніми елементами (flex column).
- */
 export default function Card({
   children = null,
   title = null,

@@ -1,44 +1,48 @@
-/** GET /calendars → { calendars: [...] } */
+import client from './client';
+
 export async function listCalendars() {
-  throw new Error('TODO(@teammate2): calendars.api.listCalendars');
+  const { data } = await client.get('/calendars');
+  return data.calendars;
 }
 
-/** GET /calendars/:id → { calendar } (з учасниками) */
-export async function getCalendar() {
-  throw new Error('TODO(@teammate2): calendars.api.getCalendar');
+export async function getCalendar(id) {
+  const { data } = await client.get(`/calendars/${id}`);
+  return data.calendar;
 }
 
-/** POST /calendars { name, description?, color } → { calendar } */
-export async function createCalendar() {
-  throw new Error('TODO(@teammate2): calendars.api.createCalendar');
+export async function createCalendar({ name, description, color }) {
+  const { data } = await client.post('/calendars', { name, description, color });
+  return data.calendar;
 }
 
-/** PATCH /calendars/:id { name?, description?, color? } → { calendar } */
-export async function updateCalendar() {
-  throw new Error('TODO(@teammate2): calendars.api.updateCalendar');
+export async function updateCalendar(id, patch) {
+  const { data } = await client.patch(`/calendars/${id}`, patch);
+  return data.calendar;
 }
 
-/** DELETE /calendars/:id → 204 */
-export async function deleteCalendar() {
-  throw new Error('TODO(@teammate2): calendars.api.deleteCalendar');
+export async function deleteCalendar(id) {
+  await client.delete(`/calendars/${id}`);
 }
 
-/** PATCH /calendars/:id/visibility { isHidden?, color? } → { membership } */
-export async function updateVisibility() {
-  throw new Error('TODO(@teammate2): calendars.api.updateVisibility');
+export async function updateVisibility(id, patch) {
+  const { data } = await client.patch(`/calendars/${id}/visibility`, patch);
+  return data.calendar;
 }
 
-/** POST /calendars/:id/share { email, role } → { invite } */
-export async function shareCalendar() {
-  throw new Error('TODO(@teammate2): calendars.api.shareCalendar');
+export async function shareCalendar(id, { email, role }) {
+  const { data } = await client.post(`/calendars/${id}/share`, { email, role });
+  return data.invite;
 }
 
-/** PATCH /calendars/:id/members/:userId { role } → { calendar } */
-export async function updateMember() {
-  throw new Error('TODO(@teammate2): calendars.api.updateMember');
+export async function updateMemberRole(id, userId, role) {
+  const { data } = await client.patch(`/calendars/${id}/members/${userId}`, { role });
+  return data.calendar;
 }
 
-/** DELETE /calendars/:id/members/:userId → 204 */
-export async function removeMember() {
-  throw new Error('TODO(@teammate2): calendars.api.removeMember');
+export async function removeMember(id, userId) {
+  await client.delete(`/calendars/${id}/members/${userId}`);
+}
+
+export async function cancelInvite(id, inviteId) {
+  await client.delete(`/calendars/${id}/invites/${inviteId}`);
 }

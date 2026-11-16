@@ -1,6 +1,5 @@
 import PropTypes from 'prop-types';
 
-// Іконки з мокапів (стиль Lucide, тонкий stroke). Додавай нові сюди, а не інлайном у компонентах.
 const PATHS = {
   logo: (
     <>

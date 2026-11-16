@@ -1,10 +1,8 @@
-// Дизайн: 10-event-create.html (.sel: кнопка з шевроном, h40 r10 13/500), 14-profile.html (h36), 08 (роль учасника)
 import PropTypes from 'prop-types';
 import cx from '../../utils/cx';
 import Icon from './Icon';
 import styles from './Select.module.css';
 
-/** Нативний select, стилізований як кнопка з шевроном. size: md 40 · sm 36 · xs 32. leading — крапка кольору чи іконка. */
 export default function Select({
   options,
   value,

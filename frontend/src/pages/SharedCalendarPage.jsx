@@ -1,15 +1,10 @@
-// Дизайн: design/screens/09-shared-calendar.html
-// Спільний календар (/calendars/:id): пілюлі календарів + навігація тижня; ліворуч — картка календаря, учасники,
-// мій колір (CalendarSettingsPanel compact); у центрі — тиждень 48px/год з аватаром автора на кожній події
-// (колір блоку = колір учасника); праворуч — активність і запрошення, що чекає.
-// Тиждень і фільтр за авторами — локальний стан сторінки (не ?date=).
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 import useCalendars from '../hooks/useCalendars';
 import useEvents from '../hooks/useEvents';
 import useModals from '../hooks/useModals';
-import { activity, people } from '../mocks/data';
+import usePeople from '../hooks/usePeople';
 import cx from '../utils/cx';
 import { colorVars } from '../utils/colors';
 import { addMinutes, groupEventsByDay } from '../utils/eventStats';
@@ -21,10 +16,12 @@ import {
   getIsoWeek,
   getViewRange,
   getWeekDays,
+  isSameDay,
   isToday,
   MONTHS_GENITIVE,
   nowOffsetMinutes,
   startOfDay,
+  toDate,
   weekdayIndex,
   WEEKDAYS_SHORT,
 } from '../utils/dates';
@@ -41,16 +38,16 @@ import HourGrid from '../components/calendar/HourGrid';
 import EventBlock from '../components/calendar/EventBlock';
 import NowLine from '../components/calendar/NowLine';
 import CalendarSettingsPanel from '../components/calendars/CalendarSettingsPanel';
-import { memberAvatar } from '../components/calendars/members';
+import { memberAvatar, ROLE_LABELS } from '../components/calendars/members';
 import styles from './SharedCalendarPage.module.css';
 
 const START_HOUR = 8;
 const END_HOUR = 20;
-const HOUR_H = 48; // --hour-h-team
+const HOUR_H = 48;
 const RULER_W = 52;
 const GRID_H = (END_HOUR - START_HOUR) * HOUR_H;
+const ACTIVITY_LIMIT = 6;
 
-/** '2 – 8 листопада' або '30 листопада – 6 грудня' (без року, як у мокапі) */
 function weekTitle(days) {
   const [first] = days;
   const last = days[days.length - 1];
@@ -60,13 +57,13 @@ function weekTitle(days) {
   return `${first.getDate()} ${MONTHS_GENITIVE[first.getMonth()]} – ${last.getDate()} ${MONTHS_GENITIVE[last.getMonth()]}`;
 }
 
-/** 'Пн, 9 лист. · 15:00 · від Максима' */
 function inviteMeta(invite) {
-  const start = invite.event?.startAt;
-  const parts = [];
-  if (start) parts.push(formatDate(start, 'short'), formatTime(start));
-  if (invite.invitedBy?.name) parts.push(`від ${invite.invitedBy.name}`);
-  return parts.join(' · ');
+  const by = invite.invitedBy?.name ? `запрошує ${invite.invitedBy.name}` : null;
+  if (invite.kind === 'calendar') return ['спільний календар', by].filter(Boolean).join(' · ');
+  const { startAt, allDay } = invite.event || {};
+  const date = startAt ? formatDate(startAt, 'short') : null;
+  const time = startAt && !allDay ? formatTime(startAt) : null;
+  return [date, time, by].filter(Boolean).join(' · ');
 }
 
 function blockHeightFor(event, height) {
@@ -75,20 +72,49 @@ function blockHeightFor(event, height) {
   return 22;
 }
 
+function activityWhen(date, now) {
+  if (isSameDay(date, now)) return `сьогодні, ${formatTime(date)}`;
+  if (isSameDay(date, addDays(now, -1))) return `вчора, ${formatTime(date)}`;
+  return formatDate(date, 'short');
+}
+
+function buildActivity(events, members, now) {
+  const created = events
+    .filter((e) => e.createdAt)
+    .map((e) => ({
+      id: `event-${e.id}`,
+      user: e.creator,
+      text: `· нова подія «${e.title}»`,
+      note: activityWhen(e.createdAt, now),
+      at: toDate(e.createdAt),
+    }));
+  const joined = members
+    .filter((m) => m.joinedAt)
+    .map((m) => ({
+      id: `join-${m.user}`,
+      user: m.user,
+      text: `у календарі з ${formatDate(m.joinedAt, 'day-month')}`,
+      note: ROLE_LABELS[m.role] || '',
+      at: toDate(m.joinedAt),
+    }));
+  return [...created, ...joined].sort((a, b) => b.at - a.at).slice(0, ACTIVITY_LIMIT);
+}
+
 export default function SharedCalendarPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { calendars, byId } = useCalendars();
+  const people = usePeople();
   const { openDetails, openQuickCreate, detailsEventId } = useModals();
   const calendar = byId[id] || null;
   const members = useMemo(() => calendar?.members || [], [calendar]);
   const weekStartsOn = user?.weekStartsOn ?? 1;
-  const meId = user?.id || 'u-me';
 
   const [anchor, setAnchor] = useState(() => startOfDay(new Date()));
   const [q, setQ] = useState('');
   const [hiddenAuthors, setHiddenAuthors] = useState(() => new Set());
+  const [respondingId, setRespondingId] = useState(null);
 
   const days = useMemo(() => getWeekDays(anchor, weekStartsOn), [anchor, weekStartsOn]);
   const { from, to } = useMemo(
@@ -103,6 +129,7 @@ export default function SharedCalendarPage() {
     includeHidden: true,
     q,
   });
+  const { events: calendarEvents } = useEvents({ calendarIds, includeHidden: true });
 
   const countsByAuthor = useMemo(() => {
     const map = new Map();
@@ -115,14 +142,18 @@ export default function SharedCalendarPage() {
     [events, hiddenAuthors],
   );
 
-  // Автори подій: учасники календаря (їхній колір членства) + довідник людей як запасний варіант.
   const authorsById = useMemo(() => {
     const map = { ...people };
     members.forEach((m) => {
-      map[m.user] = memberAvatar(m);
+      map[m.user] = memberAvatar(m, people);
     });
     return map;
-  }, [members]);
+  }, [members, people]);
+
+  const activity = useMemo(
+    () => buildActivity(calendarEvents, members, new Date()),
+    [calendarEvents, members],
+  );
 
   const navOptions = useMemo(
     () => [
@@ -168,6 +199,16 @@ export default function SharedCalendarPage() {
       calendarId: id,
     });
 
+  const respond = async (inviteId, status) => {
+    if (respondingId) return;
+    setRespondingId(inviteId);
+    try {
+      await respondInvite(inviteId, status);
+    } finally {
+      setRespondingId(null);
+    }
+  };
+
   if (!calendar) {
     return (
       <Card as="div" className={styles.empty}>
@@ -181,6 +222,7 @@ export default function SharedCalendarPage() {
   }
 
   const weekNo = getIsoWeek(days[0]);
+  const canCreate = !calendar.isReadOnly && calendar.myRole !== 'viewer';
 
   return (
     <>
@@ -229,7 +271,7 @@ export default function SharedCalendarPage() {
           <div className={styles.filters}>
             <span className={styles.filtersLabel}>Події за учасниками:</span>
             {members.map((m) => {
-              const av = memberAvatar(m);
+              const av = authorsById[m.user];
               return (
                 <Chip
                   key={m.user}
@@ -240,7 +282,7 @@ export default function SharedCalendarPage() {
                   label={
                     <span className={styles.authorLabel}>
                       <Avatar initials={av.initials} color={av.color} size={16} />
-                      {m.user === meId ? 'Ти' : av.name}
+                      {av.name}
                     </span>
                   }
                 />
@@ -302,7 +344,7 @@ export default function SharedCalendarPage() {
                       hourHeight={HOUR_H}
                       lineColor="var(--line-grid)"
                       className={cx(styles.col, today && styles.colToday)}
-                      onSlotClick={onSlotClick}
+                      onSlotClick={canCreate ? onSlotClick : null}
                     >
                       {timed.map((e) => {
                         const { top, height } = eventToGridPosition(e.startAt, e.endAt, {
@@ -339,26 +381,30 @@ export default function SharedCalendarPage() {
 
         <aside className={styles.sideRight} aria-label="Активність">
           <Card title="Активність" gap={12}>
-            <ul className={styles.activity}>
-              {activity.map((a) => {
-                const person = people[a.user];
-                return (
-                  <li key={a.id} className={styles.activityItem}>
-                    <Avatar
-                      initials={person?.initials || '?'}
-                      color={person?.color || 'graphite'}
-                      size={24}
-                    />
-                    <span className={styles.activityText}>
-                      <span>
-                        <b>{person?.name || 'Учасник'}</b> {a.text}
+            {activity.length ? (
+              <ul className={styles.activity}>
+                {activity.map((a) => {
+                  const person = authorsById[a.user];
+                  return (
+                    <li key={a.id} className={styles.activityItem}>
+                      <Avatar
+                        initials={person?.initials || '?'}
+                        color={person?.color || 'graphite'}
+                        size={24}
+                      />
+                      <span className={styles.activityText}>
+                        <span>
+                          <b>{person?.name || 'Учасник'}</b> {a.text}
+                        </span>
+                        {a.note ? <span className={styles.activityWhen}>{a.note}</span> : null}
                       </span>
-                      <span className={styles.activityWhen}>{a.when}</span>
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <span className={styles.activityEmpty}>Поки що тихо</span>
+            )}
           </Card>
 
           {pendingInvites.map((inv) => (
@@ -367,7 +413,7 @@ export default function SharedCalendarPage() {
               eyebrow="Очікує відповіді"
               title={
                 <Link to={`/invite/${inv.token}`} className={styles.inviteLink}>
-                  {inv.event?.title || inv.calendar?.name}
+                  {inv.event?.title || inv.calendar?.name || 'Запрошення'}
                 </Link>
               }
               meta={inviteMeta(inv)}
@@ -378,14 +424,16 @@ export default function SharedCalendarPage() {
                     size="xs"
                     shape="rounded"
                     className={styles.half}
-                    onClick={() => respondInvite(inv.id, 'accepted')}
+                    disabled={respondingId === inv.id}
+                    onClick={() => respond(inv.id, 'accepted')}
                   >
                     Прийняти
                   </PillButton>
                   <button
                     type="button"
                     className={styles.decline}
-                    onClick={() => respondInvite(inv.id, 'declined')}
+                    disabled={respondingId === inv.id}
+                    onClick={() => respond(inv.id, 'declined')}
                   >
                     Відхилити
                   </button>

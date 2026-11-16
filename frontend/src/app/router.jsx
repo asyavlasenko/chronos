@@ -17,15 +17,12 @@ import ProfilePage from '../pages/ProfilePage';
 import InvitePage from '../pages/InvitePage';
 import NotFoundPage from '../pages/NotFoundPage';
 
-// Стан подання календаря живе в URL: ?date=2026-11-05 (яка дата показана), ?event=<id> (відкрита модалка деталей).
 const router = createBrowserRouter([
-  // Публічні сторінки (без хедера)
   { path: '/login', element: <AuthPage mode="login" /> },
   { path: '/register', element: <AuthPage mode="register" /> },
   { path: '/reset', element: <AuthPage mode="reset" /> },
   { path: '/invite/:token', element: <InvitePage /> },
 
-  // Захищені сторінки у спільній оболонці (хедер + мобільна навігація)
   {
     element: <RequireAuth />,
     children: [
@@ -49,7 +46,7 @@ const router = createBrowserRouter([
           { path: 'calendars', element: <CalendarsPage /> },
           { path: 'calendars/:id', element: <SharedCalendarPage /> },
           { path: 'events/new', element: <EventCreatePage /> },
-          { path: 'events/:id', element: <EventCreatePage /> }, // редагування: та сама форма в режимі edit
+          { path: 'events/:id', element: <EventCreatePage /> },
           { path: 'profile', element: <ProfilePage /> },
         ],
       },

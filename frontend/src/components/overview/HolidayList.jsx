@@ -1,4 +1,3 @@
-// Дизайн: design/screens/01-overview.html (картка «Свята України»: замок read-only, найближчі свята з плиткою дати)
 import PropTypes from 'prop-types';
 import cx from '../../utils/cx';
 import { formatRelative, MONTHS_ABBR_UPPER, startOfDay, toDate } from '../../utils/dates';
@@ -8,7 +7,6 @@ import Icon from '../ui/Icon';
 import styles from './HolidayList.module.css';
 
 export default function HolidayList({ holidays, now, title = 'Свята України', className = '' }) {
-  // «через N днів» рахуємо від початку дня, бо свято — подія на весь день
   const today = startOfDay(now);
   return (
     <Card

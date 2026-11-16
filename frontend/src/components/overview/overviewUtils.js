@@ -1,11 +1,8 @@
-// Дизайн: design/screens/01-overview.html, 16-mobile.html
-// Допоміжні обчислення для «Огляду»: вільні вікна між подіями, підписи місця, учасників і ролей.
 import PropTypes from 'prop-types';
 import { startOfDay, toDate } from '../../utils/dates';
 import { addMinutes } from '../../utils/eventStats';
 
 const STEP_MIN = 30;
-/** Скільки хвилин «займає» подія без кінця: задача — блок у 1 год, нагадування — пілюля ~30 хв. */
 const TASK_MIN = 60;
 const REMINDER_MIN = 30;
 
@@ -21,7 +18,6 @@ export const peopleShape = PropTypes.objectOf(
 const ceilToStep = (date) =>
   new Date(Math.ceil(toDate(date).getTime() / (STEP_MIN * 60000)) * STEP_MIN * 60000);
 
-/** Зайняті інтервали дня: зустрічі — [start, end], задачі й нагадування — мінімальний блок. */
 export function busyIntervals(events) {
   return events
     .filter((e) => e.startAt && !e.allDay)
@@ -35,11 +31,6 @@ export function busyIntervals(events) {
     .sort((a, b) => a.start - b.start);
 }
 
-/**
- * Вільні вікна ≥ minMinutes між зайнятими інтервалами: від «зараз» (округлено до 30 хв),
- * або від startHour, якщо день у майбутньому, до endHour. Минулий день — порожньо.
- * Вікно, що починається «зараз», має fromNow: true («Вільно до 11:00»).
- */
 export function findFreeSlots(
   day,
   intervals,
@@ -69,7 +60,6 @@ export function findFreeSlots(
   return slots;
 }
 
-/** Імена учасників без себе: «Максим, Оля». */
 export function participantNames(participants = [], meId = null) {
   return (participants || [])
     .filter((p) => !meId || p.user !== meId)
@@ -78,7 +68,6 @@ export function participantNames(participants = [], meId = null) {
     .join(', ');
 }
 
-/** «Google Meet» для посилань meet.google.com, інакше — текст місця як є. */
 export function locationLabel(location = '') {
   if (!location) return '';
   if (/meet\.google\.com/i.test(location)) return 'Google Meet';
@@ -87,7 +76,6 @@ export function locationLabel(location = '') {
 
 const LINK_RE = /^(https?:\/\/)?[\w.-]+\.[a-z]{2,}(\/\S*)?$/i;
 
-/** href для «Приєднатись», якщо місце події — посилання; інакше null. */
 export function locationHref(location = '') {
   const value = (location || '').trim();
   if (!LINK_RE.test(value)) return null;
@@ -100,13 +88,12 @@ const ROLE_LABELS = {
   viewer: ['глядач', 'глядачі'],
 };
 
-/** «Ти — власник · Максим, Оля — редактори» */
-export function membersSummary(members = []) {
+export function membersSummary(members = [], meId = null) {
   return Object.keys(ROLE_LABELS)
     .map((role) => {
       const names = members
         .filter((m) => m.role === role)
-        .map((m) => m.name || m.email)
+        .map((m) => (meId && m.user === meId ? 'Ти' : m.name || m.email))
         .filter(Boolean);
       if (!names.length) return null;
       return `${names.join(', ')} — ${ROLE_LABELS[role][names.length > 1 ? 1 : 0]}`;

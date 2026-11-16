@@ -1,40 +1,54 @@
-// Дизайн: design/screens/10-event-create.html (блок «Учасники»), 11-event-quick-modal.html
-// Поле учасників: чіпи (аватар 20 + email + «Прибрати») і input без рамки «додати email і Enter».
 import { useState } from 'react';
 import PropTypes from 'prop-types';
+import useAuth from '../hooks/useAuth';
+import usePeople from '../hooks/usePeople';
 import cx from '../utils/cx';
-import { people } from '../mocks/data';
 import { participantsToAvatars } from '../utils/eventStats';
 import { participantShape } from '../utils/propTypes';
 import Avatar from '../components/ui/Avatar';
 import IconButton from '../components/ui/IconButton';
 import Input from '../components/ui/Input';
-import { isValidEmail, participantFromEmail } from './eventFormUtils';
+import { isValidEmail, normalizeEmail, participantFromEmail } from './eventFormUtils';
 import styles from './ParticipantsInput.module.css';
 
-/** Enter, кома або blur додають email як учасника зі статусом pending; Backspace у порожньому полі прибирає останнього. */
+const MAX_PARTICIPANTS = 20;
+
 export default function ParticipantsInput({
   value,
   onChange,
   id = undefined,
   placeholder = 'додати email і Enter',
+  error = null,
+  disabled = false,
   className = '',
 }) {
+  const { user } = useAuth();
+  const people = usePeople();
   const [draft, setDraft] = useState('');
-  const [error, setError] = useState(null);
+  const [draftError, setDraftError] = useState(null);
   const avatars = participantsToAvatars(value, people);
+  const shownError = draftError || error;
 
   const commit = () => {
     const text = draft.trim();
     if (!text) return;
     if (!isValidEmail(text)) {
-      setError('Некоректний email');
+      setDraftError('Некоректний email');
       return;
     }
-    const next = participantFromEmail(text);
-    if (!value.some((p) => p.email === next.email)) onChange([...value, next]);
+    const next = participantFromEmail(text, people);
+    if (next.email === normalizeEmail(user?.email)) {
+      setDraftError('Свій email додавати не потрібно');
+      return;
+    }
+    const isKnown = value.some((p) => p.email === next.email);
+    if (!isKnown && value.length >= MAX_PARTICIPANTS) {
+      setDraftError(`У події може бути не більше ${MAX_PARTICIPANTS} учасників`);
+      return;
+    }
+    if (!isKnown) onChange([...value, next]);
     setDraft('');
-    setError(null);
+    setDraftError(null);
   };
 
   const onKeyDown = (e) => {
@@ -48,7 +62,7 @@ export default function ParticipantsInput({
 
   return (
     <div className={cx(styles.wrap, className)}>
-      <div className={cx(styles.box, error && styles.invalid)}>
+      <div className={cx(styles.box, shownError && styles.invalid)}>
         {value.map((p, i) => (
           <span key={p.email} className={styles.chip}>
             <Avatar initials={avatars[i].initials} color={avatars[i].color} size={20} />
@@ -59,6 +73,7 @@ export default function ParticipantsInput({
               size="xs"
               variant="muted"
               iconSize={12}
+              disabled={disabled}
               onClick={() => onChange(value.filter((x) => x.email !== p.email))}
             />
           </span>
@@ -68,19 +83,20 @@ export default function ParticipantsInput({
           type="email"
           value={draft}
           placeholder={placeholder}
-          aria-invalid={error ? true : undefined}
+          disabled={disabled}
+          aria-invalid={shownError ? true : undefined}
           className={styles.input}
           onChange={(e) => {
             setDraft(e.target.value);
-            if (error) setError(null);
+            if (draftError) setDraftError(null);
           }}
           onKeyDown={onKeyDown}
           onBlur={commit}
         />
       </div>
-      {error ? (
+      {shownError ? (
         <span className={styles.error} role="alert">
-          {error}
+          {shownError}
         </span>
       ) : null}
     </div>
@@ -92,5 +108,7 @@ ParticipantsInput.propTypes = {
   onChange: PropTypes.func.isRequired,
   id: PropTypes.string,
   placeholder: PropTypes.string,
+  error: PropTypes.string,
+  disabled: PropTypes.bool,
   className: PropTypes.string,
 };

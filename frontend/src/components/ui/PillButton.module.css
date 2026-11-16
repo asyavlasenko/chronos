@@ -1,4 +1,3 @@
-/* PillButton. Дизайн: 01-overview.html, 02-week-cards.html, 11/12 модалки. */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -120,7 +119,6 @@
   width: 100%;
 }
 
-/* accent — кнопка-посилання без фону: перебиває розміри, оголошені вище */
 .btn.accent {
   padding: 0;
   height: auto;

@@ -1,12 +1,9 @@
-// Дизайн: design/screens/01-overview.html (десктоп), 16-mobile.html (мобільний)
-// Огляд: привітання, таймлайн сьогодні, «Наступна», задачі тижня, навантаження тижня, спільні календарі,
-// запрошення, свята, список календарів. На мобільному (≤768px) — смужка днів, темний рядок «Наступна», список дня.
 import { useEffect, useMemo, useState } from 'react';
 import useAuth from '../hooks/useAuth';
 import useEvents from '../hooks/useEvents';
 import useCalendars from '../hooks/useCalendars';
 import useModals from '../hooks/useModals';
-import { people } from '../mocks/data';
+import usePeople from '../hooks/usePeople';
 import {
   addDays,
   formatDate,
@@ -35,7 +32,6 @@ import styles from './OverviewPage.module.css';
 const TICK_MS = 60000;
 const HOLIDAYS_SHOWN = 2;
 
-/** «Зараз», оновлюється щохвилини — для лінії часу, «через N хв» і вільних вікон. */
 function useNow() {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
@@ -65,6 +61,7 @@ export default function OverviewPage() {
     to,
   });
   const { calendars, byId, toggleVisibility } = useCalendars();
+  const people = usePeople();
   const { openDetails, openQuickCreate } = useModals();
 
   const byDay = useMemo(() => groupEventsByDay(events), [events]);
@@ -93,7 +90,8 @@ export default function OverviewPage() {
 
   const week = getIsoWeek(today);
   const showWeek = user?.showWeekNumbers ?? true;
-  const hello = `${greeting(now)}, ${user?.firstName || user?.name || ''}`;
+  const userName = user?.firstName || user?.name || '';
+  const hello = userName ? `${greeting(now)}, ${userName}` : greeting(now);
   const dateLine = [formatDate(today, 'weekday-long'), showWeek ? `тиждень ${week}` : null]
     .filter(Boolean)
     .join(' · ');
@@ -135,7 +133,7 @@ export default function OverviewPage() {
             title={`Тиждень ${week}`}
             subtitle={`${weekRange} · ${pluralHoursLong(busyHours)} зайнято`}
           />
-          <SharedCalendarsCard calendars={sharedCalendars} people={people} />
+          <SharedCalendarsCard calendars={sharedCalendars} people={people} meId={user?.id} />
           <InvitesCard invites={pendingInvites} onRespond={respondInvite} />
           <HolidayList
             holidays={upcomingHolidays}

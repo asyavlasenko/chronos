@@ -1,13 +1,12 @@
-// Дизайн: design/screens/10-event-create.html
-// Нова подія / редагування (/events/new, /events/:id): форма ліворуч, праворуч — живе прев'ю блоку
-// і перевірка, чи вільний час. Prefill — з location.state або ?date=&start=&end=&calendar=&title=&type=.
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { parseApiError } from '../api/errors';
 import useAuth from '../hooks/useAuth';
 import useEvents from '../hooks/useEvents';
 import useCalendars from '../hooks/useCalendars';
-import { people } from '../mocks/data';
+import usePeople from '../hooks/usePeople';
+import useToast from '../hooks/useToast';
 import cx from '../utils/cx';
 import { colorVars } from '../utils/colors';
 import {
@@ -22,7 +21,7 @@ import {
 } from '../utils/dates';
 import { addMinutes, participantsToAvatars } from '../utils/eventStats';
 import { pluralEvents } from '../utils/text';
-import { eventShape, participantShape } from '../utils/propTypes';
+import { calendarShape, eventShape, participantShape } from '../utils/propTypes';
 import Card from '../components/ui/Card';
 import Field from '../components/ui/Field';
 import Input from '../components/ui/Input';
@@ -35,17 +34,21 @@ import Icon from '../components/ui/Icon';
 import EventBlock from '../components/calendar/EventBlock';
 import ParticipantsInput from '../modals/ParticipantsInput';
 import {
+  DEFAULT_REMINDER,
   PRIORITY_OPTIONS,
-  REMINDER_OPTIONS,
   TIME_RE,
   TYPE_OPTIONS,
   TYPE_VALUES,
   calendarOptions,
+  canModifyEvent,
   combineDateTime,
   endOfDay,
   isWritableCalendar,
+  pickWritableCalendarId,
+  reminderOptions,
   reminderToValue,
   roundUpToStep,
+  splitApiErrors,
   toTimeParam,
   valueToReminder,
 } from '../modals/eventFormUtils';
@@ -56,19 +59,31 @@ const GUESTS_HINT =
   "Кожному надішлемо лист із запрошенням; подія з'явиться в їхньому календарі після підтвердження.";
 const TIP = 'Підказка: клік на вільний час у календарі створює подію ще швидше';
 const PLACEHOLDER_TITLE = 'Назва події';
-// Порядок кружечків як у мокапі; колір самого календаря не дублюємо — він є як «Колір календаря».
 const COLOR_ORDER = ['blue', 'purple', 'green', 'orange', 'pink', 'graphite'];
 const TYPE_PREFIX = { task: 'задача ', reminder: 'нагадування ' };
+const PREFILL_KEYS = ['date', 'start', 'end', 'calendar', 'title', 'type'];
+const FIELD_MAP = {
+  title: 'title',
+  type: 'type',
+  calendar: 'calendar',
+  startAt: 'startAt',
+  endAt: 'endAt',
+  participants: 'participants',
+  location: 'location',
+  description: 'description',
+  priority: 'priority',
+  reminderMinutesBefore: 'reminder',
+  color: 'color',
+};
 
 const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
-/** 'Максим і Оля' · 'Максим, Оля і Ірина' */
 function joinNames(names) {
   if (names.length <= 1) return names.join('');
+  if (names.length > 3) return `${names.slice(0, 2).join(', ')} і ще ${names.length - 2}`;
   return `${names.slice(0, -1).join(', ')} і ${names[names.length - 1]}`;
 }
 
-/** Кінець = початок + тривалість за замовчуванням (поки користувач не чіпав кінець). */
 function endFromStart(startDate, startTime, duration) {
   const start = combineDateTime(startDate, startTime);
   if (!start) return { endDate: startDate, endTime: '' };
@@ -76,20 +91,18 @@ function endFromStart(startDate, startTime, duration) {
   return { endDate: toDateParam(end), endTime: toTimeParam(end) };
 }
 
-/** ?date=&start=&end=&calendar=&title=&type= + location.state (учасники з модалки). */
 function parsePrefill(search, state) {
   const sp = new URLSearchParams(search);
-  const fromQuery = {};
-  ['date', 'start', 'end', 'calendar', 'title', 'type'].forEach((key) => {
-    const v = sp.get(key);
-    if (v) fromQuery[key] = v;
+  const prefill = {};
+  PREFILL_KEYS.forEach((key) => {
+    const value = sp.get(key);
+    if (value) prefill[key] = value;
   });
-  return { ...fromQuery, ...(state || {}) };
+  if (Array.isArray(state?.participants)) prefill.participants = state.participants;
+  return prefill;
 }
 
-/** Початкові значення форми: з події (режим edit), із prefill або за замовчуванням. */
-function initialValues({ event, prefill, writable, duration }) {
-  const fallbackCalendar = (writable.find((c) => c.isMain) || writable[0])?.id || '';
+function initialValues({ event, prefill, duration }) {
   if (event) {
     const start = event.startAt ? toDate(event.startAt) : null;
     const end = event.endAt ? toDate(event.endAt) : null;
@@ -127,26 +140,37 @@ function initialValues({ event, prefill, writable, duration }) {
     endTime: hasEnd ? prefill.end : defaults.endTime,
     endTouched: hasEnd,
     allDay: false,
-    calendar: writable.some((c) => c.id === prefill.calendar) ? prefill.calendar : fallbackCalendar,
+    calendar: prefill.calendar || '',
     color: null,
     participants: prefill.participants || [],
-    reminder: '10',
+    reminder: DEFAULT_REMINDER,
     priority: 'medium',
     location: '',
     description: '',
   };
 }
 
-/** «У спільному календарі «Робота» подію побачать Максим і Оля. Видалити її зможеш ти як автор і власник календаря.» */
-function visibilityNote(calendar, userId) {
-  if (!calendar) return '';
-  if (!calendar.isShared) return `Подію в календарі «${calendar.name}» побачиш лише ти.`;
-  const others = (calendar.members || []).filter((m) => m.user !== userId).map((m) => m.name);
-  const who = others.length ? joinNames(others) : 'усі учасники';
-  return `У спільному календарі «${calendar.name}» подію побачать ${who}. Видалити її зможеш ти як автор і власник календаря.`;
+function rightsNote(calendar, isAuthor) {
+  if (calendar.myRole !== 'owner') {
+    return 'Змінити чи видалити її зможеш ти як автор, а також власник календаря.';
+  }
+  return isAuthor
+    ? 'Видалити її зможеш ти як автор і власник календаря.'
+    : 'Змінити чи видалити її можеш ти як власник календаря, а також її автор.';
 }
 
-/** Статус і підпис для темної картки: «Цей час вільний» або «Перетин з «…» 14:30 – 16:00». */
+function visibilityNote({ calendar, userId, people, isAuthor }) {
+  if (!calendar) return '';
+  if (!calendar.isShared) return `Подію в календарі «${calendar.name}» побачиш лише ти.`;
+  const others = (calendar.members || [])
+    .filter((m) => m.user !== userId)
+    .map((m) => people[m.user]?.name || m.name)
+    .filter(Boolean);
+  const who = others.length ? joinNames(others) : 'усі учасники';
+  const verb = others.length === 1 ? 'побачить' : 'побачать';
+  return `У спільному календарі «${calendar.name}» подію ${verb} ${who}. ${rightsNote(calendar, isAuthor)}`;
+}
+
 function describeAvailability(a) {
   if (a.allDay) {
     return {
@@ -180,40 +204,134 @@ function describeAvailability(a) {
   };
 }
 
+function lockReason(event, calendar) {
+  if (event.isInvited) {
+    const source = event.sourceCalendar?.name;
+    const where = source ? `Це подія з календаря «${source}», куди` : 'Це подія, на яку';
+    return `${where} тебе запросили. Змінювати її може автор або власник календаря.`;
+  }
+  if (!calendar || calendar.isReadOnly || calendar.myRole === 'viewer') {
+    return calendar
+      ? `У календарі «${calendar.name}» у тебе права лише на перегляд.`
+      : 'У тебе немає доступу до календаря цієї події.';
+  }
+  return `У спільному календарі «${calendar.name}» редактор може змінювати лише власні події.`;
+}
+
+function Notice({ title, text, backTo = '/calendar/week' }) {
+  return (
+    <Card padding="22px" radius={20} gap={10} className={styles.notFound}>
+      <h1 className={styles.h1}>{title}</h1>
+      <span className={styles.sub}>{text}</span>
+      <Link to={backTo} className={styles.back}>
+        <Icon name="chevron-left" size={14} />
+        Назад до календаря
+      </Link>
+    </Card>
+  );
+}
+
+Notice.propTypes = {
+  title: PropTypes.string.isRequired,
+  text: PropTypes.string.isRequired,
+  backTo: PropTypes.string,
+};
+
+function Preview({ event, calendar = null, meta, avatars, note, eyebrow, slot }) {
+  return (
+    <aside className={styles.aside}>
+      <Card padding="18px" radius={18} gap={10}>
+        <span className={styles.eyebrow}>Так це виглядатиме</span>
+        <EventBlock
+          event={event}
+          calendar={calendar}
+          variant="day"
+          meta={meta}
+          participants={avatars}
+          className={styles.previewBlock}
+        />
+        <span className={styles.note}>{note}</span>
+      </Card>
+      <Card variant="dark" padding="18px" radius={18} gap={6}>
+        <span className={styles.darkEyebrow}>{eyebrow}</span>
+        <span className={cx(styles.status, slot.conflict && styles.statusConflict)}>
+          {slot.status}
+        </span>
+        <span className={styles.darkText}>{slot.text}</span>
+      </Card>
+    </aside>
+  );
+}
+
+Preview.propTypes = {
+  event: eventShape.isRequired,
+  calendar: calendarShape,
+  meta: PropTypes.string.isRequired,
+  avatars: PropTypes.arrayOf(
+    PropTypes.shape({
+      initials: PropTypes.string.isRequired,
+      color: PropTypes.string,
+      name: PropTypes.string,
+    }),
+  ).isRequired,
+  note: PropTypes.string.isRequired,
+  eyebrow: PropTypes.string.isRequired,
+  slot: PropTypes.shape({
+    conflict: PropTypes.bool,
+    status: PropTypes.string.isRequired,
+    text: PropTypes.string.isRequired,
+  }).isRequired,
+};
+
 function EventForm({ event = null, prefill = {} }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { calendars, byId } = useCalendars();
+  const people = usePeople();
+  const { notifySuccess } = useToast();
   const duration = user?.defaultArrangementDuration ?? 60;
   const writable = useMemo(() => calendars.filter(isWritableCalendar), [calendars]);
-  const [form, setForm] = useState(() => initialValues({ event, prefill, writable, duration }));
+  const [form, setForm] = useState(() => initialValues({ event, prefill, duration }));
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isMounted = useRef(true);
+  const inFlight = useRef(false);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   const isEdit = Boolean(event);
   const isTask = form.type === 'task';
   const isArrangement = form.type === 'arrangement';
-  const allDay = form.allDay || (isTask && !form.startTime);
-  const calendar = byId[form.calendar] || writable[0] || null;
+  const hasStartTime = TIME_RE.test(form.startTime);
+  const allDay = form.allDay || (isTask && !hasStartTime);
+  const calendarId = pickWritableCalendarId(calendars, form.calendar);
+  const calendar = byId[calendarId] || null;
   const calendarColor = calendar?.color || 'graphite';
 
-  // Події обраного дня — для «цей час вільний» і сусідніх подій (усі календарі, і приховані теж).
   const dayRange = useMemo(() => {
     const from = combineDateTime(form.startDate) || combineDateTime(toDateParam(new Date()));
     return { from, to: addDays(from, 1), includeHidden: true };
   }, [form.startDate]);
-  const { events: dayEvents, createEvent, updateEvent } = useEvents(dayRange);
+  const { events: dayEvents, createEvent, saveEvent } = useEvents(dayRange);
 
   const startAt = useMemo(
     () => combineDateTime(form.startDate, allDay ? '' : form.startTime),
     [form.startDate, form.startTime, allDay],
   );
+  const hasEnd = Boolean(form.endDate || form.endTime);
   const endAt = useMemo(() => {
     if (!isArrangement || !startAt) return null;
     if (allDay) {
       const d = combineDateTime(form.endDate || form.startDate);
       return d ? endOfDay(d) : null;
     }
-    return combineDateTime(form.endDate, form.endTime);
+    if (!TIME_RE.test(form.endTime)) return null;
+    return combineDateTime(form.endDate || form.startDate, form.endTime);
   }, [isArrangement, allDay, startAt, form.endDate, form.endTime, form.startDate]);
 
   const availability = useMemo(() => {
@@ -224,7 +342,10 @@ function EventForm({ event = null, prefill = {} }) {
     const until = endAt && endAt > startAt ? endAt : addMinutes(startAt, 1);
     const conflict =
       timed.find(
-        (e) => e.type === 'arrangement' && intervalsOverlap(startAt, until, e.startAt, e.endAt),
+        (e) =>
+          e.type === 'arrangement' &&
+          Boolean(e.endAt) &&
+          intervalsOverlap(startAt, until, e.startAt, e.endAt),
       ) || null;
     const before = timed.filter((e) => toDate(e.endAt || e.startAt) <= startAt);
     return {
@@ -239,7 +360,7 @@ function EventForm({ event = null, prefill = {} }) {
       id: event?.id || 'preview',
       type: form.type,
       title: form.title.trim() || PLACEHOLDER_TITLE,
-      calendar: form.calendar,
+      calendar: calendarId,
       creator: event?.creator || user?.id,
       startAt: startAt || undefined,
       endAt: endAt || undefined,
@@ -248,53 +369,79 @@ function EventForm({ event = null, prefill = {} }) {
       participants: form.participants,
       isCompleted: Boolean(event?.isCompleted),
     }),
-    [event, user, form, startAt, endAt, allDay],
+    [event, user, form, calendarId, startAt, endAt, allDay],
   );
   const previewAvatars = useMemo(
     () => participantsToAvatars(form.participants, people),
-    [form.participants],
+    [form.participants, people],
   );
   const previewTime = allDay ? 'весь день' : startAt && formatTimeRange(startAt, endAt);
   const previewMeta = [
-    previewTime,
+    startAt ? previewTime : null,
     calendar?.name,
     form.participants.map((p) => p.name || p.email).join(', '),
   ]
     .filter(Boolean)
     .join(' · ');
 
-  const set = (patch) => setForm((f) => ({ ...f, ...patch }));
-  const onStartChange = (patch) =>
+  const clearErrors = (...keys) =>
+    setErrors((prev) => {
+      const drop = new Set(['form', ...keys]);
+      return Object.fromEntries(Object.entries(prev).filter(([key]) => !drop.has(key)));
+    });
+  const set = (patch, ...errorKeys) => {
+    setForm((f) => ({ ...f, ...patch }));
+    clearErrors(...errorKeys);
+  };
+  const onStartChange = (patch) => {
     setForm((f) => {
       const next = { ...f, ...patch };
       if (next.endTouched) return next;
       return { ...next, ...endFromStart(next.startDate, next.startTime, duration) };
     });
-  const onEndChange = (patch) => set({ ...patch, endTouched: true });
-  const onTypeChange = (type) =>
+    clearErrors('startAt', 'endAt');
+  };
+  const onEndChange = (patch) => set({ ...patch, endTouched: true }, 'endAt');
+  const onTypeChange = (type) => {
     setForm((f) => {
       if (type !== 'arrangement' || f.endTime) return { ...f, type };
       return { ...f, type, ...endFromStart(f.startDate, f.startTime, duration) };
     });
-  const onCalendarChange = (id) =>
+    clearErrors('type', 'startAt', 'endAt');
+  };
+  const onCalendarChange = (id) => {
     setForm((f) => ({ ...f, calendar: id, color: f.color === byId[id]?.color ? null : f.color }));
+    clearErrors('calendar');
+  };
 
-  const onSubmit = (e) => {
-    e.preventDefault();
+  const validate = () => {
     const next = {};
     if (!form.title.trim()) next.title = 'Вкажи назву';
-    if (!startAt) next.start = 'Вкажи дату';
-    if (isArrangement && startAt) {
-      if (!endAt) next.end = 'Вкажи дату й час кінця';
-      else if (endAt <= startAt) next.end = 'Кінець має бути пізніше за початок';
+    if (!calendarId) next.calendar = 'Немає календаря, у який можна додати подію';
+    if (!startAt && !isTask) next.startAt = 'Вкажи дату';
+    else if (startAt && !isTask && !allDay && !hasStartTime) {
+      next.startAt = 'Вкажи час або познач «Весь день»';
     }
+    if (isArrangement && startAt && (allDay || hasEnd)) {
+      if (!endAt) next.endAt = 'Вкажи дату й час кінця';
+      else if (endAt <= startAt) next.endAt = 'Кінець має бути пізніше за початок';
+    }
+    return next;
+  };
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    if (inFlight.current) return;
+
+    const next = validate();
     setErrors(next);
-    if (Object.keys(next).length) return;
+    if (Object.keys(next).length > 0) return;
+
     const dto = {
       title: form.title.trim(),
       type: form.type,
-      calendar: form.calendar,
-      startAt,
+      calendar: calendarId,
+      startAt: startAt || null,
       endAt: isArrangement ? endAt : null,
       allDay,
       color: form.color,
@@ -304,12 +451,27 @@ function EventForm({ event = null, prefill = {} }) {
       priority: form.priority,
       participants: form.participants,
     };
-    if (isEdit) updateEvent(event.id, dto);
-    else createEvent(dto);
-    navigate(`/calendar/day?date=${toDateParam(startAt)}`);
+
+    inFlight.current = true;
+    setIsSubmitting(true);
+    try {
+      if (isEdit) await saveEvent(event.id, dto);
+      else await createEvent(dto);
+      notifySuccess(isEdit ? 'Зміни збережено' : 'Подію створено');
+      if (isMounted.current) {
+        navigate(startAt ? `/calendar/day?date=${toDateParam(startAt)}` : '/tasks');
+      }
+    } catch (err) {
+      inFlight.current = false;
+      if (!isMounted.current) return;
+      const { fields, form: formError } = splitApiErrors(parseApiError(err), FIELD_MAP);
+      setErrors(formError ? { ...fields, form: formError } : fields);
+      setIsSubmitting(false);
+    }
   };
 
   const heading = isEdit ? 'Редагувати подію' : 'Нова подія';
+  const submitLabel = isEdit ? 'Зберегти' : 'Створити подію';
   const backTo = `/calendar/week${form.startDate ? `?date=${form.startDate}` : ''}`;
   const colorOptions = COLOR_ORDER.filter((k) => k !== calendarColor);
   const eyebrow = startAt
@@ -319,9 +481,17 @@ function EventForm({ event = null, prefill = {} }) {
     ? describeAvailability(availability)
     : {
         conflict: false,
-        status: 'Вкажи дату',
-        text: 'Коли буде дата, перевіримо, чи вільний цей час.',
+        status: isTask ? 'Задача без дати' : 'Вкажи дату',
+        text: isTask
+          ? "Вона з'явиться у списку задач у групі «Без дати»."
+          : 'Коли буде дата, перевіримо, чи вільний цей час.',
       };
+  const note = visibilityNote({
+    calendar,
+    userId: user?.id,
+    people,
+    isAuthor: !event || event.creator === user?.id,
+  });
 
   return (
     <>
@@ -350,15 +520,16 @@ function EventForm({ event = null, prefill = {} }) {
             <Input
               id="ev-title"
               type="text"
+              maxLength={120}
               value={form.title}
-              onChange={(e) => set({ title: e.target.value })}
+              onChange={(e) => set({ title: e.target.value }, 'title')}
               placeholder="Напр., Дзвінок з ментором"
               invalid={Boolean(errors.title)}
               className={styles.titleInput}
             />
           </Field>
 
-          <Field label="Тип">
+          <Field label="Тип" error={errors.type}>
             <div role="radiogroup" aria-label="Тип події" className={styles.types}>
               {TYPE_OPTIONS.map((t) => (
                 <button
@@ -380,7 +551,8 @@ function EventForm({ event = null, prefill = {} }) {
             <Field
               label={isTask ? 'Дедлайн' : 'Початок'}
               htmlFor="ev-start-date"
-              error={errors.start}
+              error={errors.startAt}
+              hint={isTask ? 'Дату можна не вказувати.' : null}
             >
               <div className={styles.when}>
                 <Input
@@ -388,7 +560,7 @@ function EventForm({ event = null, prefill = {} }) {
                   type="date"
                   value={form.startDate}
                   onChange={(e) => onStartChange({ startDate: e.target.value })}
-                  invalid={Boolean(errors.start)}
+                  invalid={Boolean(errors.startAt)}
                 />
                 {form.allDay ? null : (
                   <Input
@@ -396,6 +568,7 @@ function EventForm({ event = null, prefill = {} }) {
                     value={form.startTime}
                     onChange={(e) => onStartChange({ startTime: e.target.value })}
                     aria-label="Час початку"
+                    invalid={Boolean(errors.startAt)}
                     className={styles.time}
                   />
                 )}
@@ -405,7 +578,7 @@ function EventForm({ event = null, prefill = {} }) {
               <Field
                 label="Кінець"
                 htmlFor="ev-end-date"
-                error={errors.end}
+                error={errors.endAt}
                 hint={
                   <>
                     Тривалість {formatDuration(duration)} — як у налаштуваннях.{' '}
@@ -421,7 +594,7 @@ function EventForm({ event = null, prefill = {} }) {
                     type="date"
                     value={form.endDate}
                     onChange={(e) => onEndChange({ endDate: e.target.value })}
-                    invalid={Boolean(errors.end)}
+                    invalid={Boolean(errors.endAt)}
                   />
                   {form.allDay ? null : (
                     <Input
@@ -429,7 +602,7 @@ function EventForm({ event = null, prefill = {} }) {
                       value={form.endTime}
                       onChange={(e) => onEndChange({ endTime: e.target.value })}
                       aria-label="Час кінця"
-                      invalid={Boolean(errors.end)}
+                      invalid={Boolean(errors.endAt)}
                       className={styles.time}
                     />
                   )}
@@ -437,12 +610,12 @@ function EventForm({ event = null, prefill = {} }) {
               </Field>
             ) : null}
             {isTask ? (
-              <Field label="Пріоритет" htmlFor="ev-priority">
+              <Field label="Пріоритет" htmlFor="ev-priority" error={errors.priority}>
                 <Select
                   id="ev-priority"
                   options={PRIORITY_OPTIONS}
                   value={form.priority}
-                  onChange={(v) => set({ priority: v })}
+                  onChange={(v) => set({ priority: v }, 'priority')}
                 />
               </Field>
             ) : null}
@@ -452,18 +625,18 @@ function EventForm({ event = null, prefill = {} }) {
             <Checkbox
               id="ev-allday"
               checked={form.allDay}
-              onChange={(v) => set({ allDay: v })}
+              onChange={(v) => set({ allDay: v }, 'startAt', 'endAt')}
               size={15}
             />
             Весь день
           </label>
 
           <div className={styles.grid2}>
-            <Field label="Календар" htmlFor="ev-calendar">
+            <Field label="Календар" htmlFor="ev-calendar" error={errors.calendar}>
               <Select
                 id="ev-calendar"
                 options={calendarOptions(writable)}
-                value={form.calendar}
+                value={calendarId}
                 onChange={onCalendarChange}
                 leading={
                   <span
@@ -473,11 +646,11 @@ function EventForm({ event = null, prefill = {} }) {
                 }
               />
             </Field>
-            <Field label="Колір події">
+            <Field label="Колір події" error={errors.color}>
               <div className={styles.colorRow}>
                 <ColorPicker
                   value={form.color}
-                  onChange={(c) => set({ color: c })}
+                  onChange={(c) => set({ color: c }, 'color')}
                   options={colorOptions}
                   inherit={{ label: 'Колір календаря', color: calendarColor }}
                   label="Колір події"
@@ -490,44 +663,55 @@ function EventForm({ event = null, prefill = {} }) {
             <ParticipantsInput
               id="ev-guests"
               value={form.participants}
-              onChange={(list) => set({ participants: list })}
+              onChange={(list) => set({ participants: list }, 'participants')}
+              error={errors.participants || null}
+              disabled={isSubmitting}
             />
           </Field>
 
           <div className={styles.grid2}>
-            <Field label="Нагадати" htmlFor="ev-reminder">
+            <Field label="Нагадати" htmlFor="ev-reminder" error={errors.reminder}>
               <Select
                 id="ev-reminder"
-                options={REMINDER_OPTIONS}
+                options={reminderOptions(form.reminder)}
                 value={form.reminder}
-                onChange={(v) => set({ reminder: v })}
+                onChange={(v) => set({ reminder: v }, 'reminder')}
                 leading={<Icon name="bell" size={14} />}
               />
             </Field>
-            <Field label="Місце або посилання" htmlFor="ev-place">
+            <Field label="Місце або посилання" htmlFor="ev-place" error={errors.location}>
               <Input
                 id="ev-place"
                 type="text"
+                maxLength={200}
                 value={form.location}
-                onChange={(e) => set({ location: e.target.value })}
+                onChange={(e) => set({ location: e.target.value }, 'location')}
                 placeholder="Google Meet, адреса, кімната"
+                invalid={Boolean(errors.location)}
               />
             </Field>
           </div>
 
-          <Field label="Опис" htmlFor="ev-desc">
+          <Field label="Опис" htmlFor="ev-desc" error={errors.description}>
             <Textarea
               id="ev-desc"
               rows={3}
+              maxLength={2000}
               value={form.description}
-              onChange={(e) => set({ description: e.target.value })}
+              onChange={(e) => set({ description: e.target.value }, 'description')}
               placeholder="Що обговорити, що підготувати…"
             />
           </Field>
 
+          {errors.form ? (
+            <span className={styles.formError} role="alert">
+              {errors.form}
+            </span>
+          ) : null}
+
           <div className={styles.footer}>
-            <PillButton type="submit" size="lg">
-              {isEdit ? 'Зберегти' : 'Створити подію'}
+            <PillButton type="submit" size="lg" disabled={isSubmitting}>
+              {isSubmitting ? 'Зберігаємо…' : submitLabel}
             </PillButton>
             <PillButton variant="secondary" size="lg" to={backTo}>
               Скасувати
@@ -536,27 +720,15 @@ function EventForm({ event = null, prefill = {} }) {
           </div>
         </Card>
 
-        <aside className={styles.aside}>
-          <Card padding="18px" radius={18} gap={10}>
-            <span className={styles.eyebrow}>Так це виглядатиме</span>
-            <EventBlock
-              event={preview}
-              calendar={calendar}
-              variant="day"
-              meta={previewMeta}
-              participants={previewAvatars}
-              className={styles.previewBlock}
-            />
-            <span className={styles.note}>{visibilityNote(calendar, user?.id)}</span>
-          </Card>
-          <Card variant="dark" padding="18px" radius={18} gap={6}>
-            <span className={styles.darkEyebrow}>{eyebrow}</span>
-            <span className={cx(styles.status, slot.conflict && styles.statusConflict)}>
-              {slot.status}
-            </span>
-            <span className={styles.darkText}>{slot.text}</span>
-          </Card>
-        </aside>
+        <Preview
+          event={preview}
+          calendar={calendar}
+          meta={previewMeta}
+          avatars={previewAvatars}
+          note={note}
+          eyebrow={eyebrow}
+          slot={slot}
+        />
       </div>
     </>
   );
@@ -579,19 +751,28 @@ export default function EventCreatePage() {
   const { id } = useParams();
   const { search, state } = useLocation();
   const { getEvent } = useEvents();
+  const { byId } = useCalendars();
+  const { user } = useAuth();
   const prefill = useMemo(() => parsePrefill(search, state), [search, state]);
   const event = id ? getEvent(id) : null;
 
   if (id && !event) {
     return (
-      <Card padding="22px" radius={20} gap={10} className={styles.notFound}>
-        <h1 className={styles.h1}>Подію не знайдено</h1>
-        <span className={styles.sub}>Можливо, її видалили або посилання застаріло.</span>
-        <Link to="/calendar/week" className={styles.back}>
-          <Icon name="chevron-left" size={14} />
-          Назад до календаря
-        </Link>
-      </Card>
+      <Notice title="Подію не знайдено" text="Можливо, її видалили або посилання застаріло." />
+    );
+  }
+
+  const calendar = event ? byId[event.calendar] || null : null;
+  if (event && !canModifyEvent(event, calendar, user?.id)) {
+    const backTo = event.startAt
+      ? `/calendar/week?date=${toDateParam(event.startAt)}`
+      : '/calendar/week';
+    return (
+      <Notice
+        title="Цю подію не можна редагувати"
+        text={lockReason(event, calendar)}
+        backTo={backTo}
+      />
     );
   }
 

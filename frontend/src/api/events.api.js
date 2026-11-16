@@ -1,29 +1,30 @@
-/** GET /events?from&to&calendars&types&q → { events: [...] } (дати — ISO UTC) */
-export async function listEvents() {
-  throw new Error('TODO(@teammate2): events.api.listEvents');
+import client from './client';
+
+export async function listEvents(params = {}) {
+  const { data } = await client.get('/events', { params });
+  return data.events;
 }
 
-/** GET /events/:id → { event } */
-export async function getEvent() {
-  throw new Error('TODO(@teammate2): events.api.getEvent');
+export async function getEvent(id) {
+  const { data } = await client.get(`/events/${id}`);
+  return data.event;
 }
 
-/** POST /events { title, type, calendar, startAt, endAt?, … } → { event } */
-export async function createEvent() {
-  throw new Error('TODO(@teammate2): events.api.createEvent');
+export async function createEvent(payload) {
+  const { data } = await client.post('/events', payload);
+  return data.event;
 }
 
-/** PATCH /events/:id { … } → { event } */
-export async function updateEvent() {
-  throw new Error('TODO(@teammate2): events.api.updateEvent');
+export async function updateEvent(id, patch) {
+  const { data } = await client.patch(`/events/${id}`, patch);
+  return data.event;
 }
 
-/** DELETE /events/:id → 204 */
-export async function deleteEvent() {
-  throw new Error('TODO(@teammate2): events.api.deleteEvent');
+export async function deleteEvent(id) {
+  await client.delete(`/events/${id}`);
 }
 
-/** POST /events/:id/invite { emails: [] } → { event } */
-export async function inviteToEvent() {
-  throw new Error('TODO(@teammate2): events.api.inviteToEvent');
+export async function inviteToEvent(id, emails) {
+  const { data } = await client.post(`/events/${id}/invite`, { emails });
+  return data.event;
 }

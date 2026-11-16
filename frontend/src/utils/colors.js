@@ -1,6 +1,3 @@
-// Ключі кольорів з бекенду (COLOR_KEYS) → CSS-змінні з styles/tokens.css.
-// Подія фарбується кольором календаря; у спільному календарі — кольором учасника.
-
 export const COLOR_KEYS = ['graphite', 'blue', 'purple', 'green', 'orange', 'pink'];
 
 export const COLOR_VARS = {
@@ -29,7 +26,6 @@ export const COLOR_VARS = {
   },
 };
 
-// Hex для accent-color чекбоксів (CSS-змінні там не працюють у всіх браузерах)
 export const COLOR_HEX = {
   graphite: '#111827',
   blue: '#2563EB',
@@ -49,7 +45,6 @@ export const COLOR_LABELS = {
   pink: 'Рожевий',
 };
 
-// Палітра учасників спільних календарів (member-* у tokens.css) — для аватарів і подій, пофарбованих кольором учасника
 export const MEMBER_COLOR_VARS = {
   graphite: {
     base: 'var(--member-graphite)',
@@ -94,7 +89,6 @@ export const MEMBER_COLOR_HEX = {
   holidays: '#2563EB',
 };
 
-/** palette: 'calendar' (кольори календарів) | 'member' (кольори учасників) */
 export const colorVars = (key, palette = 'calendar') => {
   const table = palette === 'member' ? MEMBER_COLOR_VARS : COLOR_VARS;
   return table[key] || table.graphite;
@@ -105,10 +99,6 @@ export const colorHex = (key, palette = 'calendar') => {
   return table[key] || table.graphite;
 };
 
-/**
- * Колір події: власний color → колір автора у спільному календарі (палітра учасників) → колір календаря.
- * @returns {{ key: string, palette: 'calendar'|'member' }}
- */
 export function resolveEventColor(event, calendar) {
   if (event?.color) return { key: event.color, palette: 'calendar' };
   if (calendar?.isShared && calendar.members) {

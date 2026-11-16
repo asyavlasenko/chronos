@@ -1,13 +1,8 @@
-// Дизайн: 08-calendars.html (колір календаря, мій колір), 10-event-create.html (колір події)
 import PropTypes from 'prop-types';
 import cx from '../../utils/cx';
 import { COLOR_KEYS, COLOR_LABELS, colorVars } from '../../utils/colors';
 import styles from './ColorPicker.module.css';
 
-/**
- * Кружечки 26px; активний — outline 2px --dark offset 2. value — ключ кольору (або null, якщо є inherit).
- * inherit — додатковий перший варіант «Колір календаря» (value null) з переданим кольором.
- */
 export default function ColorPicker({
   value = null,
   onChange,

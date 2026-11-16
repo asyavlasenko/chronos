@@ -1,16 +1,20 @@
-import { useContext, useMemo } from 'react';
+import { useContext, useEffect, useMemo } from 'react';
 import { EventsContext } from '../app/providers/EventsProvider';
 import { CalendarsContext } from '../app/providers/CalendarsProvider';
 import { toDate } from '../utils/dates';
 
-/**
- * Події для подання: фільтр за діапазоном [from, to), видимими календарями, типами й пошуком.
- * Свята підмішуються як події типу 'holiday' календаря 'holidays' (весь день).
- * Без аргументів повертає всі події (для задач «без дати» тощо).
- */
 export default function useEvents({ from, to, calendarIds, types, q, includeHidden = false } = {}) {
   const ctx = useContext(EventsContext);
   const cals = useContext(CalendarsContext);
+  const { ensureHolidays } = ctx;
+
+  const fromYear = from ? from.getFullYear() : null;
+  const toYear = to ? new Date(to.getTime() - 1).getFullYear() : null;
+
+  useEffect(() => {
+    if (fromYear === null || toYear === null) return;
+    for (let year = fromYear; year <= toYear; year += 1) ensureHolidays(year);
+  }, [fromYear, toYear, ensureHolidays]);
 
   const holidayEvents = useMemo(
     () =>

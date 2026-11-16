@@ -1,12 +1,7 @@
-// Дизайн: 01-overview.html («Наступна через 48 хв»), 04-day.html, 06-year.html (підсумок року)
 import PropTypes from 'prop-types';
 import Card from './Card';
 import styles from './DarkCard.module.css';
 
-/**
- * Темна «героїчна» картка: eyebrow (11/600 uppercase, opacity .7) · value (34/700) · title · meta · children · footer.
- * Одна на екран.
- */
 export default function DarkCard({
   eyebrow = null,
   value = null,

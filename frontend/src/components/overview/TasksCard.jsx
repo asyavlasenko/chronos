@@ -1,4 +1,3 @@
-// Дизайн: design/screens/01-overview.html (картка «Задачі»: «2 з 5», прогрес 6px, до 3 невиконаних задач, «Усі задачі →»)
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import { isToday } from '../../utils/dates';

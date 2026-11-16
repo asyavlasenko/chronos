@@ -1,5 +1,3 @@
-// Відмінювання для підписів українською: '4 події', '1 задача', '21 година зайнято'.
-
 export function plural(n, [one, few, many]) {
   const mod10 = n % 10;
   const mod100 = n % 100;
@@ -18,7 +16,6 @@ export const pluralCalendars = (n) => `${n} ${plural(n, ['календар', 'к
 export const pluralDeadlines = (n) => `${n} ${plural(n, ['дедлайн', 'дедлайни', 'дедлайнів'])}`;
 export const pluralInvites = (n) => `${n} ${plural(n, ['запрошення', 'запрошення', 'запрошень'])}`;
 
-/** 'Добрий ранок' / 'Добрий день' / 'Добрий вечір' за годиною */
 export function greeting(now = new Date()) {
   const h = now.getHours();
   if (h < 12) return 'Добрий ранок';
@@ -26,7 +23,6 @@ export function greeting(now = new Date()) {
   return 'Добрий вечір';
 }
 
-/** Ініціали: 'Анастасія Власенко' → 'АВ' */
 export function initials(name = '') {
   return name
     .split(/\s+/)

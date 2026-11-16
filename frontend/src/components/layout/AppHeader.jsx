@@ -1,5 +1,3 @@
-// Дизайн: 01-overview.html (хедер: лого · Огляд · Календар · Задачі · Календарі · пошук · «Створити» · аватар),
-// 16-mobile.html (мобільний: кнопка пошуку + аватар з ініціалами; навігація — у MobileTabBar)
 import { useState } from 'react';
 import { NavLink, Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import cx from '../../utils/cx';

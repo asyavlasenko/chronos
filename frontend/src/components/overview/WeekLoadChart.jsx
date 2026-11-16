@@ -1,4 +1,3 @@
-// Дизайн: design/screens/01-overview.html (картка «Тиждень 45»: 7 стовпчиків навантаження, сьогодні — accent)
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import cx from '../../utils/cx';

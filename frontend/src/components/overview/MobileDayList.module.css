@@ -1,4 +1,3 @@
-/* MobileDayList. Дизайн: 16-mobile.html (список подій дня) */
 .list {
   display: flex;
   flex-direction: column;

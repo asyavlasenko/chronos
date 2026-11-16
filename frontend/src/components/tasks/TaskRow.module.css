@@ -1,4 +1,3 @@
-/* TaskRow. Дизайн: design/screens/07-tasks.html (.t, .n, .m, .d, .done). Лише змінні з src/styles/tokens.css. */
 .row {
   display: flex;
   align-items: center;
@@ -14,6 +13,10 @@
   flex-direction: column;
   gap: 2px;
   cursor: pointer;
+}
+
+.readOnly .label {
+  cursor: default;
 }
 
 .name {
@@ -43,12 +46,10 @@
   font-weight: var(--fw-medium);
 }
 
-/* Низький пріоритет — світліший за «середній» */
 .row .low {
   color: var(--ink-tertiary);
 }
 
-/* Шеврон «Відкрити»: сірий, без фону на білій картці */
 .row .open {
   color: var(--ink-tertiary);
 }

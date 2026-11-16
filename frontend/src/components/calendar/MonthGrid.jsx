@@ -1,6 +1,3 @@
-// Дизайн: design/screens/05-month.html
-// Сітка місяця: колонка номерів тижнів «тжд» (клік → тиждень), шапка Пн…Нд, клітинки з рядками
-// «час · крапка · назва» (до maxPerDay) і «+ ще N» (→ день); сьогодні — обведення, дні поза місяцем — сірі.
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import cx from '../../utils/cx';
@@ -27,6 +24,7 @@ function MonthCell({
   maxPerDay,
   onEventClick = null,
   onToggleComplete = null,
+  canComplete = null,
 }) {
   const outside = day.getMonth() !== month.getMonth();
   const today = isToday(day);
@@ -53,6 +51,7 @@ function MonthCell({
           variant="list"
           onClick={onEventClick}
           onToggleComplete={onToggleComplete}
+          completable={canComplete ? canComplete(e) : true}
           className={cx(
             styles.row,
             outside && styles.rowOutside,
@@ -78,12 +77,9 @@ MonthCell.propTypes = {
   maxPerDay: PropTypes.number.isRequired,
   onEventClick: PropTypes.func,
   onToggleComplete: PropTypes.func,
+  canComplete: PropTypes.func,
 };
 
-/**
- * month — будь-яка дата місяця; eventsByDay — Map з groupEventsByDay (ключ — startAt.toDateString()).
- * 6 рядків × 7 днів; якщо після 5 рядків місяць закінчився — 5. Останній (6-й) рядок нижчий, як у мокапі.
- */
 export default function MonthGrid({
   month,
   eventsByDay = new Map(),
@@ -92,6 +88,7 @@ export default function MonthGrid({
   maxPerDay = 3,
   onEventClick = null,
   onToggleComplete = null,
+  canComplete = null,
   className = '',
 }) {
   const days = getMonthGridDays(month, weekStartsOn);
@@ -115,7 +112,6 @@ export default function MonthGrid({
         ))}
       </div>
       {rows.map((row, i) => {
-        // Номер тижня — ISO 8601 (з понеділка); якщо тиждень починається з неділі, понеділок — другий день
         const monday = weekStartsOn === 1 ? row[0] : addDays(row[0], 1);
         const week = getIsoWeek(monday);
         return (
@@ -137,6 +133,7 @@ export default function MonthGrid({
                 maxPerDay={maxPerDay}
                 onEventClick={onEventClick}
                 onToggleComplete={onToggleComplete}
+                canComplete={canComplete}
               />
             ))}
           </div>
@@ -154,5 +151,6 @@ MonthGrid.propTypes = {
   maxPerDay: PropTypes.number,
   onEventClick: PropTypes.func,
   onToggleComplete: PropTypes.func,
+  canComplete: PropTypes.func,
   className: PropTypes.string,
 };

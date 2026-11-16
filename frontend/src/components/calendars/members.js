@@ -1,6 +1,3 @@
-// Довідкові функції для учасників календаря: аватар (ініціали + колір) і підписи ролей.
-// Використовують CalendarRow, MemberRow, CalendarSettingsPanel, CalendarsPage, SharedCalendarPage.
-import { people } from '../../mocks/data';
 import { initials as toInitials } from '../../utils/text';
 
 export const ROLE_LABELS = { owner: 'власник', editor: 'редактор', viewer: 'глядач' };
@@ -10,13 +7,11 @@ export const ROLE_OPTIONS = [
   { value: 'viewer', label: 'Глядач' },
 ];
 
-/**
- * Учасник календаря → { id, initials, color, name } для Avatar/AvatarStack.
- * Колір — з членства (member.color), інакше з довідника людей; ініціали — з довідника або з імені.
- */
-export function memberAvatar(member) {
+const localPart = (email) => (email || '').split('@')[0];
+
+export function memberAvatar(member, people = {}) {
   const person = people[member.user];
-  const name = member.name || person?.name || member.email || '';
+  const name = person?.name || member.name || localPart(member.email) || 'Учасник';
   return {
     id: member.user,
     initials: person?.initials || toInitials(name) || '?',
@@ -25,4 +20,5 @@ export function memberAvatar(member) {
   };
 }
 
-export const membersToAvatars = (members = []) => members.map(memberAvatar);
+export const membersToAvatars = (members = [], people = {}) =>
+  members.map((member) => memberAvatar(member, people));

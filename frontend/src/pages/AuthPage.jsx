@@ -1,11 +1,8 @@
-// Дизайн: design/screens/13-auth.html
-// Вхід / Реєстрація / Скидання пароля: форма ліворуч (таби, email, пароль із «показати», «запам'ятати»),
-// промо-картка і нотатка про запрошення праворуч. mode задає роутер: /login · /register · /reset.
 import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
-import useEvents from '../hooks/useEvents';
+import { parseApiError } from '../api/errors';
 import cx from '../utils/cx';
 import Icon from '../components/ui/Icon';
 import Card from '../components/ui/Card';
@@ -14,7 +11,16 @@ import Input from '../components/ui/Input';
 import IconButton from '../components/ui/IconButton';
 import Checkbox from '../components/ui/Checkbox';
 import PillButton from '../components/ui/PillButton';
+import PageLoader from '../components/ui/PageLoader';
 import styles from './AuthPage.module.css';
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MIN_PASSWORD = 8;
+const MIN_NAME = 2;
+
+const RESET_SENT = 'Якщо такий email існує, лист уже в дорозі';
+const RESET_DONE = 'Пароль змінено, увійди з новим';
+const LINK_INVALID = 'Посилання недійсне або прострочене';
 
 const TABS = [
   { mode: 'login', to: '/login', label: 'Вхід' },
@@ -27,6 +33,7 @@ const COPY = {
     title: 'З поверненням',
     subtitle: 'Увійди, щоб побачити свої календарі та запрошення.',
     submit: 'Увійти',
+    busy: 'Входимо…',
     footText: 'Немає акаунта?',
     footLink: 'Зареєструватися',
     footTo: '/register',
@@ -36,6 +43,7 @@ const COPY = {
     title: 'Створи акаунт',
     subtitle: 'Головний календар створиться автоматично.',
     submit: 'Зареєструватися',
+    busy: 'Створюємо акаунт…',
     footText: 'Уже є акаунт?',
     footLink: 'Увійти',
     footTo: '/login',
@@ -45,10 +53,28 @@ const COPY = {
     title: 'Скидання пароля',
     subtitle: 'Надішлемо лист із посиланням.',
     submit: 'Надіслати лист',
+    busy: 'Надсилаємо…',
     footText: 'Згадали пароль?',
     footLink: 'Увійти',
     footTo: '/login',
   },
+  confirm: {
+    formLabel: 'Новий пароль',
+    title: 'Новий пароль',
+    subtitle: `Придумай пароль, щонайменше ${MIN_PASSWORD} символів.`,
+    submit: 'Зберегти пароль',
+    busy: 'Зберігаємо…',
+    footText: 'Посилання не працює?',
+    footLink: 'Надіслати нове',
+    footTo: '/reset',
+  },
+};
+
+const FIELDS = {
+  login: ['email', 'password'],
+  register: ['name', 'email', 'password'],
+  reset: ['email'],
+  confirm: ['password', 'passwordRepeat'],
 };
 
 const PROMO = [
@@ -58,41 +84,72 @@ const PROMO = [
   'Свята твоєї країни автоматично',
 ];
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MIN_PASSWORD = 8;
-const MIN_NAME = 2;
-
-function validate(mode, values) {
+function validate(view, values) {
   const errors = {};
-  if (mode === 'register' && values.name.trim().length < MIN_NAME) {
+  const needsStrongPassword = view === 'register' || view === 'confirm';
+  if (view === 'register' && values.name.trim().length < MIN_NAME) {
     errors.name = `Мінімум ${MIN_NAME} символи`;
   }
-  if (!EMAIL_RE.test(values.email.trim())) errors.email = 'Некоректний email';
-  if (mode !== 'reset' && values.password.length < MIN_PASSWORD) {
+  if (view !== 'confirm' && !EMAIL_RE.test(values.email.trim())) {
+    errors.email = 'Некоректний email';
+  }
+  if (view === 'login' && !values.password) {
+    errors.password = 'Введи пароль';
+  }
+  if (needsStrongPassword && values.password.length < MIN_PASSWORD) {
     errors.password = `Мінімум ${MIN_PASSWORD} символів`;
+  }
+  if (view === 'confirm' && !errors.password && values.passwordRepeat !== values.password) {
+    errors.passwordRepeat = 'Паролі не збігаються';
   }
   return errors;
 }
 
+function pathOf(from) {
+  if (!from?.pathname) return '/';
+  return `${from.pathname}${from.search || ''}${from.hash || ''}`;
+}
+
 export default function AuthPage({ mode }) {
   const navigate = useNavigate();
-  const { login, register } = useAuth();
-  const { pendingInvites } = useEvents();
-  const [values, setValues] = useState({ name: '', email: '', password: '', remember: true });
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const { user, isLoading, login, register, requestPasswordReset, confirmPasswordReset } =
+    useAuth();
+  const [values, setValues] = useState({
+    name: '',
+    email: '',
+    password: '',
+    passwordRepeat: '',
+    remember: true,
+  });
   const [errors, setErrors] = useState({});
+  const [formError, setFormError] = useState(null);
+  const [sentMessage, setSentMessage] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const copy = COPY[mode];
-  const isReset = mode === 'reset';
-  const invite = pendingInvites[0] || null;
+  const token = searchParams.get('token');
+  const view = mode === 'reset' && token ? 'confirm' : mode;
+  const copy = COPY[view];
+  const isLogin = view === 'login';
+  const isConfirm = view === 'confirm';
+  const hasEmail = !isConfirm;
+  const hasPassword = view !== 'reset';
+  const hasGoogle = isLogin || view === 'register';
+  const from = location.state?.from;
+  const cameFromInvite = Boolean(from?.pathname?.startsWith('/invite/'));
+  const carriedState = from ? { from } : undefined;
+  const flash = isLogin && !formError ? location.state?.notice : null;
 
-  // Під час перемикання режиму помилки й повідомлення попередньої форми не мають лишатися.
   useEffect(() => {
     setErrors({});
-    setSent(false);
-  }, [mode]);
+    setFormError(null);
+    setSentMessage(null);
+  }, [view]);
+
+  if (isLoading) return <PageLoader />;
+  if (user && mode !== 'reset') return <Navigate to={pathOf(from)} replace />;
 
   const setField = (key) => (e) => {
     const { value } = e.target;
@@ -100,32 +157,56 @@ export default function AuthPage({ mode }) {
     setErrors((er) => ({ ...er, [key]: null }));
   };
 
+  const submitters = {
+    login: () =>
+      login({
+        email: values.email.trim(),
+        password: values.password,
+        remember: values.remember,
+      }),
+    register: () =>
+      register({
+        name: values.name.trim(),
+        email: values.email.trim(),
+        password: values.password,
+      }),
+    reset: async () => {
+      const data = await requestPasswordReset(values.email.trim());
+      setSentMessage(data?.message || RESET_SENT);
+    },
+    confirm: async () => {
+      await confirmPasswordReset({ token, password: values.password });
+      setValues((v) => ({ ...v, password: '', passwordRepeat: '' }));
+      navigate('/login', { replace: true, state: { notice: RESET_DONE } });
+    },
+  };
+
+  const showServerError = (error) => {
+    const parsed = parseApiError(error);
+    const fieldErrors = {};
+    FIELDS[view].forEach((key) => {
+      if (parsed.fields[key]) fieldErrors[key] = parsed.fields[key];
+    });
+    setErrors(fieldErrors);
+    if (Object.keys(fieldErrors).length === 0) {
+      setFormError(parsed.fields.token ? LINK_INVALID : parsed.message);
+    }
+  };
+
   const onSubmit = async (e) => {
     e.preventDefault();
-    const nextErrors = validate(mode, values);
+    if (busy) return;
+    const nextErrors = validate(view, values);
     setErrors(nextErrors);
+    setFormError(null);
+    setSentMessage(null);
     if (Object.values(nextErrors).some(Boolean)) return;
 
-    if (isReset) {
-      setSent(true);
-      return;
-    }
     setBusy(true);
     try {
-      if (mode === 'login') {
-        await login({
-          email: values.email.trim(),
-          password: values.password,
-          remember: values.remember,
-        });
-      } else {
-        await register({
-          name: values.name.trim(),
-          email: values.email.trim(),
-          password: values.password,
-        });
-      }
-      navigate('/');
+      await submitters[view]();
+    } catch (error) {
+      showServerError(error);
     } finally {
       setBusy(false);
     }
@@ -160,7 +241,7 @@ export default function AuthPage({ mode }) {
                   role="tab"
                   aria-selected={active}
                   className={cx(styles.tab, active && styles.tabActive)}
-                  onClick={() => navigate(tab.to)}
+                  onClick={() => navigate(tab.to, { state: carriedState })}
                 >
                   {tab.label}
                 </button>
@@ -173,7 +254,19 @@ export default function AuthPage({ mode }) {
             <span className={styles.subtitle}>{copy.subtitle}</span>
           </div>
 
-          {mode === 'register' ? (
+          {formError ? (
+            <p role="alert" className={cx(styles.banner, styles.bannerError)}>
+              {formError}
+            </p>
+          ) : null}
+
+          {flash ? (
+            <p role="status" className={cx(styles.banner, styles.bannerSuccess)}>
+              {flash}
+            </p>
+          ) : null}
+
+          {view === 'register' ? (
             <Field label="Ім'я" htmlFor="auth-name" error={errors.name}>
               <Input
                 id="auth-name"
@@ -190,28 +283,30 @@ export default function AuthPage({ mode }) {
             </Field>
           ) : null}
 
-          <Field label="Email" htmlFor="auth-email" error={errors.email}>
-            <Input
-              id="auth-email"
-              size="lg"
-              type="email"
-              name="email"
-              autoComplete="email"
-              placeholder="you@mail.com"
-              value={values.email}
-              onChange={setField('email')}
-              invalid={Boolean(errors.email)}
-              aria-invalid={Boolean(errors.email)}
-            />
-          </Field>
+          {hasEmail ? (
+            <Field label="Email" htmlFor="auth-email" error={errors.email}>
+              <Input
+                id="auth-email"
+                size="lg"
+                type="email"
+                name="email"
+                autoComplete="email"
+                placeholder="you@mail.com"
+                value={values.email}
+                onChange={setField('email')}
+                invalid={Boolean(errors.email)}
+                aria-invalid={Boolean(errors.email)}
+              />
+            </Field>
+          ) : null}
 
-          {!isReset ? (
+          {hasPassword ? (
             <Field
-              label="Пароль"
+              label={isConfirm ? 'Новий пароль' : 'Пароль'}
               htmlFor="auth-password"
               error={errors.password}
               trailing={
-                mode === 'login' ? (
+                isLogin ? (
                   <Link to="/reset" className={styles.forgot}>
                     Забули пароль?
                   </Link>
@@ -223,7 +318,7 @@ export default function AuthPage({ mode }) {
                 size="lg"
                 type={showPassword ? 'text' : 'password'}
                 name="password"
-                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                autoComplete={isLogin ? 'current-password' : 'new-password'}
                 value={values.password}
                 onChange={setField('password')}
                 invalid={Boolean(errors.password)}
@@ -242,7 +337,27 @@ export default function AuthPage({ mode }) {
             </Field>
           ) : null}
 
-          {!isReset ? (
+          {isConfirm ? (
+            <Field
+              label="Повтори пароль"
+              htmlFor="auth-password-repeat"
+              error={errors.passwordRepeat}
+            >
+              <Input
+                id="auth-password-repeat"
+                size="lg"
+                type={showPassword ? 'text' : 'password'}
+                name="passwordRepeat"
+                autoComplete="new-password"
+                value={values.passwordRepeat}
+                onChange={setField('passwordRepeat')}
+                invalid={Boolean(errors.passwordRepeat)}
+                aria-invalid={Boolean(errors.passwordRepeat)}
+              />
+            </Field>
+          ) : null}
+
+          {isLogin ? (
             <label htmlFor="auth-remember" className={styles.remember}>
               <Checkbox
                 id="auth-remember"
@@ -255,26 +370,36 @@ export default function AuthPage({ mode }) {
           ) : null}
 
           <PillButton type="submit" size="lg" fullWidth className={styles.big} disabled={busy}>
-            {copy.submit}
+            {busy ? copy.busy : copy.submit}
           </PillButton>
 
-          {sent ? (
+          {sentMessage ? (
             <p role="status" className={styles.status}>
-              Якщо такий email існує, лист уже в дорозі
+              {sentMessage}
             </p>
           ) : null}
 
-          {!isReset ? (
+          {hasGoogle ? (
             <>
               <div className={styles.divider}>або</div>
-              <PillButton variant="secondary" size="lg" fullWidth className={styles.big}>
+              <PillButton
+                variant="secondary"
+                size="lg"
+                fullWidth
+                className={styles.big}
+                disabled
+                title="Незабаром"
+              >
                 Продовжити з Google
               </PillButton>
             </>
           ) : null}
 
           <span className={styles.foot}>
-            {copy.footText} <Link to={copy.footTo}>{copy.footLink}</Link>
+            {copy.footText}{' '}
+            <Link to={copy.footTo} state={carriedState}>
+              {copy.footLink}
+            </Link>
           </span>
         </Card>
 
@@ -292,16 +417,16 @@ export default function AuthPage({ mode }) {
             </ul>
           </Card>
 
-          {invite ? (
+          {cameFromInvite ? (
             <Card padding="16px 18px" gap={0} className={styles.note}>
               <span className={styles.noteIcon}>
                 <Icon name="mail" size={18} />
               </span>
               <span className={styles.noteText}>
-                <span className={styles.noteTitle}>
-                  Тебе запросили в календар «{invite.calendar?.name}»
+                <span className={styles.noteTitle}>Тебе запросили.</span>
+                <span className={styles.noteSub}>
+                  Увійди або зареєструйся з email, на який прийшло запрошення.
                 </span>
-                <span className={styles.noteSub}>Увійди з цим email — запрошення чекатиме.</span>
               </span>
             </Card>
           ) : null}

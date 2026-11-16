@@ -1,7 +1,5 @@
 import PropTypes from 'prop-types';
 
-// Спільні PropTypes-форми для подій, календарів, користувачів (у формі відповідей API, docs/api.md)
-
 export const dateLike = PropTypes.oneOfType([PropTypes.instanceOf(Date), PropTypes.string]);
 
 export const participantShape = PropTypes.shape({

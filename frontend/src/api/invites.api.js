@@ -1,19 +1,21 @@
-/** GET /invites → { invites: [...] } (вхідні, status pending) */
+import client from './client';
+
 export async function listMyInvites() {
-  throw new Error('TODO(@teammate2): invites.api.listMyInvites');
+  const { data } = await client.get('/invites');
+  return data.invites;
 }
 
-/** GET /invites/:token → { invite } (публічно, для сторінки /invite/:token) */
-export async function getInvite() {
-  throw new Error('TODO(@teammate2): invites.api.getInvite');
+export async function getInvite(token) {
+  const { data } = await client.get(`/invites/${token}`);
+  return data.invite;
 }
 
-/** POST /invites/:token/accept → { invite } */
-export async function acceptInvite() {
-  throw new Error('TODO(@teammate2): invites.api.acceptInvite');
+export async function acceptInvite(token) {
+  const { data } = await client.post(`/invites/${token}/accept`);
+  return data.invite;
 }
 
-/** POST /invites/:token/decline → { invite } */
-export async function declineInvite() {
-  throw new Error('TODO(@teammate2): invites.api.declineInvite');
+export async function declineInvite(token) {
+  const { data } = await client.post(`/invites/${token}/decline`);
+  return data.invite;
 }

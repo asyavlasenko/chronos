@@ -1,6 +1,3 @@
-// Дизайн: design/screens/06-year.html
-// Календар · Рік: легенда праворуч (тулбар спільний — у CalendarLayout), 12 міні-місяців YearMiniMonth,
-// бічна панель: темний підсумок року, «Свята України · рік» (джерело Nager.Date).
 import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import useViewDate from '../hooks/useViewDate';
@@ -16,7 +13,6 @@ import Icon from '../components/ui/Icon';
 import YearMiniMonth from '../components/calendar/YearMiniMonth';
 import styles from './YearPage.module.css';
 
-// Яка позначка дня переважає, якщо в один день кілька подій
 const MARK_PRIORITY = { event: 1, holiday: 2, deadline: 3 };
 
 function markOf(event) {
@@ -37,12 +33,12 @@ export default function YearPage() {
   const { events, holidayEvents } = useEvents({ from, to, q });
   const { byId } = useCalendars();
 
-  // Позначки днів для міні-місяців, кількість подій по місяцях (без свят) і загалом за рік
   const { marks, perMonth, total } = useMemo(() => {
     const map = new Map();
     const counts = Array(12).fill(0);
     let sum = 0;
     events.forEach((e) => {
+      if (!e.startAt) return;
       const d = toDate(e.startAt);
       const key = toDateParam(d);
       const mark = markOf(e);

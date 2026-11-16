@@ -1,31 +1,30 @@
-// Запити модуля auth. Усі функції — заглушки з TODO; реалізація через client з './client'.
+import client, { refreshSession } from './client';
 
-/** POST /auth/register { email, password, name, country?, timezone? } → { user, accessToken } */
-export async function register() {
-  throw new Error('TODO(@teammate2): auth.api.register');
+export async function register({ email, password, name }) {
+  const { data } = await client.post('/auth/register', { email, password, name });
+  return data;
 }
 
-/** POST /auth/login { email, password, remember? } → { user, accessToken } */
-export async function login() {
-  throw new Error('TODO(@teammate2): auth.api.login');
+export async function login({ email, password, remember = true }) {
+  const { data } = await client.post('/auth/login', { email, password, remember });
+  return data;
 }
 
-/** POST /auth/logout → 204 */
 export async function logout() {
-  throw new Error('TODO(@teammate2): auth.api.logout');
+  const { data } = await client.post('/auth/logout');
+  return data;
 }
 
-/** POST /auth/refresh (cookie) → { accessToken } */
-export async function refresh() {
-  throw new Error('TODO(@teammate2): auth.api.refresh');
+export function refresh() {
+  return refreshSession();
 }
 
-/** POST /auth/password-reset { email } → 202 */
-export async function requestPasswordReset() {
-  throw new Error('TODO(@teammate2): auth.api.requestPasswordReset');
+export async function requestPasswordReset(email) {
+  const { data } = await client.post('/auth/password-reset', { email });
+  return data;
 }
 
-/** POST /auth/password-reset/confirm { token, password } → 204 */
-export async function confirmPasswordReset() {
-  throw new Error('TODO(@teammate2): auth.api.confirmPasswordReset');
+export async function confirmPasswordReset({ token, password }) {
+  const { data } = await client.post('/auth/password-reset/confirm', { token, password });
+  return data;
 }

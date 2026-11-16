@@ -1,4 +1,3 @@
-// Дизайн: 16-mobile.html (FAB «+» 56px, тінь --shadow-fab, над нижньою навігацією)
 import useModals from '../../hooks/useModals';
 import Icon from '../ui/Icon';
 import styles from './Fab.module.css';

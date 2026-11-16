@@ -1,4 +1,3 @@
-/* MemberRow. Дизайн: 08-calendars.html (повний), 09-shared-calendar.html (компактний) */
 .row {
   display: flex;
   align-items: center;
@@ -60,4 +59,10 @@
 .remove:hover {
   background: var(--bg);
   color: var(--ink);
+}
+.remove:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: none;
+  color: var(--ink-secondary);
 }

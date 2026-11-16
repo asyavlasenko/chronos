@@ -1,4 +1,3 @@
-/* YearMiniMonth. Дизайн: 06-year.html */
 .month {
   background: var(--card);
   border-radius: var(--r-card-sm);
@@ -46,12 +45,11 @@
   border-radius: var(--r-pill);
 }
 .weekdays > span {
-  font-size: 9px; /* з мокапа; токена для 9px немає */
+  font-size: 9px;
   font-weight: var(--fw-semibold);
   color: var(--ink-secondary);
 }
 
-/* Стани дня: звичайний → з подіями → свято → дедлайн → сьогодні (пізніший перекриває) */
 .day {
   color: var(--ink-secondary);
 }

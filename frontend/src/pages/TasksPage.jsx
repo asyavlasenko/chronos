@@ -1,8 +1,6 @@
-// Дизайн: design/screens/07-tasks.html
-// Задачі: заголовок із фільтрами за календарями, швидке додавання, групи Сьогодні / Цього тижня / Без дати / Виконані,
-// праворуч — підсумок тижня (темна картка), «За календарями», «Показувати».
-import { useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { parseApiError } from '../api/errors';
 import useAuth from '../hooks/useAuth';
 import useEvents from '../hooks/useEvents';
 import useCalendars from '../hooks/useCalendars';
@@ -12,7 +10,6 @@ import {
   addDays,
   formatDate,
   isToday,
-  parseDateParam,
   startOfDay,
   startOfWeek,
   toDate,
@@ -30,6 +27,12 @@ import Chip from '../components/ui/Chip';
 import Badge from '../components/ui/Badge';
 import Icon from '../components/ui/Icon';
 import TaskRow from '../components/tasks/TaskRow';
+import {
+  canModifyEvent,
+  combineDateTime,
+  isWritableCalendar,
+  pickWritableCalendarId,
+} from '../modals/eventFormUtils';
 import styles from './TasksPage.module.css';
 
 const TASK_TYPES = ['task'];
@@ -44,7 +47,6 @@ const WEEKDAYS_LOCATIVE = [
 ];
 const pluralActive = (n) => `${n} ${plural(n, ['активна', 'активні', 'активних'])}`;
 
-/** «1 дедлайн у неділю» · «2 дедлайни» · «без дедлайнів» */
 function deadlinesText(deadlines) {
   if (deadlines.length === 0) return 'без дедлайнів';
   if (deadlines.length === 1) {
@@ -54,15 +56,16 @@ function deadlinesText(deadlines) {
 }
 
 export default function TasksPage() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const q = searchParams.get('q') || '';
   const { user } = useAuth();
+  const userId = user?.id || null;
   const weekStartsOn = user?.weekStartsOn ?? 1;
   const timeFormat = user?.timeFormat ?? '24h';
   const { calendars, byId } = useCalendars();
-  const { openDetails, openQuickCreate } = useModals();
+  const { openDetails } = useModals();
   const { events: tasks, createEvent, toggleCompleted } = useEvents({ types: TASK_TYPES, q });
-  // Усі задачі без пошуку — для пілюль-фільтрів і підсумків праворуч
   const { events: allTasks } = useEvents({ types: TASK_TYPES });
 
   const today = useMemo(() => startOfDay(new Date()), []);
@@ -70,56 +73,86 @@ export default function TasksPage() {
   const weekTo = useMemo(() => addDays(weekFrom, 7), [weekFrom]);
   const inWeek = (value) => Boolean(value) && toDate(value) >= weekFrom && toDate(value) < weekTo;
 
-  // --- Фільтри (локальний стан) ---
   const [calFilter, setCalFilter] = useState('all');
   const [showDone, setShowDone] = useState(true);
   const [showNoDate, setShowNoDate] = useState(true);
   const [highOnly, setHighOnly] = useState(false);
   const [allDone, setAllDone] = useState(false);
 
-  // --- Швидке додавання ---
   const editableCalendars = useMemo(
-    () => calendars.filter((c) => !c.isReadOnly && !c.isHidden && c.myRole !== 'viewer'),
+    () => calendars.filter((c) => isWritableCalendar(c) && !c.isHidden),
     [calendars],
   );
   const [title, setTitle] = useState('');
-  const [calendarId, setCalendarId] = useState(
-    () => (editableCalendars.find((c) => c.isMain) || editableCalendars[0])?.id || '',
-  );
+  const [preferredCalendar, setPreferredCalendar] = useState('');
   const [withDate, setWithDate] = useState(false);
   const [dateStr, setDateStr] = useState(() => toDateParam(today));
   const [error, setError] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
+  const isMounted = useRef(true);
+  const inFlight = useRef(false);
+  const calendarId = pickWritableCalendarId(editableCalendars, preferredCalendar);
 
-  const onSubmit = (e) => {
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  const onSubmit = async (e) => {
     e.preventDefault();
+    if (inFlight.current) return;
+
     const name = title.trim();
+    const startAt = withDate ? combineDateTime(dateStr) : null;
     if (!name) {
       setError('Вкажи назву задачі');
       return;
     }
-    createEvent({
-      type: 'task',
-      title: name,
-      calendar: calendarId,
-      startAt: withDate ? parseDateParam(dateStr) : null,
-      endAt: null,
-      allDay: true,
-      priority: 'medium',
-      isCompleted: false,
-    });
-    setTitle('');
+    if (withDate && !startAt) {
+      setError('Вкажи дату або обери «Без дати»');
+      return;
+    }
+    if (!calendarId) {
+      setError('Немає календаря, у який можна додати задачу');
+      return;
+    }
+
+    inFlight.current = true;
+    setIsAdding(true);
     setError('');
+    try {
+      await createEvent({
+        type: 'task',
+        title: name,
+        calendar: calendarId,
+        startAt,
+        allDay: true,
+        priority: 'medium',
+      });
+      if (isMounted.current) setTitle('');
+    } catch (err) {
+      const { message, fields } = parseApiError(err);
+      if (isMounted.current) setError(Object.values(fields)[0] || message);
+    } finally {
+      inFlight.current = false;
+      if (isMounted.current) setIsAdding(false);
+    }
   };
 
-  const schedule = (task) => openQuickCreate({ date: today, title: task.title, taskId: task.id });
+  const schedule = (task) => navigate(`/events/${task.id}`);
+  const canModify = (task) => canModifyEvent(task, byId[task.calendar], userId);
 
-  // --- Групи ---
+  const taskCalendars = calendars.filter((c) => allTasks.some((t) => t.calendar === c.id));
+  const activeFilter = taskCalendars.some((c) => c.id === calFilter) ? calFilter : 'all';
+
   const visible = useMemo(
     () =>
       tasks
-        .filter((t) => calFilter === 'all' || t.calendar === calFilter)
+        .filter((t) => activeFilter === 'all' || t.calendar === activeFilter)
         .filter((t) => !highOnly || t.priority === 'high'),
-    [tasks, calFilter, highOnly],
+    [tasks, activeFilter, highOnly],
   );
   const active = visible.filter((t) => !t.isCompleted);
   const todayList = active.filter((t) => t.startAt && isToday(t.startAt));
@@ -131,7 +164,6 @@ export default function TasksPage() {
   const doneWeek = doneAll.filter((t) => inWeek(t.completedAt));
   const doneList = allDone ? doneAll : doneWeek;
 
-  // --- Підсумки (незалежно від фільтрів і пошуку) ---
   const activeAll = allTasks.filter((t) => !t.isCompleted);
   const doneWeekCount = allTasks.filter((t) => t.isCompleted && inWeek(t.completedAt)).length;
   const weekTasks = allTasks.filter(
@@ -142,12 +174,11 @@ export default function TasksPage() {
   const deadlines = activeAll.filter((t) => t.isDeadline && inWeek(t.startAt));
   const progress = weekTasks.length ? Math.round((weekDoneCount / weekTasks.length) * 100) : 0;
 
-  const taskCalendars = calendars.filter((c) => allTasks.some((t) => t.calendar === c.id));
   const perCalendar = taskCalendars
     .map((c) => ({ calendar: c, count: activeAll.filter((t) => t.calendar === c.id).length }))
     .filter((row) => row.count > 0);
 
-  const selectedCalendar = byId[calendarId];
+  const selectedCalendar = byId[calendarId] || null;
   const calendarOptions = editableCalendars.map((c) => ({ value: c.id, label: c.name }));
 
   const sections = [
@@ -187,10 +218,10 @@ export default function TasksPage() {
     {
       key: 'nodate',
       title: 'Без дати',
-      subtitle: 'перетягни в календар, щоб запланувати',
+      subtitle: 'натисни «Запланувати», щоб додати дату',
       list: noDateList,
       hidden: !showNoDate,
-      empty: 'Усі задачі заплановані',
+      empty: 'Задач без дати немає',
     },
     {
       key: 'done',
@@ -220,9 +251,9 @@ export default function TasksPage() {
           <div className={styles.filters} role="group" aria-label="Фільтр за календарем">
             <PillButton
               size="xxs"
-              variant={calFilter === 'all' ? 'primary' : 'white'}
-              className={cx(calFilter !== 'all' && styles.filterOff)}
-              aria-pressed={calFilter === 'all'}
+              variant={activeFilter === 'all' ? 'primary' : 'white'}
+              className={cx(activeFilter !== 'all' && styles.filterOff)}
+              aria-pressed={activeFilter === 'all'}
               onClick={() => setCalFilter('all')}
             >
               Усі
@@ -231,9 +262,9 @@ export default function TasksPage() {
               <PillButton
                 key={c.id}
                 size="xxs"
-                variant={calFilter === c.id ? 'primary' : 'white'}
-                className={cx(calFilter !== c.id && styles.filterOff)}
-                aria-pressed={calFilter === c.id}
+                variant={activeFilter === c.id ? 'primary' : 'white'}
+                className={cx(activeFilter !== c.id && styles.filterOff)}
+                aria-pressed={activeFilter === c.id}
                 onClick={() => setCalFilter(c.id)}
               >
                 {c.name}
@@ -256,9 +287,11 @@ export default function TasksPage() {
             <Input
               id="new-task-title"
               size="sm"
+              maxLength={120}
               placeholder="Нова задача… напр., «Оновити README до п'ятниці»"
               aria-label="Нова задача"
               value={title}
+              readOnly={isAdding}
               onChange={(e) => {
                 setTitle(e.target.value);
                 if (error) setError('');
@@ -274,7 +307,10 @@ export default function TasksPage() {
                 size="xs"
                 aria-label="Дата задачі"
                 value={dateStr}
-                onChange={(e) => setDateStr(e.target.value)}
+                onChange={(e) => {
+                  setDateStr(e.target.value);
+                  if (error) setError('');
+                }}
                 className={styles.dateInput}
               />
             ) : null}
@@ -283,7 +319,7 @@ export default function TasksPage() {
               aria-label="Календар"
               options={calendarOptions}
               value={calendarId}
-              onChange={setCalendarId}
+              onChange={setPreferredCalendar}
               leading={
                 <span
                   className={styles.dot}
@@ -301,8 +337,8 @@ export default function TasksPage() {
             >
               Без дати
             </PillButton>
-            <PillButton variant="primary" size="xs" type="submit">
-              Додати
+            <PillButton variant="primary" size="xs" type="submit" disabled={isAdding}>
+              {isAdding ? 'Додаємо…' : 'Додати'}
             </PillButton>
           </div>
           {error ? (
@@ -330,17 +366,21 @@ export default function TasksPage() {
                 <span className={styles.groupSub}>{s.subtitle}</span>
                 {s.action || null}
               </div>
-              {s.list.map((t) => (
-                <TaskRow
-                  key={t.id}
-                  task={t}
-                  calendar={byId[t.calendar]}
-                  timeFormat={timeFormat}
-                  onToggleComplete={toggleCompleted}
-                  onOpen={openDetails}
-                  onSchedule={schedule}
-                />
-              ))}
+              {s.list.map((t) => {
+                const editable = canModify(t);
+                return (
+                  <TaskRow
+                    key={t.id}
+                    task={t}
+                    calendar={byId[t.calendar]}
+                    timeFormat={timeFormat}
+                    onToggleComplete={toggleCompleted}
+                    canToggle={editable}
+                    onOpen={openDetails}
+                    onSchedule={editable ? schedule : null}
+                  />
+                );
+              })}
               {s.list.length === 0 && s.empty ? (
                 <div className={styles.empty}>{s.empty}</div>
               ) : null}

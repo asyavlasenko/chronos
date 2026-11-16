@@ -1,6 +1,3 @@
-// Дизайн: design/screens/05-month.html
-// Календар · Місяць: підсумок «N подій · N задач · N дедлайнів» праворуч (тулбар спільний — у CalendarLayout),
-// сітка MonthGrid, бічна панель: темний підсумок місяця, «Свята цього сезону», список календарів.
 import { useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import useViewDate from '../hooks/useViewDate';
@@ -33,10 +30,16 @@ import DarkCard from '../components/ui/DarkCard';
 import Chip from '../components/ui/Chip';
 import Icon from '../components/ui/Icon';
 import MonthGrid from '../components/calendar/MonthGrid';
+import { canModifyEvent } from '../modals/eventFormUtils';
 import styles from './MonthPage.module.css';
 
-// Назва країни для підпису «Країна: …» (user.country — ISO 3166-1 alpha-2, як у Nager.Date)
-const COUNTRY_NAMES = { UA: 'Україна' };
+const COUNTRY_NAMES = {
+  UA: 'Україна',
+  PL: 'Польща',
+  DE: 'Німеччина',
+  US: 'США',
+  GB: 'Велика Британія',
+};
 
 const isSameMonth = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
 
@@ -47,7 +50,6 @@ export default function MonthPage() {
   const q = searchParams.get('q') || '';
   const weekStartsOn = user?.weekStartsOn ?? 1;
 
-  // Сітка показує й «хвости» сусідніх місяців, тому події беремо за весь діапазон сітки
   const { from, to } = useMemo(() => {
     const days = getMonthGridDays(date, weekStartsOn);
     return { from: days[0], to: addDays(days[days.length - 1], 1) };
@@ -58,13 +60,12 @@ export default function MonthPage() {
 
   const byDay = useMemo(() => groupEventsByDay(events), [events]);
   const monthEvents = useMemo(
-    () => events.filter((e) => isSameMonth(toDate(e.startAt), date)),
+    () => events.filter((e) => e.startAt && isSameMonth(toDate(e.startAt), date)),
     [events, date],
   );
   const summary = useMemo(() => weekSummary(monthEvents), [monthEvents]);
   const eventsCount = summary.arrangements + summary.reminders;
 
-  // Два найближчі свята від початку місяця (перше — підсвічене)
   const seasonHolidays = useMemo(() => {
     const start = startOfMonth(date);
     return holidayEvents
@@ -79,6 +80,7 @@ export default function MonthPage() {
     metaParts.push(`${pluralInvites(n)} ${n === 1 ? 'чекає' : 'чекають'}`);
   }
   const countryName = COUNTRY_NAMES[user?.country] || user?.country || '—';
+  const canComplete = (e) => canModifyEvent(e, byId[e.calendar], user?.id);
 
   return (
     <>
@@ -96,6 +98,7 @@ export default function MonthPage() {
             calendarsById={byId}
             onEventClick={(e) => openDetails(e.id)}
             onToggleComplete={(e) => toggleCompleted(e.id)}
+            canComplete={canComplete}
           />
         </div>
 
@@ -166,6 +169,7 @@ export default function MonthPage() {
                   label={c.name}
                   checked={!c.isHidden}
                   onChange={() => toggleVisibility(c.id)}
+                  disabled={c.isMain}
                   color={c.color}
                   variant="plain"
                   hint={c.isShared ? 'спільний' : undefined}

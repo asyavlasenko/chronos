@@ -1,4 +1,3 @@
-// Дизайн: design/screens/01-overview.html (картка «Календарі»: чекбокси видимості, «· головний», кнопка керування)
 import PropTypes from 'prop-types';
 import cx from '../../utils/cx';
 import { calendarShape } from '../../utils/propTypes';

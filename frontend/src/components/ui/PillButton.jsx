@@ -1,15 +1,9 @@
-// Дизайн: design/screens/01-overview.html (хедер), 02 (тулбар), 11/12 (модалки)
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import cx from '../../utils/cx';
 import Icon, { ICON_NAMES } from './Icon';
 import styles from './PillButton.module.css';
 
-/**
- * Кнопка-пілюля. variant: primary (темна) · secondary (біла з рамкою) · white (біла без рамки) ·
- * ghost (прозора) · danger (біла, червоний текст) · accent (синій текст без фону).
- * size: lg 40 · md 38 · sm 34 · xs 32 · xxs 28. shape: pill | rounded (radius 8/10 для кнопок у картках).
- */
 export default function PillButton({
   children = null,
   variant = 'primary',
@@ -53,8 +47,7 @@ export default function PillButton({
     );
   }
   return (
-    // eslint-disable-next-line react/button-has-type
-    <button type={type} className={cls} {...rest}>
+    <button type={type === 'submit' ? 'submit' : 'button'} className={cls} {...rest}>
       {content}
     </button>
   );

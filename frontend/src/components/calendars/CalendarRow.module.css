@@ -1,4 +1,3 @@
-/* CalendarRow. Дизайн: 08-calendars.html (.cal: 14px 16px, border-top --line-soft; вибраний — --accent-tint-soft + смужка --dark) */
 .cal {
   display: flex;
   align-items: center;

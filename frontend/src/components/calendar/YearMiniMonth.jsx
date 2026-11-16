@@ -1,6 +1,3 @@
-// Дизайн: design/screens/06-year.html
-// Міні-місяць у поданні року — посилання на місяць. Дні з подіями — сірий фон, свята — сині,
-// дедлайни — фіолетові, сьогодні — темний; поточний місяць — обведення. Завжди 6 рядків (порожні — поза місяцем).
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import cx from '../../utils/cx';
@@ -14,10 +11,8 @@ import {
 import { pluralEvents } from '../../utils/text';
 import styles from './YearMiniMonth.module.css';
 
-/** Позначки днів: 'event' | 'holiday' | 'deadline' (за зростанням пріоритету). */
 export const DAY_MARKS = ['event', 'holiday', 'deadline'];
 
-/** month — будь-яка дата місяця; marks — Map<'YYYY-MM-DD', 'event'|'holiday'|'deadline'>. */
 export default function YearMiniMonth({
   month,
   eventsCount = 0,

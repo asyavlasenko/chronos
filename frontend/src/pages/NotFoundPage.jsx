@@ -1,4 +1,3 @@
-// 404: центрована картка з посиланням на Огляд (поза PageShell — без хедера).
 import Card from '../components/ui/Card';
 import PillButton from '../components/ui/PillButton';
 import styles from './NotFoundPage.module.css';
