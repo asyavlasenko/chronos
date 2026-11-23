@@ -3,50 +3,55 @@
 
 :root {
   /* Surfaces */
-  --bg: #F3F4F6;            /* page background */
-  --card: #FFFFFF;          /* cards, panels, modals */
-  --card-muted: #FAFAFB;    /* task blocks, subtle fills */
+  --bg: #f3f4f6;            /* page background */
+  --card: #fff;          /* cards, panels, modals */
+  --card-muted: #fafafb;    /* task blocks, subtle fills */
   --dark: #111827;          /* hero cards, primary buttons, active pills */
   --dark-soft: rgba(255, 255, 255, 0.12); /* inner blocks on dark cards */
 
   /* Text */
   --ink: #111827;
-  --ink-secondary: #6B7280;
-  --ink-tertiary: #9CA3AF;
-  --ink-on-dark: #FFFFFF;
+  --ink-secondary: #6b7280;
+  --ink-tertiary: #9ca3af;
+  --ink-on-dark: #fff;
   --ink-body: #374151;      /* long descriptions */
 
   /* Lines */
-  --line: #E5E7EB;          /* borders, inputs */
-  --line-soft: #F1F2F4;     /* dividers inside cards, hour grid */
-  --line-grid: #EFF0F3;     /* hour lines in day/week grids */
+  --line: #e5e7eb;          /* borders, inputs */
+  --line-soft: #f1f2f4;     /* dividers inside cards, hour grid */
+  --line-grid: #eff0f3;     /* hour lines in day/week grids */
+  --line-strong: #d1d5db;   /* hover borders, reminder outline */
+  --accent-dot: #60a5fa;    /* dot inside dark chips */
+  --sticker-main: #f2b705;       /* board stickers of graphite calendars: classic note yellow */
+  --sticker-main-tint: #fff1b8;
+  --sticker-main-text: #4a3700;
 
   /* Accent — only for "today" / "now" / focus / links */
-  --accent: #2563EB;
-  --accent-strong: #1D4ED8;
-  --accent-tint: #EAF1FF;
-  --accent-tint-soft: #F7F9FF;   /* today column / selected row background */
-  --accent-dashed: #93C5FD;      /* free-slot dashed border */
+  --accent: #2563eb;
+  --accent-strong: #1d4ed8;
+  --accent-tint: #eaf1ff;
+  --accent-tint-soft: #f7f9ff;   /* today column / selected row background */
+  --accent-dashed: #93c5fd;      /* free-slot dashed border */
 
   /* Status */
-  --danger: #B91C1C;
-  --danger-tint: #FEE2E2;
-  --success: #046C4E;
-  --success-tint: #E6F6EE;
+  --danger: #b91c1c;
+  --danger-tint: #fee2e2;
+  --success: #046c4e;
+  --success-tint: #e6f6ee;
 
   /* Calendar colors — a calendar has a base color plus a tint pair for event blocks */
-  --cal-main: #111827;        --cal-main-tint: #F1F2F4;    --cal-main-text: #111827;
-  --cal-study: #6D5BD0;       --cal-study-tint: #EEEBFB;   --cal-study-text: #4C3DB2;
-  --cal-work: #D97706;        --cal-work-tint: #FEF3E2;    --cal-work-text: #9A4B00;
-  --cal-sport: #059669;       --cal-sport-tint: #E6F6EE;   --cal-sport-text: #046C4E;
-  --cal-holidays: #2563EB;    --cal-holidays-tint: #EAF1FF; --cal-holidays-text: #1D4ED8;
-  --cal-volunteer: #DB2777;   --cal-volunteer-tint: #FCE7F3; --cal-volunteer-text: #9D174D;
+  --cal-main: #111827;        --cal-main-tint: #f1f2f4;    --cal-main-text: #111827;
+  --cal-study: #6d5bd0;       --cal-study-tint: #eeebfb;   --cal-study-text: #4c3db2;
+  --cal-work: #d97706;        --cal-work-tint: #fef3e2;    --cal-work-text: #9a4b00;
+  --cal-sport: #059669;       --cal-sport-tint: #e6f6ee;   --cal-sport-text: #046c4e;
+  --cal-holidays: #2563eb;    --cal-holidays-tint: #eaf1ff; --cal-holidays-text: #1d4ed8;
+  --cal-volunteer: #db2777;   --cal-volunteer-tint: #fce7f3; --cal-volunteer-text: #9d174d;
 
   /* Member colors in shared calendars (per-user event color) */
-  --member-blue: #2563EB;     --member-blue-tint: #EAF1FF;   --member-blue-text: #1D4ED8;
-  --member-purple: #7C3AED;   --member-purple-tint: #F1EAFE; --member-purple-text: #5B21B6;
-  --member-green: #059669;    --member-green-tint: #E6F6EE;  --member-green-text: #046C4E;
-  --member-orange: #EA580C;   --member-pink: #DB2777;        --member-graphite: #374151;
+  --member-blue: #2563eb;     --member-blue-tint: #eaf1ff;   --member-blue-text: #1d4ed8;
+  --member-purple: #7c3aed;   --member-purple-tint: #f1eafe; --member-purple-text: #5b21b6;
+  --member-green: #059669;    --member-green-tint: #e6f6ee;  --member-green-text: #046c4e;
+  --member-orange: #ea580c;   --member-pink: #db2777;        --member-graphite: #374151;
 
   /* Type */
   --font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;

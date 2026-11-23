@@ -83,18 +83,21 @@ function buildActivity(events, members, now) {
     .filter((e) => e.createdAt)
     .map((e) => ({
       id: `event-${e.id}`,
+      kind: 'event',
       user: e.creator,
-      text: `· нова подія «${e.title}»`,
-      note: activityWhen(e.createdAt, now),
+      eventId: e.id,
+      title: e.title,
+      when: activityWhen(e.createdAt, now),
       at: toDate(e.createdAt),
     }));
   const joined = members
     .filter((m) => m.joinedAt)
     .map((m) => ({
       id: `join-${m.user}`,
+      kind: 'join',
       user: m.user,
-      text: `у календарі з ${formatDate(m.joinedAt, 'day-month')}`,
-      note: ROLE_LABELS[m.role] || '',
+      role: ROLE_LABELS[m.role] || '',
+      when: formatDate(m.joinedAt, 'day-month'),
       at: toDate(m.joinedAt),
     }));
   return [...created, ...joined].sort((a, b) => b.at - a.at).slice(0, ACTIVITY_LIMIT);
@@ -380,28 +383,48 @@ export default function SharedCalendarPage() {
         </Card>
 
         <aside className={styles.sideRight} aria-label="Активність">
-          <Card title="Активність" gap={12}>
+          <Card title="Активність" gap={14}>
             {activity.length ? (
-              <ul className={styles.activity}>
+              <ol className={styles.activity}>
                 {activity.map((a) => {
                   const person = authorsById[a.user];
                   return (
                     <li key={a.id} className={styles.activityItem}>
-                      <Avatar
-                        initials={person?.initials || '?'}
-                        color={person?.color || 'graphite'}
-                        size={24}
-                      />
-                      <span className={styles.activityText}>
-                        <span>
-                          <b>{person?.name || 'Учасник'}</b> {a.text}
+                      <span className={styles.activityRail}>
+                        <Avatar
+                          initials={person?.initials || '?'}
+                          color={person?.color || 'graphite'}
+                          size={28}
+                        />
+                      </span>
+                      <span className={styles.activityBody}>
+                        <span className={styles.activityHead}>
+                          <b className={styles.activityName}>{person?.name || 'Учасник'}</b>
+                          <span className={styles.activityWhen}>{a.when}</span>
                         </span>
-                        {a.note ? <span className={styles.activityWhen}>{a.note}</span> : null}
+                        {a.kind === 'event' ? (
+                          <>
+                            <span className={styles.activityWhat}>нова подія</span>
+                            <button
+                              type="button"
+                              className={styles.activityEvent}
+                              style={{ borderLeftColor: colorVars(calendar.color).base }}
+                              onClick={() => openDetails(a.eventId)}
+                            >
+                              {a.title}
+                            </button>
+                          </>
+                        ) : (
+                          <span className={styles.activityWhat}>
+                            у календарі
+                            {a.role ? <span className={styles.activityRole}>{a.role}</span> : null}
+                          </span>
+                        )}
                       </span>
                     </li>
                   );
                 })}
-              </ul>
+              </ol>
             ) : (
               <span className={styles.activityEmpty}>Поки що тихо</span>
             )}

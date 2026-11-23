@@ -4,6 +4,7 @@
   gap: 10px;
   flex-wrap: wrap;
 }
+
 .back {
   display: inline-flex;
   align-items: center;
@@ -12,9 +13,11 @@
   font-size: var(--fs-13);
   font-weight: var(--fw-medium);
 }
+
 .back:hover {
   color: var(--ink);
 }
+
 .dot {
   width: 8px;
   height: 8px;
@@ -23,15 +26,18 @@
   flex: none;
   display: inline-block;
 }
+
 .spacer {
   flex: 1 1 10px;
 }
-.weekTitle {
+
+.week-title {
   font-size: var(--fs-14);
   font-weight: var(--fw-semibold);
   white-space: nowrap;
 }
-.weekNo {
+
+.week-no {
   color: var(--ink-secondary);
   font-weight: var(--fw-medium);
 }
@@ -42,7 +48,8 @@
   gap: var(--gap-page);
   align-items: flex-start;
 }
-.sideLeft {
+
+.side-left {
   flex: 1 1 250px;
   max-width: 280px;
   min-width: 0;
@@ -50,7 +57,8 @@
   flex-direction: column;
   gap: var(--gap-page);
 }
-.sideRight {
+
+.side-right {
   flex: 1 1 220px;
   max-width: 250px;
   min-width: 0;
@@ -58,14 +66,16 @@
   flex-direction: column;
   gap: var(--gap-page);
 }
+
 .main {
   flex: 999 1 560px;
   min-width: 0;
   overflow: hidden;
 }
+
 @media (max-width: 1100px) {
-  .sideLeft,
-  .sideRight {
+  .side-left,
+  .side-right {
     max-width: none;
   }
 }
@@ -78,15 +88,18 @@
   gap: 14px;
   flex-wrap: wrap;
 }
-.filtersLabel {
+
+.filters-label {
   font-size: var(--fs-12);
   color: var(--ink-secondary);
 }
-.authorLabel {
+
+.author-label {
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
+
 .search {
   display: flex;
   align-items: center;
@@ -101,11 +114,13 @@
     border-color 0.12s ease,
     box-shadow 0.12s ease;
 }
+
 .search:focus-within {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-tint);
 }
-.searchInput {
+
+.search-input {
   border: 0;
   outline: 0;
   background: transparent;
@@ -116,24 +131,29 @@
   min-width: 0;
   padding: 0;
 }
-.searchInput::placeholder {
+
+.search-input::placeholder {
   color: var(--ink-tertiary);
 }
 
 .scroll {
   overflow-x: auto;
 }
+
 .inner {
   min-width: 620px;
 }
-.daysHead {
+
+.days-head {
   display: flex;
   border-bottom: 1px solid var(--line-grid);
 }
-.rulerSpacer {
+
+.ruler-spacer {
   flex: 0 0 52px;
 }
-.dayHead {
+
+.day-head {
   flex: 1 1 0;
   min-width: 0;
   padding: 10px 4px 8px;
@@ -143,20 +163,24 @@
   gap: 2px;
   border-left: 1px solid var(--line-grid);
 }
-.dayName {
+
+.day-name {
   font-size: var(--fs-11);
   color: var(--ink-secondary);
   text-transform: uppercase;
 }
-.dayNum {
+
+.day-num {
   font-size: var(--fs-18);
   font-weight: var(--fw-semibold);
 }
-.dayToday .dayName {
+
+.day-today .day-name {
   color: var(--ink);
   font-weight: var(--fw-semibold);
 }
-.dayToday .dayNum {
+
+.day-today .day-num {
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -167,67 +191,165 @@
   justify-content: center;
   font-size: var(--fs-15);
 }
-.gridWrap {
+
+.grid-wrap {
   display: flex;
   position: relative;
   padding-top: 8px;
 }
+
 .ruler {
   text-align: right;
   padding-right: 6px;
 }
+
 .col {
   flex: 1 1 0;
   min-width: 0;
   border-left: 1px solid var(--line-grid);
 }
-.colToday {
+
+.col-today {
   background-color: var(--card-muted);
 }
 
 .activity {
   display: flex;
   flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.activity-item {
+  display: flex;
   gap: 12px;
+  align-items: stretch;
 }
-.activityItem {
+
+.activity-rail {
+  position: relative;
   display: flex;
-  gap: 10px;
-  align-items: flex-start;
+  flex: none;
+  justify-content: center;
+  width: 28px;
 }
-.activityText {
+
+.activity-item:not(:last-child) .activity-rail::after {
+  position: absolute;
+  top: 32px;
+  bottom: 4px;
+  left: 50%;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: var(--r-pill);
+  background: var(--line-soft);
+  content: '';
+}
+
+.activity-body {
   display: flex;
+  flex: 1;
   flex-direction: column;
-  gap: 2px;
-  font-size: var(--fs-12);
-  line-height: 1.35;
+  gap: 4px;
   min-width: 0;
+  padding-bottom: 16px;
 }
-.activityText b {
+
+.activity-item:last-child .activity-body {
+  padding-bottom: 0;
+}
+
+.activity-head {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.activity-name {
+  overflow: hidden;
+  font-size: var(--fs-13);
   font-weight: var(--fw-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.activityWhen {
-  color: var(--ink-secondary);
+
+.activity-when {
+  flex: none;
+  color: var(--ink-tertiary);
   font-size: var(--fs-11);
 }
-.activityEmpty {
+
+.activity-what {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--ink-secondary);
+  font-size: var(--fs-12);
+}
+
+.activity-role {
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  background: var(--line-soft);
+  color: var(--ink-body);
+  font-size: var(--fs-11);
+  font-weight: var(--fw-semibold);
+}
+
+.activity-event {
+  overflow: hidden;
+  padding: 7px 10px;
+  border: 1px solid var(--line-soft);
+  border-left: 3px solid var(--dark);
+  border-radius: var(--r-chip);
+  background: var(--card-muted);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: var(--fs-12);
+  font-weight: var(--fw-semibold);
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.activity-event:hover {
+  border-top-color: var(--line);
+  border-right-color: var(--line);
+  border-bottom-color: var(--line);
+  background: var(--card);
+}
+
+.activity-event:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.activity-empty {
   font-size: var(--fs-12);
   color: var(--ink-secondary);
 }
-.inviteLink {
+
+.invite-link {
   color: var(--ink-on-dark);
 }
-.inviteLink:hover {
+
+.invite-link:hover {
   color: var(--ink-on-dark);
   text-decoration: underline;
 }
-.inviteBtns {
+
+.invite-btns {
   display: flex;
   gap: 6px;
 }
+
 .half {
   flex: 1;
 }
+
 .decline {
   flex: 1;
   height: 32px;
@@ -239,9 +361,11 @@
   font-family: var(--font);
   transition: background-color 0.12s ease;
 }
+
 .decline:hover {
   background: var(--dark-soft);
 }
+
 .decline:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -252,7 +376,8 @@
   gap: 10px;
   align-items: flex-start;
 }
-.emptyTitle {
+
+.empty-title {
   font-size: var(--fs-18);
   font-weight: var(--fw-bold);
 }

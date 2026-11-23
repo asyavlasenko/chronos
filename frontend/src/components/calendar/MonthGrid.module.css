@@ -4,17 +4,20 @@
   overflow: hidden;
   min-width: 0;
 }
+
 .head {
   display: grid;
   grid-template-columns: 34px repeat(7, minmax(0, 1fr));
   padding-top: 6px;
 }
-.wnHead {
+
+.wn-head {
   padding: 8px 0;
   font-size: var(--fs-10);
   color: var(--ink-secondary);
   text-align: center;
 }
+
 .weekday {
   padding: 8px 8px;
   font-size: var(--fs-11);
@@ -22,11 +25,13 @@
   color: var(--ink-secondary);
   text-transform: uppercase;
 }
+
 .week {
   display: grid;
   grid-template-columns: 34px repeat(7, minmax(0, 1fr));
   border-top: 1px solid var(--line-soft);
 }
+
 .wn {
   padding-top: 8px;
   font-size: var(--fs-10);
@@ -34,9 +39,11 @@
   text-align: center;
   text-decoration: none;
 }
+
 .wn:hover {
   color: var(--accent-strong);
 }
+
 .cell {
   min-height: 96px;
   padding: 6px 6px 4px;
@@ -46,13 +53,16 @@
   gap: 2px;
   min-width: 0;
 }
-.weekShort .cell {
+
+.week-short .cell {
   min-height: 64px;
 }
+
 .today {
   background: var(--accent-tint-soft);
   box-shadow: inset 0 0 0 2px var(--dark);
 }
+
 .num {
   align-self: flex-start;
   margin-bottom: 2px;
@@ -61,15 +71,18 @@
   color: var(--ink);
   text-decoration: none;
 }
+
 .num:hover {
   color: var(--accent-strong);
 }
-.numOutside {
+
+.num-outside {
   color: var(--ink-tertiary);
   font-weight: var(--fw-medium);
 }
-.numToday,
-.numToday:hover {
+
+.num-today,
+.num-today:hover {
   display: inline-flex;
   width: 22px;
   height: 22px;
@@ -79,22 +92,27 @@
   align-items: center;
   justify-content: center;
 }
+
 .row {
   min-width: 0;
 }
-.rowOutside {
+
+.row-outside {
   opacity: 0.6;
 }
-.cell .row.rowHoliday {
+
+.cell .row.row-holiday {
   background: var(--cal-holidays-tint);
   color: var(--cal-holidays-text);
   padding: 2px 4px;
 }
-.cell .row.rowDeadline {
+
+.cell .row.row-deadline {
   background: var(--cal-study-tint);
   border-color: transparent;
   font-weight: var(--fw-semibold);
 }
+
 .more {
   align-self: flex-start;
   padding: 2px;
@@ -103,9 +121,11 @@
   color: var(--accent);
   text-decoration: none;
 }
+
 .more:hover {
   color: var(--accent-strong);
 }
+
 @media (max-width: 767px) {
   .grid {
     min-width: 560px;

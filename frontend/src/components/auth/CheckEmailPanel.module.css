@@ -1,0 +1,59 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--r-block);
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+
+.title {
+  margin: 0 0 6px;
+  font-size: var(--fs-20);
+  font-weight: var(--fw-bold);
+  color: var(--ink);
+}
+
+.text {
+  margin: 0;
+  font-size: var(--fs-14);
+  line-height: 1.5;
+  color: var(--ink-secondary);
+}
+
+.email {
+  color: var(--ink);
+  font-weight: var(--fw-semibold);
+  overflow-wrap: anywhere;
+}
+
+.error,
+.status {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--r-input);
+  font-size: var(--fs-13);
+}
+
+.error {
+  background: var(--danger-tint);
+  color: var(--danger);
+}
+
+.status {
+  background: var(--success-tint);
+  color: var(--success);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

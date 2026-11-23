@@ -1,11 +1,12 @@
 .row {
   display: flex;
 }
+
 .today {
   background: var(--accent-tint-soft);
 }
 
-.dayLink {
+.day-link {
   flex: 0 0 132px;
   box-sizing: border-box;
   padding: 14px 10px 0 18px;
@@ -17,33 +18,39 @@
   gap: 2px;
   min-width: 0;
 }
-.dayLink:hover .dayName {
+
+.day-link:hover .day-name {
   text-decoration: underline;
 }
-.dayName {
+
+.day-name {
   font-size: var(--fs-15);
   font-weight: var(--fw-semibold);
   white-space: nowrap;
 }
-.dayNum {
+
+.day-num {
   color: var(--ink-secondary);
   font-weight: var(--fw-medium);
   font-size: var(--fs-15);
 }
-.daySummary {
+
+.day-summary {
   font-size: var(--fs-11);
   color: var(--ink-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.today .dayName,
-.today .dayNum,
-.today .daySummary {
+
+.today .day-name,
+.today .day-num,
+.today .day-summary {
   color: var(--accent);
 }
-.today .dayNum,
-.today .daySummary {
+
+.today .day-num,
+.today .day-summary {
   font-weight: var(--fw-semibold);
 }
 
@@ -54,6 +61,7 @@
   box-sizing: border-box;
   border-top: 1px solid var(--line-grid);
 }
+
 .slots {
   position: absolute;
   inset: 0;
@@ -69,7 +77,8 @@
   border-radius: var(--r-input);
   padding: 7px 10px;
 }
-.row .blockCompact {
+
+.row .block-compact {
   padding: 4px 10px;
 }
 
@@ -80,12 +89,13 @@
   padding: 0 9px;
   font-size: var(--fs-11);
 }
-.row .track .remEnd {
+
+.row .track .rem-end {
   left: auto;
   right: 8px;
 }
 
-.allDayRow {
+.all-day-row {
   position: absolute;
   left: 0;
   right: 8px;
@@ -95,7 +105,8 @@
   gap: 4px;
   z-index: 1;
 }
-.allDay {
+
+.all-day {
   flex: 1 1 auto;
   min-width: 0;
   height: 22px;
@@ -113,11 +124,12 @@
   text-overflow: ellipsis;
   cursor: pointer;
 }
-.allDay:hover {
+
+.all-day:hover {
   filter: brightness(0.95);
 }
 
-.freeWrap {
+.free-wrap {
   position: absolute;
   box-sizing: border-box;
 }

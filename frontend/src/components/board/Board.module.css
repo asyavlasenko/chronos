@@ -1,0 +1,148 @@
+.board {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  max-width: 100%;
+  border-radius: var(--r-card);
+  background: var(--card);
+  color: var(--ink);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.scroller {
+  position: relative;
+  height: clamp(520px, 70vh, 640px);
+  border-top: 1px solid var(--line-soft);
+  overflow: auto;
+  overscroll-behavior-x: contain;
+}
+
+.content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.body {
+  position: relative;
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.columns {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.column {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 1px solid var(--line);
+}
+
+.column:first-child {
+  border-left: 0;
+}
+
+.today {
+  background: var(--accent-tint-soft);
+}
+
+.all-day {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  display: flex;
+  min-height: 62px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.all-day-column {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 10px;
+  padding: 12px 12px 10px;
+}
+
+.lanes {
+  position: relative;
+  z-index: 1;
+  flex: 1 0 auto;
+  background-image: linear-gradient(to right, var(--line-grid) 1px, transparent 1px);
+  cursor: cell;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.lanes-locked {
+  cursor: default;
+}
+
+.ghost {
+  position: absolute;
+  z-index: 2;
+  padding: 6px 8px;
+  border: 1.5px dashed var(--accent-dashed);
+  border-radius: var(--r-dot);
+  background: var(--accent-tint);
+  pointer-events: none;
+}
+
+.ghost-time {
+  font-size: var(--fs-11);
+  font-weight: var(--fw-semibold);
+  color: var(--accent-strong);
+  white-space: nowrap;
+}
+
+.drop-guide {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 4;
+  border-left: 2px solid var(--accent-dashed);
+  pointer-events: none;
+}
+
+.drop-guide-time {
+  position: absolute;
+  top: 6px;
+  left: 4px;
+  padding: 2px 6px;
+  border-radius: var(--r-pill);
+  background: var(--accent-tint);
+  font-size: var(--fs-11);
+  font-weight: var(--fw-semibold);
+  color: var(--accent-strong);
+  white-space: nowrap;
+}
+
+.now {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 2;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--accent);
+  pointer-events: none;
+}
+
+.now::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}

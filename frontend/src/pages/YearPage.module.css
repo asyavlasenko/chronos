@@ -7,24 +7,29 @@
   font-size: var(--fs-11);
   color: var(--ink-secondary);
 }
-.legendItem {
+
+.legend-item {
   display: flex;
   align-items: center;
   gap: 5px;
 }
+
 .dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   flex: none;
 }
-.dotEvent {
+
+.dot-event {
   background: var(--dark);
 }
-.dotHoliday {
+
+.dot-holiday {
   background: var(--accent);
 }
-.dotDeadline {
+
+.dot-deadline {
   background: var(--cal-study);
 }
 
@@ -34,6 +39,7 @@
   gap: var(--gap-page);
   align-items: flex-start;
 }
+
 .months {
   flex: 999 1 700px;
   min-width: 0;
@@ -41,6 +47,7 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
+
 .side {
   flex: 1 1 240px;
   max-width: 280px;
@@ -56,26 +63,31 @@
   opacity: 0.8;
 }
 
-.cardTitle {
+.card-title {
   font-size: var(--fs-14);
 }
+
 .lock {
   display: inline-flex;
   color: var(--ink-secondary);
 }
+
 .holiday {
   display: flex;
   justify-content: space-between;
   gap: 10px;
   font-size: var(--fs-13);
 }
-.holidayName {
+
+.holiday-name {
   min-width: 0;
 }
-.holidayDate {
+
+.holiday-date {
   color: var(--ink-secondary);
   white-space: nowrap;
 }
+
 .note {
   font-size: var(--fs-11);
   color: var(--ink-secondary);
@@ -85,6 +97,7 @@
   .months {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
   .side {
     max-width: none;
   }

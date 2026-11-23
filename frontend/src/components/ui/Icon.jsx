@@ -134,6 +134,30 @@ const PATHS = {
       <circle cx="12" cy="13" r="3.5" />
     </>
   ),
+  eraser: (
+    <>
+      <path d="M7 21l-4.3-4.3a2.4 2.4 0 0 1 0-3.4l9.6-9.6a2.4 2.4 0 0 1 3.4 0l5.6 5.6a2.4 2.4 0 0 1 0 3.4L13 21" />
+      <path d="M22 21H7M5 11l9 9" />
+    </>
+  ),
+  undo: (
+    <>
+      <path d="M9 14L4 9l5-5" />
+      <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
+    </>
+  ),
+  'zoom-in': (
+    <>
+      <circle cx="11" cy="11" r="7" />
+      <path d="M20 20l-3.5-3.5M11 8v6M8 11h6" />
+    </>
+  ),
+  'zoom-out': (
+    <>
+      <circle cx="11" cy="11" r="7" />
+      <path d="M20 20l-3.5-3.5M8 11h6" />
+    </>
+  ),
 };
 
 export const ICON_NAMES = Object.keys(PATHS);

@@ -2,9 +2,11 @@
   display: flex;
   gap: 4px;
 }
+
 .mobile {
   gap: 6px;
 }
+
 .day {
   width: 36px;
   height: 44px;
@@ -21,6 +23,7 @@
   font-family: var(--font);
   flex: none;
 }
+
 .mobile .day {
   flex: 1;
   width: auto;
@@ -28,36 +31,45 @@
   border-radius: 14px;
   gap: 2px;
 }
+
 .w {
   font-size: 9px;
   font-weight: var(--fw-semibold);
   color: var(--ink-secondary);
 }
+
 .n {
   font-size: var(--fs-14);
   font-weight: var(--fw-semibold);
 }
+
 .mobile .n {
   font-size: var(--fs-15);
 }
+
 .today .n {
   color: var(--accent);
 }
+
 .active {
   background: var(--dark);
   color: var(--ink-on-dark);
 }
+
 .active .w {
   color: var(--ink-on-dark);
   opacity: 0.7;
 }
+
 .active .n {
   font-weight: var(--fw-bold);
 }
+
 @media (max-width: 767px) {
   .toolbar {
     width: 100%;
   }
+
   .toolbar .day {
     flex: 1;
     width: auto;

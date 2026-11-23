@@ -13,6 +13,7 @@ export default function Avatar({
   className = '',
   title = '',
   palette = 'member',
+  src = null,
 }) {
   const background = isColorKey(color) ? colorVars(color, palette).base : color;
   return (
@@ -28,7 +29,7 @@ export default function Avatar({
       title={title || undefined}
       aria-hidden={title ? undefined : 'true'}
     >
-      {initials}
+      {src ? <img className={styles.image} src={src} alt="" /> : initials}
     </span>
   );
 }
@@ -41,9 +42,10 @@ Avatar.propTypes = {
   className: PropTypes.string,
   title: PropTypes.string,
   palette: PropTypes.oneOf(['calendar', 'member']),
+  src: PropTypes.string,
 };
 
-export function AvatarStack({ items, size = 22, ring = '#fff', max = 3, className = '' }) {
+export function AvatarStack({ items, size = 22, ring = 'var(--card)', max = 3, className = '' }) {
   const shown = items.slice(0, max);
   const rest = items.length - shown.length;
   return (

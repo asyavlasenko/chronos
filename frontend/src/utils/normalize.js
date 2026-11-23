@@ -13,8 +13,10 @@ const EVENT_FIELDS = [
   'reminderMinutesBefore',
   'priority',
   'isCompleted',
+  'isFloating',
   'participants',
 ];
+const DATELESS_FIELDS = ['startAt', 'endAt', 'allDay', 'reminderMinutesBefore'];
 
 const toDateOrNull = (value) => (value ? new Date(value) : null);
 
@@ -22,6 +24,7 @@ const toIsoOrNull = (value) => (value ? new Date(value).toISOString() : null);
 
 export function normalizeEvent(event) {
   const startAt = toDateOrNull(event.startAt);
+  const isFloating = Boolean(event.isFloating);
   return {
     ...event,
     startAt,
@@ -29,7 +32,8 @@ export function normalizeEvent(event) {
     completedAt: toDateOrNull(event.completedAt),
     createdAt: toDateOrNull(event.createdAt),
     updatedAt: toDateOrNull(event.updatedAt),
-    isDeadline: event.type === 'task' && Boolean(event.allDay) && Boolean(startAt),
+    isFloating,
+    isDeadline: event.type === 'task' && !isFloating && Boolean(event.allDay) && Boolean(startAt),
   };
 }
 
@@ -55,8 +59,9 @@ export function normalizeCalendar(calendar) {
 
 export function toEventPayload(dto) {
   const payload = {};
+  const skipped = dto.isFloating === true ? DATELESS_FIELDS : [];
   EVENT_FIELDS.forEach((key) => {
-    if (dto[key] !== undefined) payload[key] = dto[key];
+    if (dto[key] !== undefined && !skipped.includes(key)) payload[key] = dto[key];
   });
 
   if ('startAt' in payload) payload.startAt = toIsoOrNull(payload.startAt);

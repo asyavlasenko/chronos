@@ -1,12 +1,14 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 import useCalendars from '../hooks/useCalendars';
 import useEvents from '../hooks/useEvents';
+import useTelegram from '../hooks/useTelegram';
 import { parseApiError } from '../api/errors';
 import { getViewRange, MONTHS_GENITIVE, toDate } from '../utils/dates';
 import { initials } from '../utils/text';
+import { AVATAR_ACCEPT, toAvatarDataUrl } from '../utils/image';
 import Icon from '../components/ui/Icon';
 import Card from '../components/ui/Card';
 import Avatar from '../components/ui/Avatar';
@@ -16,6 +18,7 @@ import Select from '../components/ui/Select';
 import SegmentedControl from '../components/ui/SegmentedControl';
 import Toggle from '../components/ui/Toggle';
 import PillButton from '../components/ui/PillButton';
+import ThemePicker from '../components/profile/ThemePicker';
 import styles from './ProfilePage.module.css';
 
 const COUNTRIES = [
@@ -47,6 +50,7 @@ const MIN_PASSWORD = 8;
 const EMPTY_PASSWORDS = { current: '', next: '' };
 
 const toForm = (user) => ({
+  name: user.name || '',
   country: user.country || 'UA',
   timezone: user.timezone || 'Europe/Kyiv',
   defaultArrangementDuration: user.defaultArrangementDuration ?? 60,
@@ -91,6 +95,50 @@ Row.propTypes = {
   children: PropTypes.node.isRequired,
 };
 
+function telegramHint({ status, isWaiting }) {
+  if (isWaiting) return `Натисни «Start» у боті @${status.botUsername}, сторінка оновиться сама`;
+  if (!status.isConnected) return 'Бот надсилатиме нагадування в особисті повідомлення';
+  return status.username ? `Підключено: @${status.username}` : 'Підключено';
+}
+
+function TelegramRow() {
+  const { status, pending, isWaiting, connect, disconnect, sendTest, cancel } = useTelegram();
+
+  if (!status?.enabled) return null;
+
+  return (
+    <Row title="Нагадування в Telegram" hint={telegramHint({ status, isWaiting })}>
+      <span className={styles.rowActions}>
+        {status.isConnected ? (
+          <>
+            <PillButton
+              variant="secondary"
+              size="sm"
+              disabled={pending !== null}
+              onClick={sendTest}
+            >
+              Перевірити
+            </PillButton>
+            <PillButton variant="ghost" size="sm" disabled={pending !== null} onClick={disconnect}>
+              Відключити
+            </PillButton>
+          </>
+        ) : null}
+        {!status.isConnected && isWaiting ? (
+          <PillButton variant="ghost" size="sm" onClick={cancel}>
+            Скасувати
+          </PillButton>
+        ) : null}
+        {!status.isConnected && !isWaiting ? (
+          <PillButton variant="secondary" size="sm" disabled={pending !== null} onClick={connect}>
+            Підключити
+          </PillButton>
+        ) : null}
+      </span>
+    </Row>
+  );
+}
+
 function SectionHead({ title }) {
   return (
     <div className={styles.sectionHead}>
@@ -119,6 +167,7 @@ export default function ProfilePage() {
   const [passwordErrors, setPasswordErrors] = useState({});
   const [passwordChanged, setPasswordChanged] = useState(false);
   const [sessionsError, setSessionsError] = useState(null);
+  const fileInputRef = useRef(null);
 
   const mainCalendar = calendars.find((c) => c.isMain) || null;
   const stats = useMemo(
@@ -145,7 +194,7 @@ export default function ProfilePage() {
     setFieldErrors({});
     setStatus(null);
     try {
-      const nextUser = await updateUser(form);
+      const nextUser = await updateUser({ ...form, name: form.name.trim() });
       setForm(toForm(nextUser));
       setStatus({ type: 'success', text: 'Збережено' });
     } catch (error) {
@@ -154,6 +203,31 @@ export default function ProfilePage() {
       setStatus({ type: 'error', text: parsed.message });
     } finally {
       setPending(null);
+    }
+  };
+
+  const saveAvatar = async (avatarUrl) => {
+    setPending('avatar');
+    setStatus(null);
+    try {
+      await updateUser({ avatarUrl });
+      setStatus({ type: 'success', text: avatarUrl ? 'Фото оновлено' : 'Фото прибрано' });
+    } catch (error) {
+      setStatus({ type: 'error', text: parseApiError(error).message });
+    } finally {
+      setPending(null);
+    }
+  };
+
+  const onAvatarPicked = async (e) => {
+    const [file] = e.target.files;
+    e.target.value = '';
+    if (!file) return;
+
+    try {
+      await saveAvatar(await toAvatarDataUrl(file));
+    } catch (error) {
+      setStatus({ type: 'error', text: error.message });
     }
   };
 
@@ -228,17 +302,72 @@ export default function ProfilePage() {
   return (
     <div className={styles.layout}>
       <div className={styles.main}>
-        <Card as="section" aria-label="Акаунт" padding="20px" gap={0} className={styles.account}>
-          <Avatar initials={initials(user.name)} color="graphite" size={64} title={user.name} />
+        <Card as="section" aria-label="Акаунт" padding="20px" gap={16} className={styles.account}>
+          <Avatar
+            initials={initials(user.name)}
+            color="graphite"
+            size={72}
+            title={user.name}
+            src={user.avatarUrl}
+          />
           <div className={styles.accountText}>
             <h1 className={styles.name}>{user.name}</h1>
             <span className={styles.email}>
               {user.email} · {emailStatus}
             </span>
           </div>
-          <PillButton variant="secondary" size="sm" className={styles.photoBtn}>
-            Змінити фото
-          </PillButton>
+          <div className={styles.accountActions}>
+            <input
+              ref={fileInputRef}
+              className={styles.fileInput}
+              type="file"
+              accept={AVATAR_ACCEPT}
+              aria-label="Файл з фото профілю"
+              onChange={onAvatarPicked}
+            />
+            <PillButton
+              variant="secondary"
+              size="sm"
+              disabled={isBusy}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {user.avatarUrl ? 'Змінити фото' : 'Додати фото'}
+            </PillButton>
+            {user.avatarUrl ? (
+              <PillButton
+                variant="ghost"
+                size="sm"
+                disabled={isBusy}
+                onClick={() => saveAvatar(null)}
+              >
+                Прибрати
+              </PillButton>
+            ) : null}
+          </div>
+        </Card>
+
+        <Card as="section" aria-label="Профіль" padding="0" gap={0} className={styles.section}>
+          <SectionHead title="Профіль" />
+          <Row
+            title="Ім'я"
+            hint="Так тебе бачать учасники спільних календарів"
+            error={fieldErrors.name}
+          >
+            <Input
+              size="sm"
+              aria-label="Ім'я"
+              className={styles.nameInput}
+              value={form.name}
+              maxLength={80}
+              invalid={Boolean(fieldErrors.name)}
+              onChange={(e) => patch({ name: e.target.value })}
+            />
+          </Row>
+        </Card>
+
+        <Card as="section" aria-label="Оформлення" padding="0" gap={0} className={styles.section}>
+          <SectionHead title="Оформлення" />
+          <ThemePicker />
         </Card>
 
         <Card as="section" aria-label="Календар" padding="0" gap={0} className={styles.section}>
@@ -338,17 +467,6 @@ export default function ProfilePage() {
             />
           </Row>
           <Row
-            title="Push у браузері"
-            hint="Потрібен дозвіл браузера"
-            error={fieldErrors['notifications.push']}
-          >
-            <Toggle
-              label="Push у браузері"
-              checked={form.notifications.push}
-              onChange={(push) => patchNotifications({ push })}
-            />
-          </Row>
-          <Row
             title="Запрошення та зміни у спільних календарях"
             hint="Лист, коли тебе запрошують або змінюють подію"
             error={fieldErrors['notifications.sharedCalendarEmails']}
@@ -359,6 +477,7 @@ export default function ProfilePage() {
               onChange={(sharedCalendarEmails) => patchNotifications({ sharedCalendarEmails })}
             />
           </Row>
+          <TelegramRow />
         </Card>
 
         <Card as="section" aria-label="Безпека" padding="0" gap={0} className={styles.section}>

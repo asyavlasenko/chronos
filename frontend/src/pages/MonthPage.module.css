@@ -4,16 +4,19 @@
   font-size: var(--fs-12);
   color: var(--ink-secondary);
 }
+
 .layout {
   display: flex;
   flex-wrap: wrap;
   gap: var(--gap-page);
   align-items: flex-start;
 }
+
 .main {
   flex: 999 1 600px;
   min-width: 0;
 }
+
 .side {
   flex: 1 1 240px;
   max-width: 280px;
@@ -29,21 +32,25 @@
   opacity: 0.8;
 }
 
-.cardTitle {
+.card-title {
   font-size: var(--fs-14);
 }
+
 .lock {
   display: inline-flex;
   color: var(--ink-secondary);
 }
+
 .link {
   font-weight: var(--fw-semibold);
   color: var(--accent);
   text-decoration: none;
 }
+
 .link:hover {
   color: var(--accent-strong);
 }
+
 .note {
   font-size: var(--fs-11);
   color: var(--ink-secondary);
@@ -54,7 +61,8 @@
   align-items: center;
   gap: 10px;
 }
-.holidayDate {
+
+.holiday-date {
   width: 38px;
   height: 38px;
   flex: none;
@@ -69,28 +77,33 @@
   font-weight: var(--fw-semibold);
   line-height: 1.1;
 }
-.holidayNext {
+
+.holiday-next {
   background: var(--accent-tint);
   color: var(--accent-strong);
 }
-.holidayDay {
+
+.holiday-day {
   font-size: var(--fs-15);
 }
-.holidayText {
+
+.holiday-text {
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
-.holidayName {
+
+.holiday-name {
   font-size: var(--fs-13);
   font-weight: var(--fw-semibold);
 }
-.holidayMeta {
+
+.holiday-meta {
   font-size: var(--fs-11);
   color: var(--ink-secondary);
 }
 
-.calList {
+.cal-list {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -101,6 +114,7 @@
     max-width: none;
   }
 }
+
 @media (max-width: 767px) {
   .main {
     overflow-x: auto;

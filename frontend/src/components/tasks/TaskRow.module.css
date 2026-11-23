@@ -15,7 +15,7 @@
   cursor: pointer;
 }
 
-.readOnly .label {
+.read-only .label {
   cursor: default;
 }
 
@@ -53,6 +53,7 @@
 .row .open {
   color: var(--ink-tertiary);
 }
+
 .row .open:hover {
   color: var(--ink);
 }

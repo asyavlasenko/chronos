@@ -14,7 +14,7 @@ export function parseApiError(error) {
   const response = error?.response;
   if (!response) {
     const message = axios.isAxiosError(error) ? UNAVAILABLE : UNKNOWN;
-    return { status: 0, message, fields: {} };
+    return { status: 0, message, fields: {}, code: null };
   }
 
   const { status, data } = response;
@@ -25,5 +25,10 @@ export function parseApiError(error) {
   });
 
   const hasMessage = typeof data?.message === 'string' && data.message !== '' && status !== 501;
-  return { status, message: hasMessage ? data.message : fallbackMessage(status), fields };
+  return {
+    status,
+    message: hasMessage ? data.message : fallbackMessage(status),
+    fields,
+    code: typeof data?.code === 'string' ? data.code : null,
+  };
 }

@@ -13,13 +13,16 @@
   resize: vertical;
   min-height: 90px;
 }
+
 .textarea::placeholder {
   color: var(--ink-tertiary);
 }
+
 .textarea:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-tint);
 }
+
 .invalid,
 .invalid:focus {
   border-color: var(--danger);

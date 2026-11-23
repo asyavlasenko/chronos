@@ -1,9 +1,9 @@
 import { formatDuration, parseDateParam, toDate } from '../utils/dates';
 
 export const TYPE_OPTIONS = [
-  { value: 'arrangement', label: 'Зустріч', hint: 'має початок і кінець' },
-  { value: 'reminder', label: 'Нагадування', hint: 'один момент часу' },
-  { value: 'task', label: 'Задача', hint: 'дедлайн і чекбокс' },
+  { value: 'arrangement', label: 'Зустріч' },
+  { value: 'reminder', label: 'Нагадування' },
+  { value: 'task', label: 'Задача' },
 ];
 export const TYPE_VALUES = TYPE_OPTIONS.map((t) => t.value);
 export const TYPE_LABELS = {
@@ -14,15 +14,17 @@ export const TYPE_LABELS = {
 };
 
 export const DEFAULT_REMINDER = '10';
+export const NO_REMINDER = 'none';
 export const REMINDER_OPTIONS = [
+  { value: NO_REMINDER, label: 'Не нагадувати' },
   { value: '10', label: 'За 10 хвилин' },
   { value: '30', label: 'За 30 хвилин' },
   { value: '60', label: 'За 1 годину' },
   { value: '1440', label: 'За день' },
 ];
 export const reminderToValue = (minutes) =>
-  minutes === null || minutes === undefined ? DEFAULT_REMINDER : String(minutes);
-export const valueToReminder = (value) => Number(value);
+  minutes === null || minutes === undefined ? NO_REMINDER : String(minutes);
+export const valueToReminder = (value) => (value === NO_REMINDER ? null : Number(value));
 
 export function reminderOptions(current) {
   if (REMINDER_OPTIONS.some((option) => option.value === current)) return REMINDER_OPTIONS;
@@ -32,7 +34,7 @@ export function reminderOptions(current) {
 }
 
 export function reminderLabel(minutes) {
-  if (minutes === null || minutes === undefined) return 'Не нагадувати';
+  if (minutes === null || minutes === undefined) return 'Без нагадування';
   if (minutes === 0) return 'Нагадати в момент події';
   if (minutes === 1440) return 'Нагадати за день';
   return `Нагадати за ${formatDuration(minutes)}`;

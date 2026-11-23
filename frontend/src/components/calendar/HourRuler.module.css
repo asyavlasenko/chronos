@@ -3,10 +3,12 @@
   flex-direction: column;
   flex: none;
 }
+
 .labels {
   display: flex;
   flex-direction: column;
 }
+
 .label {
   display: block;
   color: var(--ink-secondary);

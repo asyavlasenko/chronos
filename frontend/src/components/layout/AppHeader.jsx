@@ -94,8 +94,14 @@ export default function AppHeader() {
       </PillButton>
 
       <Link to="/profile" aria-label="Профіль" className={styles.avatar}>
-        <Icon name="user" size={16} className={styles.avatarIcon} />
-        <span className={styles.avatarInitials}>{initials(user?.name || '')}</span>
+        {user?.avatarUrl ? (
+          <img className={styles.avatarImage} src={user.avatarUrl} alt="" />
+        ) : (
+          <>
+            <Icon name="user" size={16} className={styles.avatarIcon} />
+            <span className={styles.avatarInitials}>{initials(user?.name || '')}</span>
+          </>
+        )}
       </Link>
     </header>
   );

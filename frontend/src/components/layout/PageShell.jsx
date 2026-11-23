@@ -5,6 +5,7 @@ import ModalsProvider from '../../app/providers/ModalsProvider';
 import useCalendars from '../../hooks/useCalendars';
 import EventDetailsModal from '../../modals/EventDetailsModal';
 import QuickCreateModal from '../../modals/QuickCreateModal';
+import AssistantWidget from '../assistant/AssistantWidget';
 import Card from '../ui/Card';
 import PageLoader from '../ui/PageLoader';
 import PillButton from '../ui/PillButton';
@@ -53,6 +54,7 @@ export default function PageShell() {
       </div>
       <MobileTabBar />
       <Fab />
+      <AssistantWidget />
       <QuickCreateModal />
       <EventDetailsModal />
     </ModalsProvider>

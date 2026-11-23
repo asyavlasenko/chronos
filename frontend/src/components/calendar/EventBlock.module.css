@@ -11,14 +11,17 @@
   text-decoration: none;
   transition: filter 0.12s ease;
 }
+
 .block:hover {
   filter: brightness(0.97);
 }
+
 .abs {
   position: absolute;
   left: 0;
   right: 0;
 }
+
 .main {
   display: flex;
   flex-direction: column;
@@ -26,6 +29,7 @@
   flex: 1;
   gap: 1px;
 }
+
 .title {
   font-weight: var(--fw-semibold);
   line-height: 1.2;
@@ -33,12 +37,14 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 .meta {
   line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 .desc {
   margin-top: auto;
   line-height: 1.3;
@@ -52,9 +58,11 @@
   padding: 4px 7px;
   align-items: flex-start;
 }
+
 .week .title {
   font-size: var(--fs-11);
 }
+
 .week .meta {
   font-size: var(--fs-10);
 }
@@ -65,14 +73,17 @@
   gap: 14px;
   align-items: flex-start;
 }
+
 .day .main {
   gap: 4px;
   height: 100%;
 }
+
 .day .title {
   font-size: var(--fs-15);
   font-weight: var(--fw-bold);
 }
+
 .day .meta,
 .day .desc {
   font-size: var(--fs-12);
@@ -84,12 +95,15 @@
   gap: 10px;
   align-items: flex-start;
 }
+
 .overview .main {
   gap: 2px;
 }
+
 .overview .title {
   font-size: var(--fs-13);
 }
+
 .overview .meta {
   font-size: var(--fs-12);
 }
@@ -100,12 +114,15 @@
   align-items: flex-start;
   gap: 6px;
 }
+
 .timeline .main {
   gap: 2px;
 }
+
 .timeline .title {
   font-size: var(--fs-12);
 }
+
 .timeline .meta {
   font-size: var(--fs-11);
   opacity: 0.85;
@@ -116,12 +133,15 @@
   padding: 10px 12px;
   align-items: flex-start;
 }
+
 .mobile .main {
   gap: 2px;
 }
+
 .mobile .title {
   font-size: var(--fs-13);
 }
+
 .mobile .meta {
   font-size: var(--fs-11);
 }
@@ -131,10 +151,12 @@
   outline-offset: 1px;
   z-index: 2;
 }
+
 .day.selected {
   outline-color: var(--dark);
   outline-offset: 2px;
 }
+
 .mobile.selected {
   outline-color: var(--dark);
   outline-offset: 2px;
@@ -153,22 +175,25 @@
   flex: none;
   letter-spacing: 0.02em;
 }
+
 .week .author {
   position: absolute;
   right: 5px;
   top: 5px;
 }
+
 .people {
   margin-left: auto;
   flex: none;
 }
+
 .action {
   flex: none;
   margin-left: auto;
 }
 
 .reminder {
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--line-strong);
   border-radius: var(--r-pill);
   background: var(--card);
   color: var(--ink);
@@ -178,9 +203,11 @@
   white-space: nowrap;
   height: 22px;
 }
+
 .reminder.week {
   font-size: var(--fs-10);
 }
+
 .reminder.day,
 .reminder.overview,
 .reminder.mobile {
@@ -189,11 +216,13 @@
   font-size: var(--fs-12);
   border-radius: var(--r-input);
 }
+
 .reminder.timeline {
   font-size: var(--fs-11);
   height: 24px;
   padding: 0 9px;
 }
+
 .reminder.list,
 .reminder.chip {
   height: auto;
@@ -201,10 +230,12 @@
   font-size: var(--fs-11);
   border-radius: 6px;
 }
-.remTime {
+
+.rem-time {
   color: var(--ink-secondary);
 }
-.remTitle {
+
+.rem-title {
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -215,27 +246,32 @@
   border: 1px solid var(--line);
   cursor: default;
 }
+
 .task:hover {
   filter: none;
 }
+
 .task.week {
   border-radius: var(--r-chip);
   padding: 4px 7px;
   gap: 6px;
   align-items: center;
 }
+
 .task.day {
   border-radius: var(--r-block);
   padding: 0 14px;
   gap: 12px;
   align-items: center;
 }
+
 .task.overview {
   border-radius: var(--r-input);
   padding: 0 10px;
   gap: 10px;
   align-items: center;
 }
+
 .task.mobile {
   border-radius: var(--r-block);
   padding: 10px 12px;
@@ -243,6 +279,7 @@
   background: var(--card);
   align-items: center;
 }
+
 .task.list,
 .task.chip {
   border-radius: 6px;
@@ -251,10 +288,12 @@
   align-items: center;
   font-size: var(--fs-11);
 }
-.taskBox {
+
+.task-box {
   flex: none;
 }
-.taskBody {
+
+.task-body {
   flex: 1;
   min-width: 0;
   display: flex;
@@ -268,44 +307,53 @@
   color: inherit;
   cursor: pointer;
 }
-.task.week .taskBody .title {
+
+.task.week .task-body .title {
   font-size: var(--fs-11);
 }
-.task.week .taskBody .meta {
+
+.task.week .task-body .meta {
   font-size: var(--fs-10);
   color: var(--ink-secondary);
 }
-.task.day .taskBody .title {
+
+.task.day .task-body .title {
   font-size: var(--fs-14);
 }
-.task.day .taskBody .meta,
-.task.overview .taskBody .meta {
+
+.task.day .task-body .meta,
+.task.overview .task-body .meta {
   font-size: var(--fs-12);
   color: var(--ink-secondary);
 }
-.task.overview .taskBody {
+
+.task.overview .task-body {
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
 }
-.task.overview .taskBody .title {
+
+.task.overview .task-body .title {
   font-size: var(--fs-13);
 }
-.task.mobile .taskBody .title {
+
+.task.mobile .task-body .title {
   font-size: var(--fs-13);
 }
-.task.mobile .taskBody .meta {
+
+.task.mobile .task-body .meta {
   font-size: var(--fs-11);
   color: var(--ink-secondary);
 }
+
 .done .title {
   color: var(--ink-secondary);
   text-decoration: line-through;
   font-weight: var(--fw-medium);
 }
 
-.listRow {
+.list-row {
   background: transparent;
   padding: 2px 0;
   gap: 5px;
@@ -314,22 +362,26 @@
   width: 100%;
   border-radius: 4px;
 }
-.listRow:hover {
+
+.list-row:hover {
   background: var(--bg);
   filter: none;
 }
-.listTime {
+
+.list-time {
   color: var(--ink-secondary);
   flex: none;
   font-weight: var(--fw-medium);
 }
-.listDot {
+
+.list-dot {
   width: 6px;
   height: 6px;
   border-radius: 2px;
   flex: none;
 }
-.listTitle {
+
+.list-title {
   font-weight: var(--fw-medium);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -344,18 +396,21 @@
   white-space: nowrap;
   gap: 0;
 }
+
 .holiday {
   justify-content: center;
 }
 
-.listBox {
+.list-box {
   flex: none;
 }
-.listIcon {
+
+.list-icon {
   color: var(--ink-secondary);
   flex: none;
 }
-.listTitleBtn {
+
+.list-title-btn {
   border: 0;
   background: transparent;
   padding: 0;
@@ -368,7 +423,8 @@
   white-space: nowrap;
   min-width: 0;
 }
-.done .listTitleBtn {
+
+.done .list-title-btn {
   color: var(--ink-secondary);
   text-decoration: line-through;
 }

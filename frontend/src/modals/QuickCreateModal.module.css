@@ -3,11 +3,13 @@
   flex-direction: column;
   gap: 14px;
 }
+
 .head {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
+
 .eyebrow {
   font-size: var(--fs-12);
   font-weight: var(--fw-semibold);
@@ -15,13 +17,14 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
-.fieldCol {
+
+.field-col {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.form .titleInput {
+.form .title-input {
   height: 46px;
   padding: 0 2px;
   border: 0;
@@ -31,58 +34,68 @@
   font-size: var(--fs-18);
   font-weight: var(--fw-semibold);
 }
-.form .titleInput:focus {
+
+.form .title-input:focus {
   border-color: var(--dark);
   box-shadow: none;
 }
-.form .titleError,
-.form .titleError:focus {
+
+.form .title-error,
+.form .title-error:focus {
   border-color: var(--danger);
 }
+
 .error {
   font-size: var(--fs-12);
   color: var(--danger);
 }
 
-.timeRow {
+.time-row {
   display: flex;
   align-items: center;
   gap: 8px;
 }
+
 .clock {
   flex: none;
   color: var(--ink-secondary);
 }
-.timeRow .date {
+
+.time-row .date {
   flex: 1;
   min-width: 0;
 }
-.timeRow .time {
+
+.time-row .time {
   width: 88px;
   flex: none;
   text-align: center;
 }
+
 .dash {
   color: var(--ink-secondary);
 }
 
-.calRow {
+.cal-row {
   display: flex;
   align-items: center;
   gap: 8px;
 }
-.dotWrap {
+
+.dot-wrap {
   display: flex;
   justify-content: center;
   width: 16px;
   flex: none;
 }
+
 .dot {
   width: 10px;
   height: 10px;
   border-radius: var(--r-dot);
 }
-.calSelect {
+
+.cal-select {
   flex: 1;
   min-width: 0;
 }
@@ -95,15 +108,18 @@
   padding-top: 14px;
   border-top: 1px solid var(--line-soft);
 }
+
 .more {
   font-size: var(--fs-13);
   font-weight: var(--fw-semibold);
 }
+
 .keys {
   margin-left: auto;
   font-size: var(--fs-11);
   color: var(--ink-secondary);
 }
+
 @media (max-width: 767px) {
   .keys {
     display: none;

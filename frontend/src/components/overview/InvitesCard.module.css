@@ -10,29 +10,35 @@
   align-items: center;
   justify-content: center;
 }
+
 .invite {
   display: flex;
   flex-direction: column;
   gap: 8px;
   flex: 1;
 }
+
 .title {
   font-size: var(--fs-13);
   font-weight: var(--fw-semibold);
   color: var(--ink);
 }
+
 .title:hover {
   color: var(--accent);
 }
+
 .meta {
   font-size: var(--fs-12);
   color: var(--ink-secondary);
 }
+
 .actions {
   display: flex;
   gap: 6px;
   margin-top: auto;
 }
+
 .actions > * {
   flex: 1;
 }

@@ -114,3 +114,14 @@ export const resolveEventColors = (event, calendar) => {
   const { key, palette } = resolveEventColor(event, calendar);
   return colorVars(key, palette);
 };
+
+const NOTE_COLORS = {
+  base: 'var(--sticker-main)',
+  tint: 'var(--sticker-main-tint)',
+  text: 'var(--sticker-main-text)',
+};
+
+export const stickerColors = (event, calendar) =>
+  resolveEventColorKey(event, calendar) === 'graphite'
+    ? NOTE_COLORS
+    : resolveEventColors(event, calendar);

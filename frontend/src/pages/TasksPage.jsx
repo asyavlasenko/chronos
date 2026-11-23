@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { parseApiError } from '../api/errors';
 import useAuth from '../hooks/useAuth';
 import useEvents from '../hooks/useEvents';
@@ -36,6 +36,7 @@ import {
 import styles from './TasksPage.module.css';
 
 const TASK_TYPES = ['task'];
+const byNewest = (a, b) => toDate(b.createdAt || b.startAt) - toDate(a.createdAt || a.startAt);
 const WEEKDAYS_LOCATIVE = [
   'у понеділок',
   'у вівторок',
@@ -45,7 +46,17 @@ const WEEKDAYS_LOCATIVE = [
   'у суботу',
   'у неділю',
 ];
+const ERROR_FIELDS = { title: 'title', startAt: 'date' };
 const pluralActive = (n) => `${n} ${plural(n, ['активна', 'активні', 'активних'])}`;
+
+function sectionKey(task, weekFrom, weekTo) {
+  if (task.isFloating) return 'floating';
+  if (!task.startAt) return 'later';
+  if (isToday(task.startAt)) return 'today';
+  const start = toDate(task.startAt);
+  if (start < weekFrom) return 'overdue';
+  return start < weekTo ? 'week' : 'later';
+}
 
 function deadlinesText(deadlines) {
   if (deadlines.length === 0) return 'без дедлайнів';
@@ -56,7 +67,6 @@ function deadlinesText(deadlines) {
 }
 
 export default function TasksPage() {
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const q = searchParams.get('q') || '';
   const { user } = useAuth();
@@ -65,8 +75,12 @@ export default function TasksPage() {
   const timeFormat = user?.timeFormat ?? '24h';
   const { calendars, byId } = useCalendars();
   const { openDetails } = useModals();
-  const { events: tasks, createEvent, toggleCompleted } = useEvents({ types: TASK_TYPES, q });
-  const { events: allTasks } = useEvents({ types: TASK_TYPES });
+  const {
+    events: tasks,
+    createEvent,
+    toggleCompleted,
+  } = useEvents({ types: TASK_TYPES, q, includeFloating: true });
+  const { events: allTasks } = useEvents({ types: TASK_TYPES, includeFloating: true });
 
   const today = useMemo(() => startOfDay(new Date()), []);
   const weekFrom = useMemo(() => startOfWeek(today, weekStartsOn), [today, weekStartsOn]);
@@ -75,7 +89,6 @@ export default function TasksPage() {
 
   const [calFilter, setCalFilter] = useState('all');
   const [showDone, setShowDone] = useState(true);
-  const [showNoDate, setShowNoDate] = useState(true);
   const [highOnly, setHighOnly] = useState(false);
   const [allDone, setAllDone] = useState(false);
 
@@ -85,9 +98,9 @@ export default function TasksPage() {
   );
   const [title, setTitle] = useState('');
   const [preferredCalendar, setPreferredCalendar] = useState('');
-  const [withDate, setWithDate] = useState(false);
   const [dateStr, setDateStr] = useState(() => toDateParam(today));
-  const [error, setError] = useState('');
+  const [isDateless, setIsDateless] = useState(false);
+  const [error, setError] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
   const isMounted = useRef(true);
   const inFlight = useRef(false);
@@ -105,43 +118,45 @@ export default function TasksPage() {
     if (inFlight.current) return;
 
     const name = title.trim();
-    const startAt = withDate ? combineDateTime(dateStr) : null;
+    const startAt = isDateless ? null : combineDateTime(dateStr);
     if (!name) {
-      setError('Вкажи назву задачі');
+      setError({ field: 'title', text: 'Вкажи назву задачі' });
       return;
     }
-    if (withDate && !startAt) {
-      setError('Вкажи дату або обери «Без дати»');
+    if (!isDateless && !startAt) {
+      setError({ field: 'date', text: 'Вкажи дату' });
       return;
     }
     if (!calendarId) {
-      setError('Немає календаря, у який можна додати задачу');
+      setError({ field: null, text: 'Немає календаря, у який можна додати задачу' });
       return;
     }
 
     inFlight.current = true;
     setIsAdding(true);
-    setError('');
+    setError(null);
     try {
+      const when = isDateless ? { isFloating: true } : { startAt, allDay: true };
       await createEvent({
         type: 'task',
         title: name,
         calendar: calendarId,
-        startAt,
-        allDay: true,
         priority: 'medium',
+        ...when,
       });
       if (isMounted.current) setTitle('');
     } catch (err) {
       const { message, fields } = parseApiError(err);
-      if (isMounted.current) setError(Object.values(fields)[0] || message);
+      const [path] = Object.keys(fields);
+      if (isMounted.current) {
+        setError({ field: ERROR_FIELDS[path] || null, text: fields[path] || message });
+      }
     } finally {
       inFlight.current = false;
       if (isMounted.current) setIsAdding(false);
     }
   };
 
-  const schedule = (task) => navigate(`/events/${task.id}`);
   const canModify = (task) => canModifyEvent(task, byId[task.calendar], userId);
 
   const taskCalendars = calendars.filter((c) => allTasks.some((t) => t.calendar === c.id));
@@ -155,11 +170,12 @@ export default function TasksPage() {
     [tasks, activeFilter, highOnly],
   );
   const active = visible.filter((t) => !t.isCompleted);
-  const todayList = active.filter((t) => t.startAt && isToday(t.startAt));
-  const overdueList = active.filter((t) => t.startAt && toDate(t.startAt) < weekFrom);
-  const weekList = active.filter((t) => inWeek(t.startAt) && !isToday(t.startAt));
-  const laterList = active.filter((t) => t.startAt && toDate(t.startAt) >= weekTo);
-  const noDateList = active.filter((t) => !t.startAt);
+  const inSection = (key) => (t) => sectionKey(t, weekFrom, weekTo) === key;
+  const todayList = active.filter(inSection('today'));
+  const overdueList = active.filter(inSection('overdue'));
+  const weekList = active.filter(inSection('week'));
+  const laterList = active.filter(inSection('later'));
+  const floatingList = active.filter(inSection('floating')).sort(byNewest);
   const doneAll = visible.filter((t) => t.isCompleted);
   const doneWeek = doneAll.filter((t) => inWeek(t.completedAt));
   const doneList = allDone ? doneAll : doneWeek;
@@ -167,10 +183,10 @@ export default function TasksPage() {
   const activeAll = allTasks.filter((t) => !t.isCompleted);
   const doneWeekCount = allTasks.filter((t) => t.isCompleted && inWeek(t.completedAt)).length;
   const weekTasks = allTasks.filter(
-    (t) => inWeek(t.startAt) || (t.isCompleted && inWeek(t.completedAt)),
+    (t) => (!t.isFloating && inWeek(t.startAt)) || (t.isCompleted && inWeek(t.completedAt)),
   );
   const weekDoneCount = weekTasks.filter((t) => t.isCompleted).length;
-  const todayCount = activeAll.filter((t) => t.startAt && isToday(t.startAt)).length;
+  const todayCount = activeAll.filter(inSection('today')).length;
   const deadlines = activeAll.filter((t) => t.isDeadline && inWeek(t.startAt));
   const progress = weekTasks.length ? Math.round((weekDoneCount / weekTasks.length) * 100) : 0;
 
@@ -179,6 +195,8 @@ export default function TasksPage() {
     .filter((row) => row.count > 0);
 
   const selectedCalendar = byId[calendarId] || null;
+  const titleInvalid = error?.field === 'title';
+  const dateInvalid = error?.field === 'date';
   const calendarOptions = editableCalendars.map((c) => ({ value: c.id, label: c.name }));
 
   const sections = [
@@ -216,12 +234,10 @@ export default function TasksPage() {
       hidden: laterList.length === 0,
     },
     {
-      key: 'nodate',
-      title: 'Без дати',
-      subtitle: 'натисни «Запланувати», щоб додати дату',
-      list: noDateList,
-      hidden: !showNoDate,
-      empty: 'Задач без дати немає',
+      key: 'floating',
+      title: 'Колись',
+      subtitle: 'без дедлайну',
+      list: floatingList,
     },
     {
       key: 'done',
@@ -294,26 +310,40 @@ export default function TasksPage() {
               readOnly={isAdding}
               onChange={(e) => {
                 setTitle(e.target.value);
-                if (error) setError('');
+                if (error) setError(null);
               }}
-              invalid={Boolean(error)}
-              aria-invalid={Boolean(error)}
-              aria-describedby={error ? 'new-task-error' : undefined}
+              invalid={titleInvalid}
+              aria-invalid={titleInvalid}
+              aria-describedby={titleInvalid ? 'new-task-error' : undefined}
               className={styles.titleInput}
             />
-            {withDate ? (
+            <Chip
+              variant="plain"
+              label="Без дати"
+              checked={isDateless}
+              onChange={(value) => {
+                setIsDateless(value);
+                if (error) setError(null);
+              }}
+              className={styles.dateless}
+            />
+            {isDateless ? null : (
               <Input
                 type="date"
                 size="xs"
                 aria-label="Дата задачі"
                 value={dateStr}
+                readOnly={isAdding}
                 onChange={(e) => {
                   setDateStr(e.target.value);
-                  if (error) setError('');
+                  if (error) setError(null);
                 }}
+                invalid={dateInvalid}
+                aria-invalid={dateInvalid}
+                aria-describedby={dateInvalid ? 'new-task-error' : undefined}
                 className={styles.dateInput}
               />
-            ) : null}
+            )}
             <Select
               size="xs"
               aria-label="Календар"
@@ -328,22 +358,13 @@ export default function TasksPage() {
               }
               className={styles.calSelect}
             />
-            <PillButton
-              variant="secondary"
-              size="xs"
-              aria-pressed={!withDate}
-              className={cx(withDate && styles.dateOff)}
-              onClick={() => setWithDate((v) => !v)}
-            >
-              Без дати
-            </PillButton>
             <PillButton variant="primary" size="xs" type="submit" disabled={isAdding}>
               {isAdding ? 'Додаємо…' : 'Додати'}
             </PillButton>
           </div>
           {error ? (
             <span id="new-task-error" className={styles.error} role="alert">
-              {error}
+              {error.text}
             </span>
           ) : null}
         </Card>
@@ -366,21 +387,17 @@ export default function TasksPage() {
                 <span className={styles.groupSub}>{s.subtitle}</span>
                 {s.action || null}
               </div>
-              {s.list.map((t) => {
-                const editable = canModify(t);
-                return (
-                  <TaskRow
-                    key={t.id}
-                    task={t}
-                    calendar={byId[t.calendar]}
-                    timeFormat={timeFormat}
-                    onToggleComplete={toggleCompleted}
-                    canToggle={editable}
-                    onOpen={openDetails}
-                    onSchedule={editable ? schedule : null}
-                  />
-                );
-              })}
+              {s.list.map((t) => (
+                <TaskRow
+                  key={t.id}
+                  task={t}
+                  calendar={byId[t.calendar]}
+                  timeFormat={timeFormat}
+                  onToggleComplete={toggleCompleted}
+                  canToggle={canModify(t)}
+                  onOpen={openDetails}
+                />
+              ))}
               {s.list.length === 0 && s.empty ? (
                 <div className={styles.empty}>{s.empty}</div>
               ) : null}
@@ -423,7 +440,6 @@ export default function TasksPage() {
         <Card gap={8}>
           <span className={styles.sideTitle}>Показувати</span>
           <Chip variant="plain" label="Виконані" checked={showDone} onChange={setShowDone} />
-          <Chip variant="plain" label="Без дати" checked={showNoDate} onChange={setShowNoDate} />
           <Chip
             variant="plain"
             label="Лише з високим пріоритетом"

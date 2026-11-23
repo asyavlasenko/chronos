@@ -7,9 +7,11 @@
   flex-direction: column;
   overflow: hidden;
 }
+
 .today {
   box-shadow: var(--ring-today);
 }
+
 .head {
   height: 70px;
   box-sizing: border-box;
@@ -18,10 +20,12 @@
   justify-content: space-between;
   align-items: flex-start;
 }
+
 .today .head {
   background: var(--dark);
   color: var(--ink-on-dark);
 }
+
 .w {
   display: block;
   font-size: var(--fs-11);
@@ -30,18 +34,22 @@
   text-transform: uppercase;
   white-space: nowrap;
 }
+
 .today .w {
   color: var(--ink-on-dark);
   opacity: 0.7;
 }
+
 .n {
   font-size: var(--fs-22);
   font-weight: var(--fw-bold);
   letter-spacing: -0.02em;
 }
+
 .day {
   flex: none;
 }
+
 .right {
   display: flex;
   flex-direction: column;
@@ -50,6 +58,7 @@
   min-width: 0;
   padding-top: 4px;
 }
+
 .right .badge {
   display: block;
   max-width: 100%;
@@ -57,17 +66,21 @@
   text-overflow: ellipsis;
   cursor: pointer;
 }
+
 .h {
   font-size: var(--fs-11);
   color: var(--ink-secondary);
 }
+
 .today .h {
   color: var(--ink-on-dark);
   opacity: 0.8;
 }
+
 .grid {
   margin: 0 8px;
 }
+
 .add {
   display: flex;
   align-items: center;
@@ -81,10 +94,12 @@
   font-family: var(--font);
   cursor: pointer;
 }
+
 .add:hover {
   color: var(--ink);
 }
-.addToday {
+
+.add-today {
   color: var(--accent);
   font-weight: var(--fw-semibold);
 }

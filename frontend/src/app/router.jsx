@@ -15,45 +15,53 @@ import EventCreatePage from '../pages/EventCreatePage';
 import AuthPage from '../pages/AuthPage';
 import ProfilePage from '../pages/ProfilePage';
 import InvitePage from '../pages/InvitePage';
+import VerifyEmailPage from '../pages/VerifyEmailPage';
 import NotFoundPage from '../pages/NotFoundPage';
+import ErrorPage from '../pages/ErrorPage';
 
 const router = createBrowserRouter([
-  { path: '/login', element: <AuthPage mode="login" /> },
-  { path: '/register', element: <AuthPage mode="register" /> },
-  { path: '/reset', element: <AuthPage mode="reset" /> },
-  { path: '/invite/:token', element: <InvitePage /> },
-
   {
-    element: <RequireAuth />,
+    errorElement: <ErrorPage />,
     children: [
+      { path: '/login', element: <AuthPage mode="login" /> },
+      { path: '/register', element: <AuthPage mode="register" /> },
+      { path: '/reset', element: <AuthPage mode="reset" /> },
+      { path: '/invite/:token', element: <InvitePage /> },
+      { path: '/verify-email/:token', element: <VerifyEmailPage /> },
+
       {
-        element: <PageShell />,
+        element: <RequireAuth />,
         children: [
-          { index: true, element: <OverviewPage /> },
           {
-            path: 'calendar',
-            element: <CalendarLayout />,
+            element: <PageShell />,
             children: [
-              { index: true, element: <Navigate to="week" replace /> },
-              { path: 'day', element: <DayPage /> },
-              { path: 'week', element: <WeekPage /> },
-              { path: 'week/timeline', element: <WeekTimelinePage /> },
-              { path: 'month', element: <MonthPage /> },
-              { path: 'year', element: <YearPage /> },
+              { index: true, element: <OverviewPage /> },
+              {
+                path: 'calendar',
+                element: <CalendarLayout />,
+                children: [
+                  { index: true, element: <Navigate to="week" replace /> },
+                  { path: 'day', element: <DayPage /> },
+                  { path: 'week', element: <WeekPage /> },
+                  { path: 'week/timeline', element: <WeekTimelinePage /> },
+                  { path: 'month', element: <MonthPage /> },
+                  { path: 'year', element: <YearPage /> },
+                ],
+              },
+              { path: 'tasks', element: <TasksPage /> },
+              { path: 'calendars', element: <CalendarsPage /> },
+              { path: 'calendars/:id', element: <SharedCalendarPage /> },
+              { path: 'events/new', element: <EventCreatePage /> },
+              { path: 'events/:id', element: <EventCreatePage /> },
+              { path: 'profile', element: <ProfilePage /> },
             ],
           },
-          { path: 'tasks', element: <TasksPage /> },
-          { path: 'calendars', element: <CalendarsPage /> },
-          { path: 'calendars/:id', element: <SharedCalendarPage /> },
-          { path: 'events/new', element: <EventCreatePage /> },
-          { path: 'events/:id', element: <EventCreatePage /> },
-          { path: 'profile', element: <ProfilePage /> },
         ],
       },
+
+      { path: '*', element: <NotFoundPage /> },
     ],
   },
-
-  { path: '*', element: <NotFoundPage /> },
 ]);
 
 export default router;

@@ -4,6 +4,7 @@
   gap: var(--gap-page);
   align-items: flex-start;
 }
+
 .main {
   flex: 999 1 520px;
   max-width: 820px;
@@ -12,6 +13,7 @@
   flex-direction: column;
   gap: 14px;
 }
+
 .side {
   flex: 1 1 260px;
   max-width: 300px;
@@ -20,53 +22,62 @@
   flex-direction: column;
   gap: var(--gap-page);
 }
+
 @media (max-width: 1000px) {
   .side {
     max-width: none;
   }
 }
 
-.titleRow {
+.title-row {
   display: flex;
   align-items: baseline;
   gap: 12px;
   flex-wrap: wrap;
 }
+
 .h1 {
   font-size: var(--fs-22);
   font-weight: var(--fw-bold);
   letter-spacing: -0.01em;
 }
+
 .subtitle {
   font-size: var(--fs-13);
   color: var(--ink-secondary);
 }
+
 .spacer {
   flex: 1;
 }
+
 .filters {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
 }
-.filters .filterOff {
+
+.filters .filter-off {
   font-weight: var(--fw-medium);
 }
 
 .form:focus-within {
   box-shadow: 0 0 0 3px var(--accent-tint);
 }
-.formRow {
+
+.form-row {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
 }
+
 .plus {
   color: var(--ink-secondary);
   flex: none;
 }
-.form .titleInput {
+
+.form .title-input {
   flex: 1 1 200px;
   width: auto;
   min-width: 0;
@@ -77,24 +88,34 @@
   font-size: var(--fs-14);
   box-shadow: none;
 }
-.form .titleInput:focus {
+
+.form .title-input:focus {
   border: 0;
   box-shadow: none;
 }
-.form .dateInput {
+
+.form .date-input {
   width: 150px;
   flex: none;
+  border-radius: var(--r-pill);
+  font-weight: var(--fw-medium);
 }
-.calSelect {
+
+.form .dateless {
+  flex: none;
+  font-size: var(--fs-12);
+  font-weight: var(--fw-medium);
+}
+
+.cal-select {
   flex: none;
 }
-.form .calSelect select {
+
+.form .cal-select select {
   border-radius: var(--r-pill);
   padding-left: 26px;
 }
-.form .dateOff {
-  color: var(--ink-secondary);
-}
+
 .error {
   font-size: var(--fs-12);
   color: var(--danger);
@@ -104,37 +125,45 @@
 .group {
   overflow: hidden;
 }
-.groupHead {
+
+.group-head {
   padding: 14px 16px 10px;
   display: flex;
   align-items: baseline;
   gap: 8px;
 }
-.groupTitle {
+
+.group-title {
   font-size: var(--fs-15);
   font-weight: var(--fw-bold);
 }
-.groupTitleMuted {
+
+.group-title-muted {
   color: var(--ink-secondary);
 }
-.groupSub {
+
+.group-sub {
   font-size: var(--fs-12);
   color: var(--ink-secondary);
 }
-.groupHead .count {
+
+.group-head .count {
   margin-left: auto;
   font-size: var(--fs-12);
   padding: 3px 9px;
 }
+
 .link {
   margin-left: auto;
   font-size: var(--fs-12);
   font-weight: var(--fw-semibold);
   color: var(--accent);
 }
+
 .link:hover {
   color: var(--accent-strong);
 }
+
 .empty {
   padding: 12px 16px;
   border-top: 1px solid var(--line-soft);
@@ -150,12 +179,13 @@
   flex: none;
 }
 
-.valueSub {
+.value-sub {
   font-size: var(--fs-14);
   font-weight: var(--fw-medium);
   opacity: 0.8;
   letter-spacing: normal;
 }
+
 .bar {
   height: 6px;
   border-radius: var(--r-pill);
@@ -163,34 +193,41 @@
   display: flex;
   margin-top: 2px;
 }
-.barFill {
+
+.bar-fill {
   height: 6px;
   border-radius: var(--r-pill);
   background: var(--ink-on-dark);
   display: block;
 }
-.darkMeta {
+
+.dark-meta {
   font-size: var(--fs-12);
   opacity: 0.8;
 }
-.sideTitle {
+
+.side-title {
   font-size: var(--fs-14);
   font-weight: var(--fw-bold);
 }
-.calRow {
+
+.cal-row {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: var(--fs-13);
 }
-.calName {
+
+.cal-name {
   flex: 1;
   min-width: 0;
 }
-.calCount {
+
+.cal-count {
   color: var(--ink-secondary);
 }
-.sideEmpty {
+
+.side-empty {
   font-size: var(--fs-12);
   color: var(--ink-secondary);
 }

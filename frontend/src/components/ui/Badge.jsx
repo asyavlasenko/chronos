@@ -17,7 +17,7 @@ export default function Badge({
   const vars = variant === 'tint' && color ? colorVars(color) : null;
   const style = vars ? { background: vars.tint, color: vars.text } : undefined;
   const dotStyle = dot
-    ? { background: dot === 'accent' ? '#60A5FA' : colorVars(dot).base }
+    ? { background: dot === 'accent' ? 'var(--accent-dot)' : colorVars(dot).base }
     : undefined;
   return (
     <Tag

@@ -3,7 +3,24 @@ import { EventsContext } from '../app/providers/EventsProvider';
 import { CalendarsContext } from '../app/providers/CalendarsProvider';
 import { toDate } from '../utils/dates';
 
-export default function useEvents({ from, to, calendarIds, types, q, includeHidden = false } = {}) {
+const matchesQuery = (event, query) =>
+  !query ||
+  event.title.toLowerCase().includes(query) ||
+  (event.description || '').toLowerCase().includes(query);
+
+const byCompletion = (a, b) => Number(Boolean(a.isCompleted)) - Number(Boolean(b.isCompleted));
+
+const byNewest = (a, b) => (toDate(b.createdAt) || 0) - (toDate(a.createdAt) || 0);
+
+export default function useEvents({
+  from,
+  to,
+  calendarIds,
+  types,
+  q,
+  includeHidden = false,
+  includeFloating = false,
+} = {}) {
   const ctx = useContext(EventsContext);
   const cals = useContext(CalendarsContext);
   const { ensureHolidays } = ctx;
@@ -43,14 +60,10 @@ export default function useEvents({ from, to, calendarIds, types, q, includeHidd
 
     return [...ctx.events, ...holidayEvents]
       .filter((e) => visible.has(e.calendar))
+      .filter((e) => includeFloating || !e.isFloating)
       .filter((e) => !allowedCals || allowedCals.has(e.calendar))
       .filter((e) => !allowedTypes || allowedTypes.has(e.type))
-      .filter(
-        (e) =>
-          !query ||
-          e.title.toLowerCase().includes(query) ||
-          (e.description || '').toLowerCase().includes(query),
-      )
+      .filter((e) => matchesQuery(e, query))
       .filter((e) => {
         if (!from && !to) return true;
         if (!e.startAt) return false;
@@ -65,6 +78,7 @@ export default function useEvents({ from, to, calendarIds, types, q, includeHidd
     cals.calendars,
     cals.visibleIds,
     includeHidden,
+    includeFloating,
     calendarIds,
     types,
     q,
@@ -72,5 +86,15 @@ export default function useEvents({ from, to, calendarIds, types, q, includeHidd
     to,
   ]);
 
-  return { ...ctx, events, holidayEvents };
+  const floatingTasks = useMemo(() => {
+    const visible = new Set(cals.visibleIds);
+    const query = q ? q.trim().toLowerCase() : '';
+
+    return ctx.events
+      .filter((e) => e.isFloating && visible.has(e.calendar))
+      .filter((e) => matchesQuery(e, query))
+      .sort((a, b) => byCompletion(a, b) || byNewest(a, b));
+  }, [ctx.events, cals.visibleIds, q]);
+
+  return { ...ctx, events, holidayEvents, floatingTasks };
 }

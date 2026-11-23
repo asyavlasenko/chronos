@@ -6,31 +6,37 @@
   flex-direction: column;
   gap: var(--gap-page);
 }
+
 .main {
   display: flex;
   flex-direction: column;
   gap: var(--gap-page);
   min-width: 0;
 }
+
 @media (max-width: 767px) {
   .page {
     padding: 16px 16px 110px;
     gap: 12px;
   }
+
   .main {
     gap: 12px;
   }
 }
+
 .state {
   height: 60vh;
   overflow: hidden;
   border-radius: var(--r-card);
 }
+
 .error {
   max-width: 460px;
   align-items: flex-start;
 }
-.errorText {
+
+.error-text {
   font-size: var(--fs-13);
   color: var(--ink-secondary);
 }

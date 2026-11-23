@@ -1,7 +1,24 @@
 import client, { refreshSession } from './client';
 
-export async function register({ email, password, name }) {
-  const { data } = await client.post('/auth/register', { email, password, name });
+export async function register({ email, password, name, timezone, country, next }) {
+  const { data } = await client.post('/auth/register', {
+    email,
+    password,
+    name,
+    timezone,
+    country,
+    next,
+  });
+  return data;
+}
+
+export async function verifyEmail(token) {
+  const { data } = await client.post('/auth/verify-email', { token });
+  return data;
+}
+
+export async function resendVerification(email) {
+  const { data } = await client.post('/auth/verify-email/resend', { email });
   return data;
 }
 

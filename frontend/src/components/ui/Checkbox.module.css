@@ -3,6 +3,7 @@
   cursor: pointer;
   flex: none;
 }
+
 .locked {
   cursor: default;
 }

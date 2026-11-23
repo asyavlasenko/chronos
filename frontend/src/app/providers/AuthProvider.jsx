@@ -55,11 +55,14 @@ export default function AuthProvider({ children }) {
     [applySession],
   );
 
-  const register = useCallback(
-    async ({ email, password, name }) =>
-      applySession(await authApi.register({ email, password, name })),
+  const register = useCallback((account) => authApi.register(account), []);
+
+  const verifyEmail = useCallback(
+    async (token) => applySession(await authApi.verifyEmail(token)),
     [applySession],
   );
+
+  const resendVerification = useCallback((email) => authApi.resendVerification(email), []);
 
   const logout = useCallback(async () => {
     await authApi.logout();
@@ -100,6 +103,8 @@ export default function AuthProvider({ children }) {
       isLoading,
       login,
       register,
+      verifyEmail,
+      resendVerification,
       logout,
       updateUser,
       changePassword,
@@ -112,6 +117,8 @@ export default function AuthProvider({ children }) {
       isLoading,
       login,
       register,
+      verifyEmail,
+      resendVerification,
       logout,
       updateUser,
       changePassword,

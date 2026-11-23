@@ -12,15 +12,18 @@ import IconButton from '../components/ui/IconButton';
 import Checkbox from '../components/ui/Checkbox';
 import PillButton from '../components/ui/PillButton';
 import PageLoader from '../components/ui/PageLoader';
+import CheckEmailPanel from '../components/auth/CheckEmailPanel';
 import styles from './AuthPage.module.css';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const COUNTRY_RE = /^[A-Z]{2}$/;
 const MIN_PASSWORD = 8;
 const MIN_NAME = 2;
 
 const RESET_SENT = 'Якщо такий email існує, лист уже в дорозі';
 const RESET_DONE = 'Пароль змінено, увійди з новим';
 const LINK_INVALID = 'Посилання недійсне або прострочене';
+const EMAIL_NOT_VERIFIED = 'EMAIL_NOT_VERIFIED';
 
 const TABS = [
   { mode: 'login', to: '/login', label: 'Вхід' },
@@ -105,6 +108,23 @@ function validate(view, values) {
   return errors;
 }
 
+function detectTimezone() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function detectCountry() {
+  try {
+    const { region } = new Intl.Locale(navigator.language);
+    return COUNTRY_RE.test(region || '') ? region : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function pathOf(from) {
   if (!from?.pathname) return '/';
   return `${from.pathname}${from.search || ''}${from.hash || ''}`;
@@ -114,8 +134,15 @@ export default function AuthPage({ mode }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const { user, isLoading, login, register, requestPasswordReset, confirmPasswordReset } =
-    useAuth();
+  const {
+    user,
+    isLoading,
+    login,
+    register,
+    resendVerification,
+    requestPasswordReset,
+    confirmPasswordReset,
+  } = useAuth();
   const [values, setValues] = useState({
     name: '',
     email: '',
@@ -126,6 +153,7 @@ export default function AuthPage({ mode }) {
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState(null);
   const [sentMessage, setSentMessage] = useState(null);
+  const [pendingEmail, setPendingEmail] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -136,7 +164,6 @@ export default function AuthPage({ mode }) {
   const isConfirm = view === 'confirm';
   const hasEmail = !isConfirm;
   const hasPassword = view !== 'reset';
-  const hasGoogle = isLogin || view === 'register';
   const from = location.state?.from;
   const cameFromInvite = Boolean(from?.pathname?.startsWith('/invite/'));
   const carriedState = from ? { from } : undefined;
@@ -146,6 +173,7 @@ export default function AuthPage({ mode }) {
     setErrors({});
     setFormError(null);
     setSentMessage(null);
+    setPendingEmail(null);
   }, [view]);
 
   if (isLoading) return <PageLoader />;
@@ -164,12 +192,17 @@ export default function AuthPage({ mode }) {
         password: values.password,
         remember: values.remember,
       }),
-    register: () =>
-      register({
+    register: async () => {
+      const data = await register({
         name: values.name.trim(),
         email: values.email.trim(),
         password: values.password,
-      }),
+        timezone: detectTimezone(),
+        country: detectCountry(),
+        next: from ? pathOf(from) : undefined,
+      });
+      setPendingEmail({ email: data.email, previewUrl: data.previewUrl || null });
+    },
     reset: async () => {
       const data = await requestPasswordReset(values.email.trim());
       setSentMessage(data?.message || RESET_SENT);
@@ -181,8 +214,18 @@ export default function AuthPage({ mode }) {
     },
   };
 
+  const backToLogin = () => {
+    setPendingEmail(null);
+    navigate('/login', { state: carriedState });
+  };
+
   const showServerError = (error) => {
     const parsed = parseApiError(error);
+    if (parsed.code === EMAIL_NOT_VERIFIED) {
+      setPendingEmail({ email: values.email.trim(), previewUrl: null });
+      return;
+    }
+
     const fieldErrors = {};
     FIELDS[view].forEach((key) => {
       if (parsed.fields[key]) fieldErrors[key] = parsed.fields[key];
@@ -231,176 +274,172 @@ export default function AuthPage({ mode }) {
             <span className={styles.logoText}>Chronos</span>
           </Link>
 
-          <div role="tablist" aria-label="Вхід або реєстрація" className={styles.tabs}>
-            {TABS.map((tab) => {
-              const active = tab.mode === mode;
-              return (
-                <button
-                  key={tab.mode}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  className={cx(styles.tab, active && styles.tabActive)}
-                  onClick={() => navigate(tab.to, { state: carriedState })}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-
-          <div>
-            <h1 className={styles.title}>{copy.title}</h1>
-            <span className={styles.subtitle}>{copy.subtitle}</span>
-          </div>
-
-          {formError ? (
-            <p role="alert" className={cx(styles.banner, styles.bannerError)}>
-              {formError}
-            </p>
-          ) : null}
-
-          {flash ? (
-            <p role="status" className={cx(styles.banner, styles.bannerSuccess)}>
-              {flash}
-            </p>
-          ) : null}
-
-          {view === 'register' ? (
-            <Field label="Ім'я" htmlFor="auth-name" error={errors.name}>
-              <Input
-                id="auth-name"
-                size="lg"
-                type="text"
-                name="name"
-                autoComplete="name"
-                placeholder="Як до тебе звертатися"
-                value={values.name}
-                onChange={setField('name')}
-                invalid={Boolean(errors.name)}
-                aria-invalid={Boolean(errors.name)}
-              />
-            </Field>
-          ) : null}
-
-          {hasEmail ? (
-            <Field label="Email" htmlFor="auth-email" error={errors.email}>
-              <Input
-                id="auth-email"
-                size="lg"
-                type="email"
-                name="email"
-                autoComplete="email"
-                placeholder="you@mail.com"
-                value={values.email}
-                onChange={setField('email')}
-                invalid={Boolean(errors.email)}
-                aria-invalid={Boolean(errors.email)}
-              />
-            </Field>
-          ) : null}
-
-          {hasPassword ? (
-            <Field
-              label={isConfirm ? 'Новий пароль' : 'Пароль'}
-              htmlFor="auth-password"
-              error={errors.password}
-              trailing={
-                isLogin ? (
-                  <Link to="/reset" className={styles.forgot}>
-                    Забули пароль?
-                  </Link>
-                ) : null
-              }
-            >
-              <Input
-                id="auth-password"
-                size="lg"
-                type={showPassword ? 'text' : 'password'}
-                name="password"
-                autoComplete={isLogin ? 'current-password' : 'new-password'}
-                value={values.password}
-                onChange={setField('password')}
-                invalid={Boolean(errors.password)}
-                aria-invalid={Boolean(errors.password)}
-                trailing={
-                  <IconButton
-                    icon={showPassword ? 'eye-off' : 'eye'}
-                    label={showPassword ? 'Сховати пароль' : 'Показати пароль'}
-                    size="round"
-                    iconSize={16}
-                    className={styles.eye}
-                    onClick={() => setShowPassword((s) => !s)}
-                  />
-                }
-              />
-            </Field>
-          ) : null}
-
-          {isConfirm ? (
-            <Field
-              label="Повтори пароль"
-              htmlFor="auth-password-repeat"
-              error={errors.passwordRepeat}
-            >
-              <Input
-                id="auth-password-repeat"
-                size="lg"
-                type={showPassword ? 'text' : 'password'}
-                name="passwordRepeat"
-                autoComplete="new-password"
-                value={values.passwordRepeat}
-                onChange={setField('passwordRepeat')}
-                invalid={Boolean(errors.passwordRepeat)}
-                aria-invalid={Boolean(errors.passwordRepeat)}
-              />
-            </Field>
-          ) : null}
-
-          {isLogin ? (
-            <label htmlFor="auth-remember" className={styles.remember}>
-              <Checkbox
-                id="auth-remember"
-                size={15}
-                checked={values.remember}
-                onChange={(checked) => setValues((v) => ({ ...v, remember: checked }))}
-              />
-              Запам&apos;ятати мене
-            </label>
-          ) : null}
-
-          <PillButton type="submit" size="lg" fullWidth className={styles.big} disabled={busy}>
-            {busy ? copy.busy : copy.submit}
-          </PillButton>
-
-          {sentMessage ? (
-            <p role="status" className={styles.status}>
-              {sentMessage}
-            </p>
-          ) : null}
-
-          {hasGoogle ? (
+          {pendingEmail ? (
+            <CheckEmailPanel
+              key={pendingEmail.email}
+              email={pendingEmail.email}
+              previewUrl={pendingEmail.previewUrl}
+              onResend={resendVerification}
+              onBack={backToLogin}
+            />
+          ) : (
             <>
-              <div className={styles.divider}>або</div>
-              <PillButton
-                variant="secondary"
-                size="lg"
-                fullWidth
-                className={styles.big}
-                disabled
-                title="Незабаром"
-              >
-                Продовжити з Google
-              </PillButton>
-            </>
-          ) : null}
+              <div role="tablist" aria-label="Вхід або реєстрація" className={styles.tabs}>
+                {TABS.map((tab) => {
+                  const active = tab.mode === mode;
+                  return (
+                    <button
+                      key={tab.mode}
+                      type="button"
+                      role="tab"
+                      aria-selected={active}
+                      className={cx(styles.tab, active && styles.tabActive)}
+                      onClick={() => navigate(tab.to, { state: carriedState })}
+                    >
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
 
-          <span className={styles.foot}>
-            {copy.footText}{' '}
-            <Link to={copy.footTo} state={carriedState}>
-              {copy.footLink}
-            </Link>
-          </span>
+              <div>
+                <h1 className={styles.title}>{copy.title}</h1>
+                <span className={styles.subtitle}>{copy.subtitle}</span>
+              </div>
+
+              {formError ? (
+                <p role="alert" className={cx(styles.banner, styles.bannerError)}>
+                  {formError}
+                </p>
+              ) : null}
+
+              {flash ? (
+                <p role="status" className={cx(styles.banner, styles.bannerSuccess)}>
+                  {flash}
+                </p>
+              ) : null}
+
+              {view === 'register' ? (
+                <Field label="Ім'я" htmlFor="auth-name" error={errors.name}>
+                  <Input
+                    id="auth-name"
+                    size="lg"
+                    type="text"
+                    name="name"
+                    autoComplete="name"
+                    placeholder="Як до тебе звертатися"
+                    value={values.name}
+                    onChange={setField('name')}
+                    invalid={Boolean(errors.name)}
+                    aria-invalid={Boolean(errors.name)}
+                  />
+                </Field>
+              ) : null}
+
+              {hasEmail ? (
+                <Field label="Email" htmlFor="auth-email" error={errors.email}>
+                  <Input
+                    id="auth-email"
+                    size="lg"
+                    type="email"
+                    name="email"
+                    autoComplete="email"
+                    placeholder="you@mail.com"
+                    value={values.email}
+                    onChange={setField('email')}
+                    invalid={Boolean(errors.email)}
+                    aria-invalid={Boolean(errors.email)}
+                  />
+                </Field>
+              ) : null}
+
+              {hasPassword ? (
+                <Field
+                  label={isConfirm ? 'Новий пароль' : 'Пароль'}
+                  htmlFor="auth-password"
+                  error={errors.password}
+                  trailing={
+                    isLogin ? (
+                      <Link to="/reset" className={styles.forgot}>
+                        Забули пароль?
+                      </Link>
+                    ) : null
+                  }
+                >
+                  <Input
+                    id="auth-password"
+                    size="lg"
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    autoComplete={isLogin ? 'current-password' : 'new-password'}
+                    value={values.password}
+                    onChange={setField('password')}
+                    invalid={Boolean(errors.password)}
+                    aria-invalid={Boolean(errors.password)}
+                    trailing={
+                      <IconButton
+                        icon={showPassword ? 'eye-off' : 'eye'}
+                        label={showPassword ? 'Сховати пароль' : 'Показати пароль'}
+                        size="round"
+                        iconSize={16}
+                        className={styles.eye}
+                        onClick={() => setShowPassword((s) => !s)}
+                      />
+                    }
+                  />
+                </Field>
+              ) : null}
+
+              {isConfirm ? (
+                <Field
+                  label="Повтори пароль"
+                  htmlFor="auth-password-repeat"
+                  error={errors.passwordRepeat}
+                >
+                  <Input
+                    id="auth-password-repeat"
+                    size="lg"
+                    type={showPassword ? 'text' : 'password'}
+                    name="passwordRepeat"
+                    autoComplete="new-password"
+                    value={values.passwordRepeat}
+                    onChange={setField('passwordRepeat')}
+                    invalid={Boolean(errors.passwordRepeat)}
+                    aria-invalid={Boolean(errors.passwordRepeat)}
+                  />
+                </Field>
+              ) : null}
+
+              {isLogin ? (
+                <label htmlFor="auth-remember" className={styles.remember}>
+                  <Checkbox
+                    id="auth-remember"
+                    size={15}
+                    checked={values.remember}
+                    onChange={(checked) => setValues((v) => ({ ...v, remember: checked }))}
+                  />
+                  Запам&apos;ятати мене
+                </label>
+              ) : null}
+
+              <PillButton type="submit" size="lg" fullWidth className={styles.big} disabled={busy}>
+                {busy ? copy.busy : copy.submit}
+              </PillButton>
+
+              {sentMessage ? (
+                <p role="status" className={styles.status}>
+                  {sentMessage}
+                </p>
+              ) : null}
+
+              <span className={styles.foot}>
+                {copy.footText}{' '}
+                <Link to={copy.footTo} state={carriedState}>
+                  {copy.footLink}
+                </Link>
+              </span>
+            </>
+          )}
         </Card>
 
         <div className={styles.side}>

@@ -4,6 +4,7 @@
   gap: 10px;
   min-width: 0;
 }
+
 .icon {
   width: 28px;
   height: 28px;
@@ -15,11 +16,13 @@
   justify-content: center;
   flex: none;
 }
+
 .compact .icon {
   width: 30px;
   height: 30px;
 }
-.textLine {
+
+.text-line {
   flex: 1;
   min-width: 0;
   font-size: var(--fs-13);
@@ -28,13 +31,15 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.textCol {
+
+.text-col {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
+
 .email {
   font-size: var(--fs-13);
   font-weight: var(--fw-semibold);
@@ -42,19 +47,23 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.subRow {
+
+.sub-row {
   display: flex;
   align-items: center;
   gap: 6px;
   min-width: 0;
 }
+
 .sub {
   color: var(--ink-secondary);
   font-weight: var(--fw-regular);
 }
+
 .compact .sub {
   font-size: var(--fs-11);
 }
+
 .cancel {
   flex: none;
   font-family: var(--font);
@@ -64,12 +73,15 @@
   padding: 0 4px;
   height: 30px;
 }
+
 .compact .cancel {
   font-size: var(--fs-11);
 }
+
 .cancel:hover {
   color: var(--danger);
 }
+
 .cancel:disabled {
   opacity: 0.5;
   cursor: not-allowed;

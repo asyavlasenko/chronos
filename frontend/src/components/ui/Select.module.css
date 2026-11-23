@@ -4,6 +4,7 @@
   align-items: center;
   min-width: 0;
 }
+
 .select {
   appearance: none;
   -webkit-appearance: none;
@@ -21,13 +22,16 @@
   cursor: pointer;
   outline: 0;
 }
+
 .select:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-tint);
 }
-.withLeading {
+
+.with-leading {
   padding-left: 30px;
 }
+
 .leading {
   position: absolute;
   left: 12px;
@@ -35,26 +39,32 @@
   align-items: center;
   pointer-events: none;
 }
+
 .chevron {
   position: absolute;
   right: 12px;
   color: var(--ink);
   pointer-events: none;
 }
+
 .md {
   height: 40px;
 }
+
 .sm {
   height: 36px;
 }
+
 .xs {
   height: 32px;
 }
+
 .xs .select {
   font-size: var(--fs-12);
   padding-left: 10px;
   border-radius: var(--r-chip);
 }
-.xs .withLeading {
+
+.xs .with-leading {
   padding-left: 28px;
 }

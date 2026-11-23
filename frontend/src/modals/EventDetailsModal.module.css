@@ -5,10 +5,12 @@
   gap: 8px;
   flex-wrap: wrap;
 }
-.head .calBadge {
+
+.head .cal-badge {
   font-size: var(--fs-12);
   padding: 4px 10px;
 }
+
 .actions {
   display: flex;
   align-items: center;
@@ -17,6 +19,7 @@
   gap: 4px;
   margin-left: auto;
 }
+
 .confirm {
   margin-right: 4px;
   font-size: var(--fs-12);
@@ -31,18 +34,22 @@
   letter-spacing: -0.01em;
   line-height: 1.2;
 }
+
 .meta {
   font-size: var(--fs-14);
   color: var(--ink-secondary);
 }
+
 .rel {
   color: var(--accent);
   font-weight: var(--fw-semibold);
 }
-.relPast {
+
+.rel-past {
   color: var(--ink-secondary);
   font-weight: var(--fw-medium);
 }
+
 .done {
   display: flex;
   align-items: center;
@@ -52,11 +59,13 @@
   font-size: var(--fs-13);
   cursor: pointer;
 }
-.doneBadge {
+
+.done-badge {
   display: block;
   margin-top: 10px;
 }
-.holidayNote {
+
+.holiday-note {
   font-size: var(--fs-13);
   color: var(--ink-body);
   line-height: 1.5;
@@ -67,34 +76,42 @@
   flex-direction: column;
   gap: 10px;
 }
+
 .row {
   display: flex;
   align-items: center;
   gap: 10px;
   font-size: var(--fs-13);
 }
-.rowTop {
+
+.row-top {
   align-items: flex-start;
 }
-.rowIcon {
+
+.row-icon {
   flex: none;
   color: var(--ink-secondary);
 }
-.rowIconTop {
+
+.row-icon-top {
   margin-top: 2px;
 }
+
 .link {
   font-weight: var(--fw-medium);
   overflow-wrap: anywhere;
 }
+
 .join {
   margin-left: auto;
 }
+
 .row .change {
   margin-left: auto;
   height: auto;
   padding: 0;
 }
+
 .desc {
   margin: 0;
   line-height: 1.5;
@@ -108,12 +125,14 @@
   padding-top: 14px;
   border-top: 1px solid var(--line-soft);
 }
-.peopleHead {
+
+.people-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
 }
+
 .eyebrow {
   font-size: var(--fs-12);
   font-weight: var(--fw-semibold);
@@ -121,10 +140,12 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
+
 .summary {
   font-size: var(--fs-12);
   color: var(--ink-secondary);
 }
+
 .person {
   flex: 1;
   min-width: 0;
@@ -132,9 +153,11 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 .muted {
   color: var(--ink-secondary);
 }
+
 .anon {
   display: inline-flex;
   align-items: center;
@@ -146,15 +169,18 @@
   background: var(--bg);
   color: var(--ink-secondary);
 }
+
 .invite {
   display: flex;
   gap: 6px;
   margin-top: 2px;
 }
-.invite .inviteInput {
+
+.invite .invite-input {
   flex: 1;
   min-width: 0;
 }
+
 .error {
   font-size: var(--fs-12);
   color: var(--danger);

@@ -2,6 +2,7 @@
   position: relative;
   box-sizing: border-box;
 }
+
 .slots {
   position: absolute;
   inset: 0;

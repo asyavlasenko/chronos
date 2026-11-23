@@ -23,6 +23,7 @@ export const eventShape = PropTypes.shape({
   location: PropTypes.string,
   reminderMinutesBefore: PropTypes.number,
   isCompleted: PropTypes.bool,
+  isFloating: PropTypes.bool,
   priority: PropTypes.oneOf(['low', 'medium', 'high']),
   estimateMinutes: PropTypes.number,
   participants: PropTypes.arrayOf(participantShape),
@@ -64,6 +65,7 @@ export const userShape = PropTypes.shape({
   weekStartsOn: PropTypes.oneOf([0, 1]),
   timeFormat: PropTypes.oneOf(['24h', '12h']),
   showWeekNumbers: PropTypes.bool,
+  hiddenModules: PropTypes.arrayOf(PropTypes.string),
 });
 
 export const holidayShape = PropTypes.shape({

@@ -2,11 +2,13 @@
   font-size: var(--fs-16);
   font-weight: var(--fw-bold);
 }
+
 .text {
   font-size: var(--fs-13);
   color: var(--ink-secondary);
   line-height: 1.45;
 }
+
 .actions {
   display: flex;
   justify-content: flex-end;

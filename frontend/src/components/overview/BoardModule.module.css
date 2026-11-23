@@ -1,0 +1,48 @@
+.module {
+  position: relative;
+  display: flex;
+  min-width: 0;
+}
+
+.module > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.hide {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  z-index: 1;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--ink-secondary);
+  box-shadow: 0 2px 6px rgba(17, 24, 39, 0.12);
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity 0.12s ease,
+    color 0.12s ease;
+}
+
+.module:hover .hide,
+.hide:focus-visible {
+  opacity: 1;
+}
+
+.hide:hover {
+  color: var(--ink);
+}
+
+@media (hover: none) {
+  .hide {
+    opacity: 1;
+  }
+}

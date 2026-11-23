@@ -1,0 +1,98 @@
+.mascot {
+  display: block;
+  overflow: visible;
+}
+
+.head {
+  transform-box: fill-box;
+  transform-origin: 50% 80%;
+}
+
+.fur {
+  fill: var(--cal-work);
+}
+
+.inner,
+.nose,
+.eyes {
+  fill: var(--dark);
+}
+
+.cheek,
+.glint {
+  fill: var(--card);
+}
+
+.blush {
+  fill: var(--cal-volunteer);
+  opacity: 0.35;
+}
+
+.smile {
+  fill: none;
+  stroke: var(--dark);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+
+.eyes {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.blink {
+  animation: blink 5.5s infinite;
+}
+
+.thinking .head {
+  animation: tilt 1.4s ease-in-out infinite;
+}
+
+.happy .head {
+  animation: hop 0.5s ease-out;
+}
+
+@keyframes blink {
+  0%,
+  94%,
+  100% {
+    transform: scaleY(1);
+  }
+
+  97% {
+    transform: scaleY(0.1);
+  }
+}
+
+@keyframes tilt {
+  0%,
+  100% {
+    transform: rotate(-5deg);
+  }
+
+  50% {
+    transform: rotate(5deg);
+  }
+}
+
+@keyframes hop {
+  0% {
+    transform: translateY(0);
+  }
+
+  40% {
+    transform: translateY(-4px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blink,
+  .thinking .head,
+  .happy .head {
+    animation: none;
+  }
+}

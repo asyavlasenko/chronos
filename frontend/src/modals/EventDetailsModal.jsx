@@ -86,7 +86,13 @@ function metaParts(event) {
   const end = event.endAt ? toDate(event.endAt) : null;
   const isTask = event.type === 'task';
 
-  if (!start) return [isTask ? 'Без дедлайну' : 'Дата не вказана'];
+  if (event.isFloating) {
+    return [
+      'Без дедлайну',
+      event.createdAt && `додано ${formatDate(event.createdAt, 'day-month')}`,
+    ];
+  }
+  if (!start) return ['Дата не вказана'];
   if (isTask) {
     return [`Дедлайн: ${formatDate(start, 'weekday-long')}`, !event.allDay && formatTime(start)];
   }
@@ -143,6 +149,10 @@ function EventDetails({ event, onClose }) {
   const guests = rows.filter((p) => p.user !== event.creator);
   const summary = statusSummary(guests);
   const reminderValue = reminderToValue(event.reminderMinutesBefore);
+
+  const hasRows =
+    !isHoliday &&
+    (!event.isFloating || event.isInvited || Boolean(event.location || event.description));
 
   const isUrl = looksLikeUrl(event.location);
   const href = isUrl ? withProtocol(event.location.trim()) : null;
@@ -289,7 +299,8 @@ function EventDetails({ event, onClose }) {
         <p className={styles.holidayNote}>
           Державне свято · календар «{calendar?.name || 'Свята'}» (тільки читання)
         </p>
-      ) : (
+      ) : null}
+      {hasRows ? (
         <div className={styles.rows}>
           {event.isInvited ? (
             <div className={styles.row}>
@@ -322,30 +333,32 @@ function EventDetails({ event, onClose }) {
             </div>
           ) : null}
 
-          <div className={styles.row}>
-            <Icon name="bell" size={16} className={styles.rowIcon} />
-            {canEdit && editingReminder ? (
-              <Select
-                size="xs"
-                aria-label="Нагадати"
-                options={reminderOptions(reminderValue)}
-                value={reminderValue}
-                onChange={onReminderChange}
-              />
-            ) : (
-              <span>{reminderLabel(event.reminderMinutesBefore)}</span>
-            )}
-            {canEdit ? (
-              <PillButton
-                variant="accent"
-                size="xs"
-                className={styles.change}
-                onClick={() => setEditingReminder((v) => !v)}
-              >
-                {editingReminder ? 'Готово' : 'Змінити'}
-              </PillButton>
-            ) : null}
-          </div>
+          {event.isFloating ? null : (
+            <div className={styles.row}>
+              <Icon name="bell" size={16} className={styles.rowIcon} />
+              {canEdit && editingReminder ? (
+                <Select
+                  size="xs"
+                  aria-label="Нагадати"
+                  options={reminderOptions(reminderValue)}
+                  value={reminderValue}
+                  onChange={onReminderChange}
+                />
+              ) : (
+                <span>{reminderLabel(event.reminderMinutesBefore)}</span>
+              )}
+              {canEdit ? (
+                <PillButton
+                  variant="accent"
+                  size="xs"
+                  className={styles.change}
+                  onClick={() => setEditingReminder((v) => !v)}
+                >
+                  {editingReminder ? 'Готово' : 'Змінити'}
+                </PillButton>
+              ) : null}
+            </div>
+          )}
 
           {event.description ? (
             <div className={cx(styles.row, styles.rowTop)}>
@@ -354,7 +367,7 @@ function EventDetails({ event, onClose }) {
             </div>
           ) : null}
         </div>
-      )}
+      ) : null}
 
       {isHoliday ? null : (
         <div className={styles.people}>

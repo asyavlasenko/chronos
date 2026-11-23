@@ -12,6 +12,7 @@
   max-width: calc(100% - 32px);
   pointer-events: none;
 }
+
 .toast {
   pointer-events: auto;
   display: flex;
@@ -27,12 +28,15 @@
   font-weight: var(--fw-medium);
   box-shadow: var(--shadow-fab);
 }
+
 .error {
   background: var(--danger);
 }
+
 .message {
   min-width: 0;
 }
+
 .close {
   display: flex;
   align-items: center;
@@ -44,10 +48,12 @@
   color: var(--ink-on-dark);
   flex: none;
 }
+
 @media (max-width: 767px) {
   .stack {
     bottom: calc(100px + env(safe-area-inset-bottom, 0px));
   }
+
   .toast {
     border-radius: var(--r-card-sm);
   }

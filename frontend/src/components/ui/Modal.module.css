@@ -10,6 +10,7 @@
   padding-bottom: 40px;
   box-sizing: border-box;
 }
+
 .card {
   box-sizing: border-box;
   max-width: calc(100% - 32px);
@@ -21,20 +22,24 @@
   flex-direction: column;
   animation: rise 0.16s ease-out;
 }
+
 @keyframes rise {
   from {
     transform: translateY(8px);
   }
+
   to {
     transform: translateY(0);
   }
 }
+
 @media (max-width: 767px) {
   .overlay {
     padding-top: 0 !important;
     align-items: flex-end;
     padding-bottom: 0;
   }
+
   .card {
     width: 100% !important;
     max-width: none;

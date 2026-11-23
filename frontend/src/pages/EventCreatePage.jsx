@@ -12,7 +12,6 @@ import { colorVars } from '../utils/colors';
 import {
   addDays,
   formatDate,
-  formatDuration,
   formatTime,
   formatTimeRange,
   intervalsOverlap,
@@ -54,11 +53,13 @@ import {
 } from '../modals/eventFormUtils';
 import styles from './EventCreatePage.module.css';
 
-const SUBTITLE = "Обов'язкові лише назва і дата. Решту можна додати пізніше.";
-const GUESTS_HINT =
-  "Кожному надішлемо лист із запрошенням; подія з'явиться в їхньому календарі після підтвердження.";
-const TIP = 'Підказка: клік на вільний час у календарі створює подію ще швидше';
 const PLACEHOLDER_TITLE = 'Назва події';
+const TYPE_ICONS = { arrangement: 'calendar', reminder: 'bell', task: 'check-square' };
+const FLOATING_SLOT = {
+  conflict: false,
+  status: 'Зроблю, коли буде настрій',
+  text: 'Справа житиме в блоці «Колись» і не потрапить у календар, доки не призначиш їй час.',
+};
 const COLOR_ORDER = ['blue', 'purple', 'green', 'orange', 'pink', 'graphite'];
 const TYPE_PREFIX = { task: 'задача ', reminder: 'нагадування ' };
 const PREFILL_KEYS = ['date', 'start', 'end', 'calendar', 'title', 'type'];
@@ -104,7 +105,8 @@ function parsePrefill(search, state) {
 
 function initialValues({ event, prefill, duration }) {
   if (event) {
-    const start = event.startAt ? toDate(event.startAt) : null;
+    const isFloating = Boolean(event.isFloating);
+    const start = event.startAt && !isFloating ? toDate(event.startAt) : null;
     const end = event.endAt ? toDate(event.endAt) : null;
     return {
       title: event.title,
@@ -114,11 +116,12 @@ function initialValues({ event, prefill, duration }) {
       endDate: end ? toDateParam(end) : '',
       endTime: end && !event.allDay ? toTimeParam(end) : '',
       endTouched: true,
-      allDay: Boolean(event.allDay),
+      allDay: Boolean(event.allDay) && !isFloating,
+      floating: isFloating,
       calendar: event.calendar,
       color: event.color || null,
       participants: event.participants || [],
-      reminder: reminderToValue(event.reminderMinutesBefore),
+      reminder: isFloating ? DEFAULT_REMINDER : reminderToValue(event.reminderMinutesBefore),
       priority: event.priority || 'medium',
       location: event.location || '',
       description: event.description || '',
@@ -140,6 +143,7 @@ function initialValues({ event, prefill, duration }) {
     endTime: hasEnd ? prefill.end : defaults.endTime,
     endTouched: hasEnd,
     allDay: false,
+    floating: false,
     calendar: prefill.calendar || '',
     color: null,
     participants: prefill.participants || [],
@@ -307,11 +311,13 @@ function EventForm({ event = null, prefill = {} }) {
   const isEdit = Boolean(event);
   const isTask = form.type === 'task';
   const isArrangement = form.type === 'arrangement';
+  const isFloating = isTask && form.floating;
   const hasStartTime = TIME_RE.test(form.startTime);
-  const allDay = form.allDay || (isTask && !hasStartTime);
+  const allDay = isFloating || form.allDay || (isTask && !hasStartTime);
   const calendarId = pickWritableCalendarId(calendars, form.calendar);
   const calendar = byId[calendarId] || null;
   const calendarColor = calendar?.color || 'graphite';
+  const accent = colorVars(form.color || calendarColor);
 
   const dayRange = useMemo(() => {
     const from = combineDateTime(form.startDate) || combineDateTime(toDateParam(new Date()));
@@ -320,8 +326,8 @@ function EventForm({ event = null, prefill = {} }) {
   const { events: dayEvents, createEvent, saveEvent } = useEvents(dayRange);
 
   const startAt = useMemo(
-    () => combineDateTime(form.startDate, allDay ? '' : form.startTime),
-    [form.startDate, form.startTime, allDay],
+    () => (isFloating ? null : combineDateTime(form.startDate, allDay ? '' : form.startTime)),
+    [form.startDate, form.startTime, allDay, isFloating],
   );
   const hasEnd = Boolean(form.endDate || form.endTime);
   const endAt = useMemo(() => {
@@ -377,6 +383,7 @@ function EventForm({ event = null, prefill = {} }) {
   );
   const previewTime = allDay ? 'весь день' : startAt && formatTimeRange(startAt, endAt);
   const previewMeta = [
+    isFloating ? 'без дедлайну' : null,
     startAt ? previewTime : null,
     calendar?.name,
     form.participants.map((p) => p.name || p.email).join(', '),
@@ -418,8 +425,9 @@ function EventForm({ event = null, prefill = {} }) {
     const next = {};
     if (!form.title.trim()) next.title = 'Вкажи назву';
     if (!calendarId) next.calendar = 'Немає календаря, у який можна додати подію';
-    if (!startAt && !isTask) next.startAt = 'Вкажи дату';
-    else if (startAt && !isTask && !allDay && !hasStartTime) {
+    if (isFloating) return next;
+    if (!startAt) next.startAt = isTask ? 'Вкажи дату дедлайну' : 'Вкажи дату';
+    else if (!isTask && !allDay && !hasStartTime) {
       next.startAt = 'Вкажи час або познач «Весь день»';
     }
     if (isArrangement && startAt && (allDay || hasEnd)) {
@@ -441,7 +449,7 @@ function EventForm({ event = null, prefill = {} }) {
       title: form.title.trim(),
       type: form.type,
       calendar: calendarId,
-      startAt: startAt || null,
+      startAt,
       endAt: isArrangement ? endAt : null,
       allDay,
       color: form.color,
@@ -451,6 +459,7 @@ function EventForm({ event = null, prefill = {} }) {
       priority: form.priority,
       participants: form.participants,
     };
+    if (isTask || event?.isFloating) dto.isFloating = isFloating;
 
     inFlight.current = true;
     setIsSubmitting(true);
@@ -459,7 +468,7 @@ function EventForm({ event = null, prefill = {} }) {
       else await createEvent(dto);
       notifySuccess(isEdit ? 'Зміни збережено' : 'Подію створено');
       if (isMounted.current) {
-        navigate(startAt ? `/calendar/day?date=${toDateParam(startAt)}` : '/tasks');
+        navigate(isFloating ? '/tasks' : `/calendar/day?date=${toDateParam(startAt)}`);
       }
     } catch (err) {
       inFlight.current = false;
@@ -474,18 +483,20 @@ function EventForm({ event = null, prefill = {} }) {
   const submitLabel = isEdit ? 'Зберегти' : 'Створити подію';
   const backTo = `/calendar/week${form.startDate ? `?date=${form.startDate}` : ''}`;
   const colorOptions = COLOR_ORDER.filter((k) => k !== calendarColor);
-  const eyebrow = startAt
+  const datedEyebrow = startAt
     ? `${formatDate(startAt, 'weekday-short')} · ${allDay ? 'весь день' : formatTime(startAt)}`
     : 'Дата не вказана';
-  const slot = availability
-    ? describeAvailability(availability)
+  const eyebrow = isFloating ? 'Без дедлайну' : datedEyebrow;
+  const datelessSlot = isFloating
+    ? FLOATING_SLOT
     : {
         conflict: false,
-        status: isTask ? 'Задача без дати' : 'Вкажи дату',
+        status: isTask ? 'Вкажи дату дедлайну' : 'Вкажи дату',
         text: isTask
-          ? "Вона з'явиться у списку задач у групі «Без дати»."
+          ? 'Коли буде дата, покажемо, що ще заплановано на цей день.'
           : 'Коли буде дата, перевіримо, чи вільний цей час.',
       };
+  const slot = availability ? describeAvailability(availability) : datelessSlot;
   const note = visibilityNote({
     calendar,
     userId: user?.id,
@@ -511,10 +522,16 @@ function EventForm({ event = null, prefill = {} }) {
           gap={18}
           className={styles.card}
         >
-          <div>
+          <header className={styles.head}>
+            <span
+              className={styles.headIcon}
+              style={{ background: accent.tint, color: accent.text }}
+              aria-hidden="true"
+            >
+              <Icon name={TYPE_ICONS[form.type]} size={20} />
+            </span>
             <h1 className={styles.h1}>{heading}</h1>
-            <span className={styles.sub}>{SUBTITLE}</span>
-          </div>
+          </header>
 
           <Field label="Назва" htmlFor="ev-title" error={errors.title}>
             <Input
@@ -540,54 +557,62 @@ function EventForm({ event = null, prefill = {} }) {
                   className={cx(styles.typeBtn, form.type === t.value && styles.typeActive)}
                   onClick={() => onTypeChange(t.value)}
                 >
+                  <span className={styles.typeIcon} aria-hidden="true">
+                    <Icon name={TYPE_ICONS[t.value]} size={15} />
+                  </span>
                   <span className={styles.typeTitle}>{t.label}</span>
-                  <span className={styles.typeHint}>{t.hint}</span>
                 </button>
               ))}
             </div>
           </Field>
 
+          {isTask ? (
+            <label htmlFor="ev-floating" className={styles.check}>
+              <Checkbox
+                id="ev-floating"
+                checked={form.floating}
+                onChange={(v) => set({ floating: v }, 'startAt', 'reminder')}
+                size={15}
+              />
+              Без дати (зроблю колись)
+            </label>
+          ) : null}
+
+          <h2 className={styles.sectionLabel}>
+            <Icon name="clock" size={13} />
+            Коли
+          </h2>
+
           <div className={styles.grid2}>
-            <Field
-              label={isTask ? 'Дедлайн' : 'Початок'}
-              htmlFor="ev-start-date"
-              error={errors.startAt}
-              hint={isTask ? 'Дату можна не вказувати.' : null}
-            >
-              <div className={styles.when}>
-                <Input
-                  id="ev-start-date"
-                  type="date"
-                  value={form.startDate}
-                  onChange={(e) => onStartChange({ startDate: e.target.value })}
-                  invalid={Boolean(errors.startAt)}
-                />
-                {form.allDay ? null : (
-                  <Input
-                    type="time"
-                    value={form.startTime}
-                    onChange={(e) => onStartChange({ startTime: e.target.value })}
-                    aria-label="Час початку"
-                    invalid={Boolean(errors.startAt)}
-                    className={styles.time}
-                  />
-                )}
-              </div>
-            </Field>
-            {isArrangement ? (
+            {isFloating ? null : (
               <Field
-                label="Кінець"
-                htmlFor="ev-end-date"
-                error={errors.endAt}
-                hint={
-                  <>
-                    Тривалість {formatDuration(duration)} — як у налаштуваннях.{' '}
-                    <Link to="/profile" className={styles.hintLink}>
-                      Змінити
-                    </Link>
-                  </>
-                }
+                label={isTask ? 'Дедлайн' : 'Початок'}
+                htmlFor="ev-start-date"
+                error={errors.startAt}
               >
+                <div className={styles.when}>
+                  <Input
+                    id="ev-start-date"
+                    type="date"
+                    value={form.startDate}
+                    onChange={(e) => onStartChange({ startDate: e.target.value })}
+                    invalid={Boolean(errors.startAt)}
+                  />
+                  {form.allDay ? null : (
+                    <Input
+                      type="time"
+                      value={form.startTime}
+                      onChange={(e) => onStartChange({ startTime: e.target.value })}
+                      aria-label="Час початку"
+                      invalid={Boolean(errors.startAt)}
+                      className={styles.time}
+                    />
+                  )}
+                </div>
+              </Field>
+            )}
+            {isArrangement ? (
+              <Field label="Кінець" htmlFor="ev-end-date" error={errors.endAt}>
                 <div className={styles.when}>
                   <Input
                     id="ev-end-date"
@@ -621,15 +646,22 @@ function EventForm({ event = null, prefill = {} }) {
             ) : null}
           </div>
 
-          <label htmlFor="ev-allday" className={styles.check}>
-            <Checkbox
-              id="ev-allday"
-              checked={form.allDay}
-              onChange={(v) => set({ allDay: v }, 'startAt', 'endAt')}
-              size={15}
-            />
-            Весь день
-          </label>
+          {isFloating ? null : (
+            <label htmlFor="ev-allday" className={styles.check}>
+              <Checkbox
+                id="ev-allday"
+                checked={form.allDay}
+                onChange={(v) => set({ allDay: v }, 'startAt', 'endAt')}
+                size={15}
+              />
+              Весь день
+            </label>
+          )}
+
+          <h2 className={styles.sectionLabel}>
+            <Icon name="users" size={13} />
+            Календар і учасники
+          </h2>
 
           <div className={styles.grid2}>
             <Field label="Календар" htmlFor="ev-calendar" error={errors.calendar}>
@@ -659,7 +691,7 @@ function EventForm({ event = null, prefill = {} }) {
             </Field>
           </div>
 
-          <Field label="Учасники" htmlFor="ev-guests" hint={GUESTS_HINT}>
+          <Field label="Учасники" htmlFor="ev-guests">
             <ParticipantsInput
               id="ev-guests"
               value={form.participants}
@@ -669,16 +701,23 @@ function EventForm({ event = null, prefill = {} }) {
             />
           </Field>
 
+          <h2 className={styles.sectionLabel}>
+            <Icon name="text" size={13} />
+            Деталі
+          </h2>
+
           <div className={styles.grid2}>
-            <Field label="Нагадати" htmlFor="ev-reminder" error={errors.reminder}>
-              <Select
-                id="ev-reminder"
-                options={reminderOptions(form.reminder)}
-                value={form.reminder}
-                onChange={(v) => set({ reminder: v }, 'reminder')}
-                leading={<Icon name="bell" size={14} />}
-              />
-            </Field>
+            {isFloating ? null : (
+              <Field label="Нагадати" htmlFor="ev-reminder" error={errors.reminder}>
+                <Select
+                  id="ev-reminder"
+                  options={reminderOptions(form.reminder)}
+                  value={form.reminder}
+                  onChange={(v) => set({ reminder: v }, 'reminder')}
+                  leading={<Icon name="bell" size={14} />}
+                />
+              </Field>
+            )}
             <Field label="Місце або посилання" htmlFor="ev-place" error={errors.location}>
               <Input
                 id="ev-place"
@@ -716,7 +755,6 @@ function EventForm({ event = null, prefill = {} }) {
             <PillButton variant="secondary" size="lg" to={backTo}>
               Скасувати
             </PillButton>
-            <span className={styles.tip}>{TIP}</span>
           </div>
         </Card>
 

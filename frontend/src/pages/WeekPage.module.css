@@ -4,17 +4,21 @@
   gap: 8px;
   flex-wrap: wrap;
 }
+
 .summary b {
   font-weight: var(--fw-bold);
 }
+
 .spacer {
   flex: 1;
 }
-.filterLabel {
+
+.filter-label {
   font-size: var(--fs-12);
   color: var(--ink-secondary);
   margin-right: 4px;
 }
+
 .days {
   display: flex;
   gap: 10px;
@@ -22,6 +26,7 @@
   overflow-x: auto;
   padding-bottom: 4px;
 }
+
 @media (max-width: 767px) {
   .days {
     margin: 0 -16px;

@@ -12,6 +12,7 @@ import { normalizeEvent, normalizeInvite, toEventPayload } from '../../utils/nor
 export const EventsContext = createContext(null);
 
 const FOCUS_REFETCH_MS = 60 * 1000;
+const FLOATING_DEFAULTS = { allDay: true, endAt: null, reminderMinutesBefore: null };
 
 export default function EventsProvider({ children }) {
   const { user } = useAuth();
@@ -130,7 +131,12 @@ export default function EventsProvider({ children }) {
       if (!current) return false;
 
       const patch = typeof changes === 'function' ? changes(current) : changes;
-      setEvents((list) => list.map((e) => (e.id === id ? { ...e, ...patch } : e)));
+      const optimistic = normalizeEvent({
+        ...current,
+        ...patch,
+        ...(patch.isFloating === true ? FLOATING_DEFAULTS : null),
+      });
+      setEvents((list) => list.map((e) => (e.id === id ? optimistic : e)));
       try {
         upsert(await eventsApi.updateEvent(id, toEventPayload(patch)));
         return true;

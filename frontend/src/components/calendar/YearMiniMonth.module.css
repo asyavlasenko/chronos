@@ -9,33 +9,40 @@
   color: var(--ink);
   text-decoration: none;
 }
+
 .month:hover {
   box-shadow: 0 0 0 1px var(--line);
 }
+
 .cur,
 .cur:hover {
   box-shadow: var(--ring-today);
 }
+
 .head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 8px;
 }
+
 .name {
   font-size: var(--fs-14);
   font-weight: var(--fw-bold);
 }
+
 .count {
   font-size: var(--fs-11);
   color: var(--ink-secondary);
   white-space: nowrap;
 }
+
 .grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 1px;
 }
+
 .grid > span {
   height: 22px;
   display: flex;
@@ -44,6 +51,7 @@
   font-size: var(--fs-10);
   border-radius: var(--r-pill);
 }
+
 .weekdays > span {
   font-size: 9px;
   font-weight: var(--fw-semibold);
@@ -53,21 +61,25 @@
 .day {
   color: var(--ink-secondary);
 }
+
 .event {
   background: var(--bg);
   color: var(--ink);
   font-weight: var(--fw-medium);
 }
+
 .holiday {
   background: var(--accent-tint);
   color: var(--accent-strong);
   font-weight: var(--fw-semibold);
 }
+
 .deadline {
   background: var(--cal-study-tint);
   color: var(--cal-study-text);
   font-weight: var(--fw-semibold);
 }
+
 .today {
   background: var(--dark);
   color: var(--ink-on-dark);

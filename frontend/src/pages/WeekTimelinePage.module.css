@@ -10,18 +10,22 @@
   min-width: 0;
   overflow: hidden;
 }
+
 .scroller {
   overflow-x: auto;
 }
+
 .inner {
   min-width: 0;
 }
+
 .head {
   display: flex;
   align-items: flex-end;
   height: 40px;
 }
-.headDay {
+
+.head-day {
   flex: 0 0 132px;
   box-sizing: border-box;
   padding: 0 0 8px 18px;
@@ -31,18 +35,21 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
+
 .hours {
   flex: 1;
   display: flex;
   padding-bottom: 8px;
   min-width: 0;
 }
+
 .hour {
   flex: 1;
   font-size: var(--fs-10);
   color: var(--ink-secondary);
   white-space: nowrap;
 }
+
 .rows {
   position: relative;
 }
@@ -56,7 +63,8 @@
   z-index: 4;
   pointer-events: none;
 }
-.nowLabel {
+
+.now-label {
   position: absolute;
   top: -2px;
   left: -18px;
@@ -80,32 +88,38 @@
   color: var(--ink-secondary);
   flex-wrap: wrap;
 }
-.legendItem {
+
+.legend-item {
   display: flex;
   align-items: center;
   gap: 6px;
 }
-.legendHint {
+
+.legend-hint {
   margin-left: auto;
 }
-.swatchMeeting,
-.swatchReminder,
-.swatchTask {
+
+.swatch-meeting,
+.swatch-reminder,
+.swatch-task {
   width: 14px;
   height: 10px;
   box-sizing: border-box;
   flex: none;
 }
-.swatchMeeting {
+
+.swatch-meeting {
   border-radius: var(--r-dot);
   background: var(--cal-study-tint);
 }
-.swatchReminder {
+
+.swatch-reminder {
   border-radius: var(--r-pill);
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--line-strong);
   background: var(--card);
 }
-.swatchTask {
+
+.swatch-task {
   border-radius: var(--r-dot);
   border: 1px solid var(--line);
   background: var(--card-muted);
@@ -119,23 +133,28 @@
   flex-direction: column;
   gap: var(--gap-page);
 }
-.nowNext {
+
+.now-next {
   font-size: var(--fs-13);
   margin-top: 6px;
 }
-.nowTitle {
+
+.now-title {
   font-size: var(--fs-13);
   font-weight: var(--fw-semibold);
 }
+
 .join {
   margin-top: 4px;
 }
-.cardTitle {
+
+.card-title {
   font-size: var(--fs-13);
   font-weight: var(--fw-bold);
   margin-bottom: 2px;
 }
-.typeFilters {
+
+.type-filters {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
@@ -146,6 +165,7 @@
     max-width: none;
   }
 }
+
 @media (max-width: 767px) {
   .inner {
     min-width: 560px;

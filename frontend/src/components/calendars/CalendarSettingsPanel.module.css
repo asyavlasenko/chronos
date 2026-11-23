@@ -4,12 +4,14 @@
   gap: 10px;
   flex-wrap: wrap;
 }
+
 .sw {
   width: 14px;
   height: 14px;
   border-radius: 4px;
   flex: none;
 }
+
 .title {
   font-size: var(--fs-18);
   font-weight: var(--fw-bold);
@@ -18,72 +20,86 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 .open {
   margin-left: auto;
   font-size: var(--fs-12);
   font-weight: var(--fw-semibold);
   white-space: nowrap;
 }
+
 .grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
-.colorRow {
+
+.color-row {
   height: 40px;
 }
-.colorStatic {
+
+.color-static {
   display: flex;
   align-items: center;
   gap: 8px;
   height: 40px;
   font-size: var(--fs-13);
 }
+
 .section,
-.sectionTight {
+.section-tight {
   border-top: 1px solid var(--line-soft);
   padding-top: 14px;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-.sectionTight {
+
+.section-tight {
   gap: 8px;
 }
+
 .lbl {
   font-size: var(--fs-12);
   font-weight: var(--fw-semibold);
   color: var(--ink-secondary);
 }
+
 .invite {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
 }
-.inviteField {
+
+.invite-field {
   flex: 1 1 160px;
   min-width: 0;
 }
+
 .hint {
   font-size: var(--fs-11);
   color: var(--ink-secondary);
   line-height: 1.45;
 }
+
 .error {
   font-size: var(--fs-12);
   color: var(--danger);
 }
-.myColorRow {
+
+.my-color-row {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
 }
-.hintInline {
+
+.hint-inline {
   font-size: var(--fs-11);
   color: var(--ink-secondary);
   margin-left: 4px;
 }
+
 .actions {
   display: flex;
   align-items: center;
@@ -92,6 +108,7 @@
   border-top: 1px solid var(--line-soft);
   padding-top: 14px;
 }
+
 .delete {
   margin-left: auto;
   color: var(--danger);
@@ -100,31 +117,36 @@
   padding: 0 4px;
   font-family: var(--font);
 }
+
 .delete:hover {
   text-decoration: underline;
 }
+
 .delete:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   text-decoration: none;
 }
+
 .note {
   font-size: var(--fs-13);
   color: var(--ink-secondary);
   line-height: 1.45;
 }
+
 @media (max-width: 480px) {
   .grid {
     grid-template-columns: minmax(0, 1fr);
   }
 }
 
-.cHead {
+.c-head {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-.cIcon {
+
+.c-icon {
   width: 36px;
   height: 36px;
   border-radius: var(--r-input);
@@ -133,44 +155,53 @@
   justify-content: center;
   flex: none;
 }
-.cTitles {
+
+.c-titles {
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
-.cTitle {
+
+.c-title {
   font-size: var(--fs-16);
   font-weight: var(--fw-bold);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.cSub {
+
+.c-sub {
   font-size: var(--fs-12);
   color: var(--ink-secondary);
 }
-.cDesc {
+
+.c-desc {
   font-size: var(--fs-12);
   color: var(--ink-secondary);
   line-height: 1.45;
 }
-.cBtns {
+
+.c-btns {
   display: flex;
   gap: 6px;
 }
+
 .half {
   flex: 1;
 }
-.cCardTitle {
+
+.c-card-title {
   font-size: var(--fs-14);
   font-weight: var(--fw-bold);
 }
-.cList {
+
+.c-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-.cInvite {
+
+.c-invite {
   display: flex;
   gap: 6px;
   margin-top: 2px;

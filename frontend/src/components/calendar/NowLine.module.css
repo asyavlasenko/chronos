@@ -5,6 +5,7 @@
   z-index: 3;
   pointer-events: none;
 }
+
 .label {
   position: absolute;
   top: -8px;

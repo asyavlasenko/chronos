@@ -4,6 +4,7 @@ import useEvents from '../hooks/useEvents';
 import useCalendars from '../hooks/useCalendars';
 import useModals from '../hooks/useModals';
 import usePeople from '../hooks/usePeople';
+import cx from '../utils/cx';
 import {
   addDays,
   formatDate,
@@ -17,8 +18,12 @@ import {
 } from '../utils/dates';
 import { busyMinutes, groupEventsByDay, nextUpcoming, weekSummary } from '../utils/eventStats';
 import { greeting, pluralEvents, pluralHoursLong, pluralTasks } from '../utils/text';
+import PillButton from '../components/ui/PillButton';
 import DayStrip from '../components/calendar/DayStrip';
-import TodayTimeline from '../components/overview/TodayTimeline';
+import Board from '../components/board/Board';
+import BoardModule from '../components/overview/BoardModule';
+import FloatingTasksCard from '../components/overview/FloatingTasksCard';
+import ModulesSettingsModal from '../components/overview/ModulesSettingsModal';
 import NextEventCard from '../components/overview/NextEventCard';
 import TasksCard from '../components/overview/TasksCard';
 import WeekLoadChart from '../components/overview/WeekLoadChart';
@@ -27,10 +32,13 @@ import InvitesCard from '../components/overview/InvitesCard';
 import HolidayList from '../components/overview/HolidayList';
 import CalendarsCard from '../components/overview/CalendarsCard';
 import MobileDayList from '../components/overview/MobileDayList';
+import useHiddenModules, { MODULE_LABELS } from '../components/overview/useHiddenModules';
+import useMediaQuery from '../components/overview/useMediaQuery';
 import styles from './OverviewPage.module.css';
 
 const TICK_MS = 60000;
 const HOLIDAYS_SHOWN = 2;
+const MOBILE_QUERY = '(max-width: 767px)';
 
 function useNow() {
   const [now, setNow] = useState(() => new Date());
@@ -50,6 +58,9 @@ export default function OverviewPage() {
   const today = useMemo(() => parseDateParam(todayKey), [todayKey]);
   const weekStartsOn = user?.weekStartsOn ?? 1;
   const [selectedDay, setSelectedDay] = useState(today);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const isMobile = useMediaQuery(MOBILE_QUERY);
+  const { hidden, setModuleHidden } = useHiddenModules();
 
   const days = useMemo(() => getWeekDays(today, weekStartsOn), [today, weekStartsOn]);
   const { from, to } = useMemo(
@@ -101,49 +112,53 @@ export default function OverviewPage() {
   const selectedEventsCount = selectedEvents.filter(isTimedEvent).length;
   const selectedTasksCount = selectedEvents.filter((e) => e.type === 'task').length;
 
-  return (
-    <>
-      <div className={styles.desktop}>
-        <div className={styles.greeting}>
-          <h1 className={styles.h1}>{hello}</h1>
-          <span className={styles.sub}>
-            {dateLine} · {todayLine}
-          </span>
-        </div>
+  const modules = [
+    { key: 'floating', isWide: true, card: <FloatingTasksCard /> },
+    {
+      key: 'next',
+      card: <NextEventCard event={next} now={now} people={people} onOpen={onEventClick} />,
+    },
+    {
+      key: 'tasks',
+      card: (
+        <TasksCard tasks={weekTasks} onToggleComplete={onToggleComplete} onOpen={onEventClick} />
+      ),
+    },
+    {
+      key: 'load',
+      isWide: true,
+      card: (
+        <WeekLoadChart
+          days={load}
+          title={`Тиждень ${week}`}
+          subtitle={`${weekRange} · ${pluralHoursLong(busyHours)} зайнято`}
+        />
+      ),
+    },
+    {
+      key: 'shared',
+      card: <SharedCalendarsCard calendars={sharedCalendars} people={people} meId={user?.id} />,
+    },
+    { key: 'invites', card: <InvitesCard invites={pendingInvites} onRespond={respondInvite} /> },
+    {
+      key: 'holidays',
+      card: (
+        <HolidayList
+          holidays={upcomingHolidays}
+          now={now}
+          title={byId.holidays?.name || 'Свята України'}
+        />
+      ),
+    },
+    {
+      key: 'calendars',
+      card: <CalendarsCard calendars={userCalendars} onToggle={toggleVisibility} />,
+    },
+  ];
+  const visibleModules = modules.filter((m) => !hidden.includes(m.key));
 
-        <div className={styles.grid}>
-          <TodayTimeline
-            className={styles.today}
-            date={today}
-            events={todayEvents}
-            calendarsById={byId}
-            now={now}
-            meId={user?.id}
-            nextEventId={next?.id}
-            slotMinutes={user?.defaultArrangementDuration ?? 60}
-            onEventClick={onEventClick}
-            onSlotClick={onSlotClick}
-            onToggleComplete={onToggleComplete}
-          />
-          <NextEventCard event={next} now={now} people={people} onOpen={onEventClick} />
-          <TasksCard tasks={weekTasks} onToggleComplete={onToggleComplete} onOpen={onEventClick} />
-          <WeekLoadChart
-            className={styles.week}
-            days={load}
-            title={`Тиждень ${week}`}
-            subtitle={`${weekRange} · ${pluralHoursLong(busyHours)} зайнято`}
-          />
-          <SharedCalendarsCard calendars={sharedCalendars} people={people} meId={user?.id} />
-          <InvitesCard invites={pendingInvites} onRespond={respondInvite} />
-          <HolidayList
-            holidays={upcomingHolidays}
-            now={now}
-            title={byId.holidays?.name || 'Свята України'}
-          />
-          <CalendarsCard calendars={userCalendars} onToggle={toggleVisibility} />
-        </div>
-      </div>
-
+  if (isMobile) {
+    return (
       <div className={styles.mobile}>
         <div className={styles.mHead}>
           <span className={styles.mDate}>{dateLine}</span>
@@ -170,7 +185,54 @@ export default function OverviewPage() {
           onSlotClick={onSlotClick}
           onToggleComplete={onToggleComplete}
         />
+        {hidden.includes('floating') ? null : <FloatingTasksCard canDrag={false} />}
       </div>
-    </>
+    );
+  }
+
+  return (
+    <div className={styles.desktop}>
+      <div className={styles.greeting}>
+        <div className={styles.hello}>
+          <h1 className={styles.h1}>{hello}</h1>
+          <span className={styles.sub}>
+            {dateLine} · {todayLine}
+          </span>
+        </div>
+        <PillButton
+          variant="white"
+          size="sm"
+          icon="settings"
+          aria-haspopup="dialog"
+          onClick={() => setIsSettingsOpen(true)}
+        >
+          Налаштувати
+        </PillButton>
+      </div>
+
+      <Board className={styles.board} />
+
+      {visibleModules.length ? (
+        <div className={styles.grid}>
+          {visibleModules.map((m) => (
+            <BoardModule
+              key={m.key}
+              label={MODULE_LABELS[m.key]}
+              onHide={() => setModuleHidden(m.key, true)}
+              className={cx(m.isWide && styles.wide)}
+            >
+              {m.card}
+            </BoardModule>
+          ))}
+        </div>
+      ) : null}
+
+      <ModulesSettingsModal
+        open={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        hidden={hidden}
+        onChange={setModuleHidden}
+      />
+    </div>
   );
 }

@@ -1,6 +1,7 @@
 .fab {
   display: none;
 }
+
 @media (max-width: 767px) {
   .fab {
     position: fixed;

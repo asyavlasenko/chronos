@@ -1,0 +1,71 @@
+.page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+  background: var(--bg);
+}
+
+.card {
+  width: 100%;
+  max-width: 400px;
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.logo-mark {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-input);
+  background: var(--dark);
+  color: var(--ink-on-dark);
+}
+
+.logo-text {
+  font-size: var(--fs-17);
+  font-weight: var(--fw-bold);
+}
+
+.title {
+  margin: 0 0 6px;
+  font-size: var(--fs-20);
+  font-weight: var(--fw-bold);
+  color: var(--ink);
+}
+
+.text {
+  margin: 0;
+  font-size: var(--fs-14);
+  line-height: 1.5;
+  color: var(--ink-secondary);
+}
+
+.status {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--r-input);
+  background: var(--success-tint);
+  color: var(--success);
+  font-size: var(--fs-13);
+}
+
+.foot {
+  font-size: var(--fs-13);
+  color: var(--ink-secondary);
+  text-align: center;
+}
+
+.foot a {
+  color: var(--accent);
+  font-weight: var(--fw-semibold);
+  text-decoration: none;
+}
