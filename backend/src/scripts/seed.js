@@ -88,12 +88,10 @@ async function createUsers() {
   const created = {};
   await DEMO_USERS.reduce(async (previous, demo) => {
     await previous;
-    const { user } = await authService.register({
-      email: demo.email,
-      password: PASSWORD,
-      name: demo.name,
-    });
-    created[demo.key] = user;
+    created[demo.key] = await authService.createAccount(
+      { email: demo.email, password: PASSWORD, name: demo.name },
+      { isEmailVerified: true },
+    );
   }, Promise.resolve());
   return created;
 }
@@ -124,6 +122,13 @@ const task = (calendar, creator, title, extra = {}) => ({
   title,
   ...extra,
 });
+
+const floating = {
+  isFloating: true,
+  allDay: true,
+  startAt: new Date(),
+  reminderMinutesBefore: null,
+};
 
 const participant = (user, status) => ({
   user: user._id,
@@ -221,9 +226,16 @@ async function seed() {
     arrangement(main, asia, 'Планування тижня', 6, [17, 0], [18, 0]),
 
     task(work, asia, 'Підготувати демо Chronos', { startAt: at(3, 12, 30), priority: 'high' }),
-    task(study, asia, 'Підключити API свят'),
-    task(study, asia, 'Email-запрошення на події'),
-    task(main, asia, 'Пост у LinkedIn про Chronos', { priority: 'low' }),
+    task(study, asia, 'Підключити API свят', { startAt: at(8), allDay: true }),
+    task(study, asia, 'Email-запрошення на події', { startAt: at(9), allDay: true }),
+    task(main, asia, 'Пост у LinkedIn про Chronos', {
+      startAt: at(12),
+      allDay: true,
+      priority: 'low',
+    }),
+    task(main, asia, 'Розібрати фото з літа', floating),
+    task(main, asia, 'Навчитись грати на укулеле', floating),
+    task(study, asia, 'Подивитись лекції з алгоритмів', floating),
     task(study, asia, 'Оновити README', {
       startAt: at(1, 18, 0),
       isCompleted: true,

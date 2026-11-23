@@ -2,10 +2,33 @@ import asyncHandler from '../../utils/asyncHandler.js';
 import { REFRESH_COOKIE, clearRefreshCookie, setRefreshCookie } from './auth.cookies.js';
 import * as authService from './auth.service.js';
 
+const withPreview = (body, previewUrl) => (previewUrl ? { ...body, previewUrl } : body);
+
 export const register = asyncHandler(async (req, res) => {
-  const { user, accessToken, refreshToken } = await authService.register(req.body);
+  const { user, previewUrl } = await authService.register(req.body);
+  res
+    .status(201)
+    .json(
+      withPreview(
+        { message: 'Ми надіслали лист із посиланням для підтвердження', email: user.email },
+        previewUrl,
+      ),
+    );
+});
+
+export const verifyEmail = asyncHandler(async (req, res) => {
+  const { user, accessToken, refreshToken } = await authService.verifyEmail(req.body.token);
   setRefreshCookie(res, refreshToken, true);
-  res.status(201).json({ user, accessToken });
+  res.json({ user, accessToken });
+});
+
+export const resendVerification = asyncHandler(async (req, res) => {
+  const previewUrl = await authService.resendVerification(req.body.email);
+  res
+    .status(202)
+    .json(
+      withPreview({ message: 'Якщо цей email чекає підтвердження, лист уже в дорозі' }, previewUrl),
+    );
 });
 
 export const login = asyncHandler(async (req, res) => {

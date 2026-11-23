@@ -12,6 +12,12 @@ import Invite from '../invites/invite.model.js';
 import { createInvite } from '../invites/invite.service.js';
 import User from '../users/user.model.js';
 import Event, { TYPE_RULE_MESSAGES, typeRuleViolations } from './event.model.js';
+import {
+  isRescheduled,
+  notifyEventCancelled,
+  notifyEventChanged,
+  scheduleSnapshot,
+} from './event.notifications.js';
 import { EVENT_POPULATE, serializeInvitedEvent, serializeOwnEvent } from './event.serializer.js';
 
 const LIST_LIMIT = 2000;
@@ -95,23 +101,11 @@ const sendInvites = (event, user, emails) =>
     ),
   );
 
-async function findSorted(conditions, datedOnly) {
-  const find = (extra, sort, limit) =>
-    Event.find({ $and: [...conditions, extra] })
-      .sort(sort)
-      .limit(limit)
-      .populate([...EVENT_POPULATE, SOURCE_CALENDAR_POPULATE]);
-
-  const dated = await find({ startAt: { $ne: null } }, { startAt: 1, _id: 1 }, LIST_LIMIT);
-  if (datedOnly || dated.length === LIST_LIMIT) return dated;
-
-  const undated = await find(
-    { startAt: null },
-    { createdAt: 1, _id: 1 },
-    LIST_LIMIT - dated.length,
-  );
-  return [...dated, ...undated];
-}
+const findSorted = (conditions) =>
+  Event.find({ $and: conditions })
+    .sort({ startAt: 1, _id: 1 })
+    .limit(LIST_LIMIT)
+    .populate([...EVENT_POPULATE, SOURCE_CALENDAR_POPULATE]);
 
 export async function list(user, { from, to, calendars, types, q, includeHidden }) {
   const memberships = await Calendar.find({ 'members.user': user._id }).select(
@@ -142,6 +136,7 @@ export async function list(user, { from, to, calendars, types, q, includeHidden 
   const conditions = [{ $or: scopes }];
   if (from) {
     conditions.push(
+      { isFloating: { $ne: true } },
       { startAt: { $lt: to } },
       { $or: [{ endAt: { $gt: from } }, { endAt: null, startAt: { $gte: from } }] },
     );
@@ -152,7 +147,7 @@ export async function list(user, { from, to, calendars, types, q, includeHidden 
     conditions.push({ $or: [{ title: pattern }, { description: pattern }] });
   }
 
-  const events = await findSorted(conditions, Boolean(from));
+  const events = await findSorted(conditions);
 
   return events.map((event) =>
     memberIds.has(idOf(event.calendar))
@@ -201,10 +196,14 @@ export async function update(user, id, { participants: emails, isCompleted, cale
     event.set('calendar', calendar);
   }
 
+  const before = scheduleSnapshot(event);
   event.set(fields);
   applyDefaultEnd(event, user);
 
   const violations = typeRuleViolations(event);
+  if (fields.isFloating === false && event.isModified('isFloating') && !fields.startAt) {
+    violations.push({ field: 'startAt', message: TYPE_RULE_MESSAGES.scheduleNeedsDate });
+  }
   if (isCompleted && event.type !== EVENT_TYPES.TASK) {
     violations.push({ field: 'isCompleted', message: TYPE_RULE_MESSAGES.completedTaskOnly });
   }
@@ -216,6 +215,7 @@ export async function update(user, id, { participants: emails, isCompleted, cale
 
   const removed = emails ? removeParticipants(event, emails) : [];
   const added = emails ? await addParticipants(event, emails, user) : [];
+  if (removed.length > 0 || added.length > 0) event.increment();
 
   await event.save();
   if (removed.length > 0) {
@@ -227,6 +227,7 @@ export async function update(user, id, { participants: emails, isCompleted, cale
     });
   }
   await sendInvites(event, user, added);
+  if (isRescheduled(before, event)) await notifyEventChanged(event, user, added);
 
   return present(event);
 }
@@ -237,6 +238,7 @@ export async function remove(user, id) {
 
   await Invite.deleteMany({ kind: INVITE_KINDS.EVENT, event: event._id });
   await event.deleteOne();
+  await notifyEventCancelled(event, user);
 }
 
 export async function invite(user, id, emails) {
@@ -250,6 +252,7 @@ export async function invite(user, id, emails) {
     ]);
   }
 
+  if (added.length > 0) event.increment();
   await event.save();
   await sendInvites(event, user, added);
 

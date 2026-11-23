@@ -30,6 +30,7 @@ export function serializeEvent(event) {
     startAt: event.startAt,
     endAt: event.endAt,
     allDay: event.allDay,
+    isFloating: Boolean(event.isFloating),
     color: event.color ?? null,
     location: event.location,
     reminderMinutesBefore: event.reminderMinutesBefore,

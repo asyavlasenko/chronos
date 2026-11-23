@@ -43,6 +43,8 @@ const acceptInvite = (eventId, email) =>
     { $set: { 'participants.$.status': 'accepted', 'participants.$.respondedAt': new Date() } },
   );
 
+const TASK = { type: 'task', startAt: at('09:00') };
+
 const titles = (res) => res.body.events.map((event) => event.title);
 
 const fields = (res) => res.body.details.map((detail) => detail.field);
@@ -149,7 +151,7 @@ describe('POST /api/events', () => {
     expect(res.body.event).toMatchObject({ type: 'reminder', startAt: at('09:00'), endAt: null });
   });
 
-  it('створює задачу з дедлайном і без дати', async () => {
+  it('створює задачу з дедлайном і відхиляє задачу без дати', async () => {
     const { owner, calendar } = await createOwner();
 
     const dated = await postEvent(owner, {
@@ -169,8 +171,12 @@ describe('POST /api/events', () => {
       isCompleted: false,
       completedAt: null,
     });
-    expect(undated.status).toBe(201);
-    expect(undated.body.event).toMatchObject({ startAt: null, endAt: null, priority: 'medium' });
+    expect(dated.body.event.priority).toBe('high');
+    expect(undated.status).toBe(400);
+    expect(undated.body.details).toEqual([
+      { field: 'startAt', message: 'У кожної події має бути дата' },
+    ]);
+    expect(await Event.countDocuments()).toBe(1);
   });
 
   it('повертає 400, якщо кінець не пізніше за початок', async () => {
@@ -196,13 +202,19 @@ describe('POST /api/events', () => {
       title: '   ',
       type: 'task',
       calendar,
+      startAt: at('09:00'),
     });
     const reminderWithoutStart = await postEvent(owner, {
       title: 'Нагадування',
       type: 'reminder',
       calendar,
     });
-    const longTitle = await postEvent(owner, { title: 'я'.repeat(121), type: 'task', calendar });
+    const longTitle = await postEvent(owner, {
+      title: 'я'.repeat(121),
+      type: 'task',
+      calendar,
+      startAt: at('09:00'),
+    });
 
     expect(empty.status).toBe(400);
     expect(fields(empty).sort()).toEqual(['calendar', 'startAt', 'title', 'type']);
@@ -325,7 +337,6 @@ describe('GET /api/events', () => {
       postEvent(owner, { title, type: 'reminder', calendar, startAt });
     const task = (title, startAt) => postEvent(owner, { title, type: 'task', calendar, startAt });
 
-    await task('Без дати');
     await arrangement('Нічна', at('23:00'), at('02:00', '2026-11-17'));
     await arrangement('Закінчилась на межі', at('22:00', '2026-11-15'), at('00:00'));
     await arrangement('Через північ', at('23:00', '2026-11-15'), at('01:00'));
@@ -353,7 +364,7 @@ describe('GET /api/events', () => {
     ]);
   });
 
-  it('без діапазону повертає всі події, а задачі без дати ставить у кінець', async () => {
+  it('без діапазону повертає всі події за зростанням початку', async () => {
     const { owner } = await seedDay();
 
     const res = await listEvents(owner);
@@ -368,7 +379,6 @@ describe('GET /api/events', () => {
       'Дедлайн',
       'Нічна',
       'Починається на межі',
-      'Без дати',
     ]);
   });
 
@@ -413,9 +423,9 @@ describe('GET /api/events', () => {
     const { owner, calendar } = await createOwner();
     const study = await createCalendar(owner, [], 'Навчання');
     const stranger = await createOwner();
-    await postEvent(owner, { title: 'Особиста', type: 'task', calendar });
-    await postEvent(owner, { title: 'Лекція', type: 'task', calendar: study.id });
-    await postEvent(stranger.owner, { title: 'Чужа', type: 'task', calendar: stranger.calendar });
+    await postEvent(owner, { title: 'Особиста', ...TASK, calendar });
+    await postEvent(owner, { title: 'Лекція', ...TASK, calendar: study.id });
+    await postEvent(stranger.owner, { title: 'Чужа', ...TASK, calendar: stranger.calendar });
 
     const all = await listEvents(owner);
     const onlyStudy = await listEvents(owner, { calendars: study.id });
@@ -434,7 +444,7 @@ describe('GET /api/events', () => {
   it('шукає підрядок у назві та описі без урахування регістру', async () => {
     const { owner, calendar } = await createOwner();
     const task = (title, description = '') =>
-      postEvent(owner, { title, type: 'task', calendar, description });
+      postEvent(owner, { title, ...TASK, calendar, description });
     await task('Квартальний ЗВІТ');
     await task('Дзвінок', 'обговорити звіт за жовтень');
     await task('Реліз (v2.0)');
@@ -459,8 +469,8 @@ describe('GET /api/events', () => {
     const { owner, calendar } = await createOwner();
     const hidden = await createCalendar(owner, [], 'Прихований');
     await Calendar.updateOne({ _id: hidden._id }, { $set: { 'members.0.isHidden': true } });
-    await postEvent(owner, { title: 'Видима', type: 'task', calendar });
-    await postEvent(owner, { title: 'Прихована', type: 'task', calendar: hidden.id });
+    await postEvent(owner, { title: 'Видима', ...TASK, calendar });
+    await postEvent(owner, { title: 'Прихована', ...TASK, calendar: hidden.id });
 
     const byDefault = await listEvents(owner);
     const withHidden = await listEvents(owner, { includeHidden: true });
@@ -477,7 +487,7 @@ describe('GET /api/events', () => {
       { _id: team._id, 'members.user': editor.user._id },
       { $set: { 'members.$.isHidden': true } },
     );
-    await postEvent(owner, { title: 'Спільна', type: 'task', calendar });
+    await postEvent(owner, { title: 'Спільна', ...TASK, calendar });
 
     const forOwner = await listEvents(owner);
     const forEditor = await listEvents(editor);
@@ -550,7 +560,7 @@ describe('GET /api/events', () => {
 describe('GET /api/events/:id', () => {
   it('віддає подію учаснику календаря з будь-якою роллю', async () => {
     const { owner, viewer, calendar } = await createTeam();
-    const created = await postEvent(owner, { title: 'Огляд', type: 'task', calendar });
+    const created = await postEvent(owner, { title: 'Огляд', ...TASK, calendar });
 
     const res = await getEvent(viewer, created.body.event.id);
 
@@ -596,7 +606,7 @@ describe('GET /api/events/:id', () => {
     const stranger = await createUser();
     const created = await postEvent(host.owner, {
       title: 'Приватна',
-      type: 'task',
+      ...TASK,
       calendar: host.calendar,
     });
 
@@ -658,7 +668,7 @@ describe('PATCH /api/events/:id', () => {
 
   it('isCompleted ставить і знімає completedAt', async () => {
     const { owner, calendar } = await createOwner();
-    const created = await postEvent(owner, { title: 'Купити квитки', type: 'task', calendar });
+    const created = await postEvent(owner, { title: 'Купити квитки', ...TASK, calendar });
     const { id } = created.body.event;
 
     const done = await patchEvent(owner, id, { isCompleted: true });
@@ -730,14 +740,14 @@ describe('PATCH /api/events/:id', () => {
 
     const asReminder = await patchEvent(owner, id, { type: 'reminder' });
     const asArrangement = await patchEvent(owner, id, { type: 'arrangement' });
-    const asTask = await patchEvent(owner, id, { type: 'task', startAt: null, isCompleted: true });
+    const asTask = await patchEvent(owner, id, { type: 'task', isCompleted: true });
     const backToReminder = await patchEvent(owner, id, { type: 'reminder', startAt: at('08:00') });
 
     expect(asReminder.body.event).toMatchObject({ type: 'reminder', endAt: null });
     expect(asArrangement.body.event).toMatchObject({ type: 'arrangement', endAt: at('11:00') });
     expect(asTask.body.event).toMatchObject({
       type: 'task',
-      startAt: null,
+      startAt: at('10:00'),
       endAt: null,
       isCompleted: true,
     });
@@ -753,7 +763,7 @@ describe('PATCH /api/events/:id', () => {
     const study = await createCalendar(owner, [], 'Навчання');
     const stranger = await createOwner();
     const readOnly = await createCalendar(stranger.owner, [{ account: owner, role: 'viewer' }]);
-    const created = await postEvent(owner, { title: 'Лекція', type: 'task', calendar });
+    const created = await postEvent(owner, { title: 'Лекція', ...TASK, calendar });
     const { id } = created.body.event;
 
     const toForeign = await patchEvent(owner, id, { calendar: stranger.calendar });
@@ -863,7 +873,7 @@ describe('DELETE /api/events/:id', () => {
 
   it('редактор не може видалити чужу подію, власник календаря може', async () => {
     const { owner, editor, viewer, calendar } = await createTeam();
-    const body = { type: 'task', calendar };
+    const body = { ...TASK, calendar };
     const ownerEvent = await postEvent(owner, { ...body, title: 'Подія власника' });
     const editorEvent = await postEvent(editor, { ...body, title: 'Подія редактора' });
 
@@ -913,7 +923,7 @@ describe('POST /api/events/:id/invite', () => {
 
   it('перевіряє права і тіло запиту', async () => {
     const { owner, editor, calendar } = await createTeam();
-    const created = await postEvent(owner, { title: 'Огляд', type: 'task', calendar });
+    const created = await postEvent(owner, { title: 'Огляд', ...TASK, calendar });
     const { id } = created.body.event;
 
     const byEditor = await inviteToEvent(editor, id, ['x@mail.com']);
@@ -985,7 +995,13 @@ describe('модель Event', () => {
       isCompleted: true,
       completedAt: new Date(),
     });
-    const task = new Event({ ...base(), type: 'task', endAt: at('11:00'), isCompleted: true });
+    const task = new Event({
+      ...base(),
+      type: 'task',
+      startAt: at('10:00'),
+      endAt: at('11:00'),
+      isCompleted: true,
+    });
 
     await reminder.validate();
     await task.validate();
@@ -993,7 +1009,6 @@ describe('модель Event', () => {
     expect(reminder.endAt).toBeNull();
     expect(reminder.isCompleted).toBe(false);
     expect(reminder.completedAt).toBeNull();
-    expect(task.startAt).toBeNull();
     expect(task.endAt).toBeNull();
     expect(task.isCompleted).toBe(true);
   });

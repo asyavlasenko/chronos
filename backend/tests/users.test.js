@@ -106,6 +106,51 @@ describe('PATCH /api/users/me', () => {
     });
   });
 
+  it('приймає завантажене зображення аватара і відхиляє завелике чи не зображення', async () => {
+    const { headers } = await createUser();
+    const image = `data:image/jpeg;base64,${'A'.repeat(2000)}`;
+
+    const saved = await request(app).patch('/api/users/me').set(headers).send({ avatarUrl: image });
+    const tooBig = await request(app)
+      .patch('/api/users/me')
+      .set(headers)
+      .send({ avatarUrl: `data:image/png;base64,${'A'.repeat(150000)}` });
+    const notImage = await request(app)
+      .patch('/api/users/me')
+      .set(headers)
+      .send({ avatarUrl: 'data:text/html;base64,PHNjcmlwdD4=' });
+    const script = await request(app)
+      .patch('/api/users/me')
+      .set(headers)
+      .send({ avatarUrl: 'ftp://example.com/avatar.png' });
+
+    expect(saved.status).toBe(200);
+    expect(saved.body.user.avatarUrl).toBe(image);
+    expect(tooBig.status).toBe(400);
+    expect(notImage.status).toBe(400);
+    expect(script.status).toBe(400);
+  });
+
+  it('зберігає тему оформлення і відхиляє невідомі значення', async () => {
+    const { headers } = await createUser();
+    const patchMe = (body) => request(app).patch('/api/users/me').set(headers).send(body);
+
+    const initial = await request(app).get('/api/users/me').set(headers);
+    const saved = await patchMe({ theme: { color: 'mint', mode: 'dark' } });
+    const unknownColor = await patchMe({ theme: { color: 'rainbow', mode: 'dark' } });
+    const unknownMode = await patchMe({ theme: { color: 'mint', mode: 'neon' } });
+    const partial = await patchMe({ theme: { color: 'pink' } });
+    const after = await request(app).get('/api/users/me').set(headers);
+
+    expect(initial.body.user.theme).toEqual({ color: 'graphite', mode: 'light' });
+    expect(saved.status).toBe(200);
+    expect(saved.body.user.theme).toEqual({ color: 'mint', mode: 'dark' });
+    expect(unknownColor.status).toBe(400);
+    expect(unknownMode.status).toBe(400);
+    expect(partial.status).toBe(400);
+    expect(after.body.user.theme).toEqual({ color: 'mint', mode: 'dark' });
+  });
+
   it('дозволяє скинути аватар у null', async () => {
     const { headers } = await createUser();
     await request(app)
@@ -128,7 +173,7 @@ describe('PATCH /api/users/me', () => {
       password: 'another-secret',
       passwordHash: 'plain',
       tokenVersion: 99,
-      isEmailVerified: true,
+      isEmailVerified: false,
     });
     const onlyForbidden = await request(app)
       .patch('/api/users/me')
@@ -137,7 +182,7 @@ describe('PATCH /api/users/me', () => {
 
     expect(mixed.status).toBe(200);
     expect(mixed.body.user.email).toBe(user.email);
-    expect(mixed.body.user.isEmailVerified).toBe(false);
+    expect(mixed.body.user.isEmailVerified).toBe(true);
     expect(onlyForbidden.status).toBe(400);
 
     const saved = await User.findById(user.id);

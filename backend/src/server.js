@@ -2,6 +2,11 @@ import http from 'node:http';
 import app from './app.js';
 import env from './config/env.js';
 import { connectDb, disconnectDb } from './config/db.js';
+import {
+  startReminderScheduler,
+  stopReminderScheduler,
+} from './modules/events/reminder.service.js';
+import { startTelegramBot, stopTelegramBot } from './modules/telegram/telegram.service.js';
 
 const SHUTDOWN_TIMEOUT_MS = 10000;
 const server = http.createServer(app);
@@ -11,10 +16,14 @@ async function start() {
   server.listen(env.port, () => {
     console.log(`Chronos API: http://localhost:${env.port}/api (${env.nodeEnv})`);
   });
+  startReminderScheduler();
+  startTelegramBot();
 }
 
 function shutdown(signal) {
   console.log(`${signal}: зупиняю сервер…`);
+  stopReminderScheduler();
+  stopTelegramBot();
   server.close(async () => {
     await disconnectDb();
     process.exit(0);

@@ -99,7 +99,7 @@ describe('GET /api/calendars', () => {
     const main = await getMainCalendar(owner.user._id);
     await createEvent(calendar.id, owner);
     await createEvent(calendar.id, editor);
-    await createEvent(calendar.id, owner, { type: 'task', startAt: null });
+    await createEvent(calendar.id, owner, { type: 'task' });
     await createEvent(main.id, owner);
 
     const res = await request(app).get('/api/calendars').set(owner.headers);

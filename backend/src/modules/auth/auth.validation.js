@@ -7,6 +7,18 @@ export const registerSchema = Joi.object({
   name: Joi.string().trim().min(2).max(80).required().label('Ім’я'),
   country: Joi.string().trim().uppercase().length(2).label('Країна'),
   timezone: timezone(),
+  next: Joi.string()
+    .pattern(/^\/(?!\/)\S*$/)
+    .max(300)
+    .label('Адреса повернення'),
+});
+
+export const verifyEmailSchema = Joi.object({
+  token: Joi.string().hex().length(64).required().label('Токен'),
+});
+
+export const resendVerificationSchema = Joi.object({
+  email: email().required(),
 });
 
 export const loginSchema = Joi.object({

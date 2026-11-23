@@ -7,6 +7,10 @@ const REQUEST_TIMEOUT_MS = 8000;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const DUPLICATE_KEY = 11000;
 
+const OBSERVANCES = {
+  UA: [{ month: 12, day: 6, localName: 'День святого Миколая', name: 'Saint Nicholas Day' }],
+};
+
 const unknownCountry = () => new ApiError(400, 'Свята для цієї країни недоступні');
 const unsupportedYear = () => new ApiError(400, 'Свята для цього року недоступні');
 const unavailable = () => new ApiError(502, 'Сервіс свят тимчасово недоступний');
@@ -28,10 +32,29 @@ const toHoliday = (item) => ({
 const isFresh = (cache) =>
   Date.now() - cache.fetchedAt.getTime() < env.holidays.cacheTtlDays * DAY_MS;
 
+const pad = (value) => String(value).padStart(2, '0');
+
+const observancesFor = (country, year) =>
+  (OBSERVANCES[country] || []).map(({ month, day, localName, name }) => ({
+    date: `${year}-${pad(month)}-${pad(day)}`,
+    localName,
+    name,
+  }));
+
+function withObservances(cache) {
+  const official = cache.holidays.map(({ date, localName, name }) => ({ date, localName, name }));
+  const taken = new Set(official.map((holiday) => holiday.date));
+  const extra = observancesFor(cache.country, cache.year).filter(
+    (holiday) => !taken.has(holiday.date),
+  );
+
+  return [...official, ...extra].sort((a, b) => a.date.localeCompare(b.date));
+}
+
 const toResult = (cache, isStale = false) => ({
   country: cache.country,
   year: cache.year,
-  holidays: cache.holidays.map(({ date, localName, name }) => ({ date, localName, name })),
+  holidays: withObservances(cache),
   fetchedAt: cache.fetchedAt,
   isStale,
 });

@@ -13,6 +13,9 @@ import calendarRoutes from './modules/calendars/calendar.routes.js';
 import eventRoutes from './modules/events/event.routes.js';
 import inviteRoutes from './modules/invites/invite.routes.js';
 import holidayRoutes from './modules/holidays/holidays.routes.js';
+import drawingRoutes from './modules/drawings/drawing.routes.js';
+import assistantRoutes from './modules/assistant/assistant.routes.js';
+import telegramRoutes from './modules/telegram/telegram.routes.js';
 
 const app = express();
 
@@ -32,6 +35,9 @@ app.use('/api/calendars', calendarRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/invites', inviteRoutes);
 app.use('/api/holidays', holidayRoutes);
+app.use('/api/drawings', drawingRoutes);
+app.use('/api/assistant', assistantRoutes);
+app.use('/api/telegram', telegramRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

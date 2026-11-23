@@ -46,5 +46,28 @@ export const COLOR_KEYS = Object.freeze(['graphite', 'blue', 'purple', 'green', 
 
 export const HOLIDAYS_CALENDAR_ID = 'holidays';
 
+export const BOARD_MODULES = Object.freeze([
+  'floating',
+  'next',
+  'tasks',
+  'load',
+  'shared',
+  'invites',
+  'holidays',
+  'calendars',
+]);
+
 export const TIME_FORMATS = Object.freeze(['24h', '12h']);
+
+export const THEME_COLORS = Object.freeze([
+  'graphite',
+  'blue',
+  'lavender',
+  'pink',
+  'coral',
+  'sand',
+  'mint',
+  'teal',
+]);
+export const THEME_MODES = Object.freeze(['light', 'dark', 'system']);
 export const WEEK_STARTS = Object.freeze({ MONDAY: 1, SUNDAY: 0 });

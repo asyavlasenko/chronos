@@ -57,7 +57,7 @@ const details = {
   color: colorKey().allow(null),
   location: Joi.string().trim().max(200).allow('').label('Місце'),
   description: Joi.string().trim().max(2000).allow('').label('Опис'),
-  reminderMinutesBefore: Joi.number().integer().min(0).max(10080).label('Нагадування'),
+  reminderMinutesBefore: Joi.number().integer().min(0).max(10080).allow(null).label('Нагадування'),
   priority: Joi.string()
     .valid(...Object.values(PRIORITIES))
     .label('Пріоритет'),
@@ -67,11 +67,20 @@ export const createEventSchema = Joi.object({
   title: title().required(),
   type: type().required(),
   calendar: calendar().required(),
-  startAt: Joi.when('type', {
+  isFloating: Joi.when('type', {
     is: EVENT_TYPES.TASK,
-    then: isoDate().allow(null),
+    then: Joi.boolean(),
+    otherwise: Joi.boolean().valid(false),
+  })
+    .label('Без дати')
+    .messages({ 'any.only': TYPE_RULE_MESSAGES.floatingTaskOnly }),
+  startAt: Joi.when('isFloating', {
+    is: true,
+    then: isoDate(),
     otherwise: isoDate().required(),
-  }).label('Початок'),
+  })
+    .label('Початок')
+    .messages({ 'any.required': TYPE_RULE_MESSAGES.startRequired }),
   endAt: Joi.when('type', {
     is: EVENT_TYPES.ARRANGEMENT,
     then: isoDate()
@@ -91,8 +100,9 @@ export const updateEventSchema = Joi.object({
   title: title(),
   type: type(),
   calendar: calendar(),
-  startAt: isoDate().allow(null).label('Початок'),
+  startAt: isoDate().label('Початок'),
   endAt: isoDate().allow(null).label('Кінець'),
+  isFloating: Joi.boolean().label('Без дати'),
   ...details,
   isCompleted: Joi.boolean().label('Виконано'),
   participants: participants(),

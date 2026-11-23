@@ -4,6 +4,9 @@ dotenv.config();
 
 const { env: e } = process;
 
+const numberOr = (value, fallback) =>
+  value === undefined || value === '' || Number.isNaN(Number(value)) ? fallback : Number(value);
+
 const env = Object.freeze({
   nodeEnv: e.NODE_ENV || 'development',
   isProduction: e.NODE_ENV === 'production',
@@ -22,6 +25,23 @@ const env = Object.freeze({
     secure: e.COOKIE_SECURE === 'true',
   },
   passwordResetTtlMinutes: Number(e.PASSWORD_RESET_TTL_MINUTES) || 60,
+  emailVerificationTtlHours: Number(e.EMAIL_VERIFICATION_TTL_HOURS) || 24,
+  authRateLimit: {
+    max: numberOr(e.AUTH_RATE_LIMIT_MAX, e.NODE_ENV === 'test' ? 0 : 30),
+    windowMinutes: numberOr(e.AUTH_RATE_LIMIT_WINDOW_MINUTES, 10),
+  },
+  assistant: {
+    apiKey: e.ANTHROPIC_API_KEY || '',
+    model: e.ASSISTANT_MODEL || 'claude-opus-5-5',
+    rateLimitMax: numberOr(e.ASSISTANT_RATE_LIMIT_MAX, e.NODE_ENV === 'test' ? 0 : 20),
+    rateLimitWindowMinutes: numberOr(e.ASSISTANT_RATE_LIMIT_WINDOW_MINUTES, 10),
+  },
+  telegram: {
+    botToken: e.TELEGRAM_BOT_TOKEN || '',
+    linkTtlMinutes: numberOr(e.TELEGRAM_LINK_TTL_MINUTES, 15),
+    rateLimitMax: numberOr(e.TELEGRAM_RATE_LIMIT_MAX, e.NODE_ENV === 'test' ? 0 : 20),
+    rateLimitWindowMinutes: numberOr(e.TELEGRAM_RATE_LIMIT_WINDOW_MINUTES, 10),
+  },
   smtp: {
     host: e.SMTP_HOST || '',
     port: Number(e.SMTP_PORT) || 587,

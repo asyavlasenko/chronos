@@ -11,7 +11,8 @@ export async function createUser(overrides = {}) {
     name: `Користувач ${counter}`,
     ...overrides,
   };
-  const { user, accessToken } = await authService.register(dto);
+  const user = await authService.createAccount(dto, { isEmailVerified: true });
+  const { accessToken } = authService.issueTokens(user);
   return {
     user,
     token: accessToken,

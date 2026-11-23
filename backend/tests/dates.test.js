@@ -1,9 +1,17 @@
 import {
   daysBetween,
+  describeLocalNow,
+  formatEventWhen,
+  formatLead,
   getIsoWeek,
   getRangeForView,
   intervalsOverlap,
+  isCalendarDate,
+  isClockTime,
+  localDayRange,
   startOfIsoWeek,
+  toDateParam,
+  zonedTimeToUtc,
 } from '../src/utils/dates.js';
 
 const utc = (value) => new Date(`${value}Z`);
@@ -200,5 +208,118 @@ describe('daysBetween', () => {
 
   it('приймає ISO-рядки', () => {
     expect(daysBetween('2026-11-16T00:00:00Z', '2026-11-20T00:00:00Z')).toBe(4);
+  });
+});
+
+describe('formatEventWhen', () => {
+  const startAt = utc('2026-11-16T22:30:00');
+
+  it('показує день і час у часовому поясі отримувача', () => {
+    expect(formatEventWhen({ startAt, allDay: false }, 'Europe/Kyiv')).toBe(
+      'вівторок, 17 листопада о 00:30',
+    );
+    expect(formatEventWhen({ startAt, allDay: false }, 'America/New_York')).toBe(
+      'понеділок, 16 листопада о 17:30',
+    );
+  });
+
+  it('для події на весь день не показує час', () => {
+    expect(formatEventWhen({ startAt, allDay: true }, 'UTC')).toBe('понеділок, 16 листопада');
+  });
+});
+
+describe('toDateParam', () => {
+  it('повертає локальну дату у форматі РРРР-ММ-ДД', () => {
+    const date = utc('2026-11-16T22:30:00');
+
+    expect(toDateParam(date, 'Europe/Kyiv')).toBe('2026-11-17');
+    expect(toDateParam(date, 'America/New_York')).toBe('2026-11-16');
+    expect(toDateParam(date)).toBe('2026-11-16');
+  });
+});
+
+describe('formatLead', () => {
+  const now = utc('2026-11-16T10:00:00');
+  const inMinutes = (minutes) => new Date(now.getTime() + minutes * 60 * 1000);
+
+  it.each([
+    [-3, 'уже зараз'],
+    [0, 'уже зараз'],
+    [10, 'через 10 хв'],
+    [59, 'через 59 хв'],
+    [60, 'через 1 год'],
+    [150, 'через 3 год'],
+    [1440, 'через 1 дн'],
+    [10080, 'через 7 дн'],
+  ])('%i хв до початку: %s', (minutes, expected) => {
+    expect(formatLead(inMinutes(minutes), now)).toBe(expected);
+  });
+});
+
+describe('zonedTimeToUtc', () => {
+  it.each([
+    ['2026-11-17', '15:00', 'Europe/Kyiv', '2026-11-17T13:00:00.000Z'],
+    ['2026-07-01', '15:00', 'Europe/Kyiv', '2026-07-01T12:00:00.000Z'],
+    ['2026-11-17', '15:00', 'America/New_York', '2026-11-17T20:00:00.000Z'],
+    ['2026-11-17', '00:00', 'Asia/Tokyo', '2026-11-16T15:00:00.000Z'],
+    ['2026-11-17', '09:30', 'UTC', '2026-11-17T09:30:00.000Z'],
+    ['2026-10-25', '12:00', 'Europe/Kyiv', '2026-10-25T10:00:00.000Z'],
+  ])('%s %s у поясі %s', (date, time, timeZone, expected) => {
+    expect(zonedTimeToUtc(date, time, timeZone).toISOString()).toBe(expected);
+  });
+});
+
+describe('isCalendarDate та isClockTime', () => {
+  it('приймають лише справжні дати й час', () => {
+    expect(isCalendarDate('2026-11-17')).toBe(true);
+    expect(isCalendarDate('2028-02-29')).toBe(true);
+    expect(isCalendarDate('2026-02-31')).toBe(false);
+    expect(isCalendarDate('17.11.2026')).toBe(false);
+    expect(isCalendarDate(null)).toBe(false);
+    expect(isClockTime('00:00')).toBe(true);
+    expect(isClockTime('23:59')).toBe(true);
+    expect(isClockTime('24:00')).toBe(false);
+    expect(isClockTime('9:30')).toBe(false);
+    expect(isClockTime(null)).toBe(false);
+  });
+});
+
+describe('describeLocalNow', () => {
+  it('повертає локальні дату, час і день тижня', () => {
+    const now = utc('2026-11-16T22:30:00');
+
+    expect(describeLocalNow(now, 'Europe/Kyiv')).toEqual({
+      date: '2026-11-17',
+      time: '00:30',
+      weekday: 'вівторок',
+    });
+    expect(describeLocalNow(now, 'America/New_York')).toEqual({
+      date: '2026-11-16',
+      time: '17:30',
+      weekday: 'понеділок',
+    });
+  });
+});
+
+describe('localDayRange', () => {
+  it('повертає межі дня користувача в UTC, зокрема для завтра й у день переведення годинника', () => {
+    const now = new Date('2026-11-16T22:30:00.000Z');
+
+    expect(localDayRange(now, 'Europe/Kyiv')).toEqual({
+      from: new Date('2026-11-16T22:00:00.000Z'),
+      to: new Date('2026-11-17T22:00:00.000Z'),
+    });
+    expect(localDayRange(now, 'Europe/Kyiv', 1)).toEqual({
+      from: new Date('2026-11-17T22:00:00.000Z'),
+      to: new Date('2026-11-18T22:00:00.000Z'),
+    });
+    expect(localDayRange(now, 'America/New_York')).toEqual({
+      from: new Date('2026-11-16T05:00:00.000Z'),
+      to: new Date('2026-11-17T05:00:00.000Z'),
+    });
+    expect(localDayRange(new Date('2026-10-25T10:00:00.000Z'), 'Europe/Kyiv')).toEqual({
+      from: new Date('2026-10-24T21:00:00.000Z'),
+      to: new Date('2026-10-25T22:00:00.000Z'),
+    });
   });
 });

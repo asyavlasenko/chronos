@@ -1,5 +1,11 @@
 import mongoose from 'mongoose';
-import { TIME_FORMATS, WEEK_STARTS } from '../../constants/index.js';
+import {
+  BOARD_MODULES,
+  THEME_COLORS,
+  THEME_MODES,
+  TIME_FORMATS,
+  WEEK_STARTS,
+} from '../../constants/index.js';
 
 const { Schema } = mongoose;
 
@@ -8,6 +14,25 @@ const notificationsSchema = new Schema(
     emailReminders: { type: Boolean, default: true },
     push: { type: Boolean, default: false },
     sharedCalendarEmails: { type: Boolean, default: true },
+  },
+  { _id: false },
+);
+
+const themeSchema = new Schema(
+  {
+    color: { type: String, enum: THEME_COLORS, default: 'graphite' },
+    mode: { type: String, enum: THEME_MODES, default: 'light' },
+  },
+  { _id: false },
+);
+
+const telegramSchema = new Schema(
+  {
+    chatId: { type: Number },
+    username: { type: String, default: null },
+    connectedAt: { type: Date },
+    linkToken: { type: String, select: false },
+    linkExpiresAt: { type: Date, select: false },
   },
   { _id: false },
 );
@@ -34,9 +59,13 @@ const userSchema = new Schema(
     showWeekNumbers: { type: Boolean, default: true },
     showHolidays: { type: Boolean, default: true },
     notifications: { type: notificationsSchema, default: () => ({}) },
+    hiddenModules: { type: [{ type: String, enum: BOARD_MODULES }], default: [] },
+    theme: { type: themeSchema, default: () => ({}) },
+    telegram: { type: telegramSchema },
 
     isEmailVerified: { type: Boolean, default: false },
     emailVerificationToken: { type: String, select: false },
+    emailVerificationExpiresAt: { type: Date, select: false },
     passwordResetToken: { type: String, select: false },
     passwordResetExpiresAt: { type: Date, select: false },
     tokenVersion: { type: Number, default: 0 },
@@ -50,13 +79,20 @@ const userSchema = new Schema(
         delete safe.__v;
         delete safe.passwordHash;
         delete safe.emailVerificationToken;
+        delete safe.emailVerificationExpiresAt;
         delete safe.passwordResetToken;
         delete safe.passwordResetExpiresAt;
         delete safe.tokenVersion;
+        delete safe.telegram;
         return safe;
       },
     },
   },
+);
+
+userSchema.index(
+  { 'telegram.chatId': 1 },
+  { partialFilterExpression: { 'telegram.chatId': { $type: 'number' } } },
 );
 
 const User = mongoose.model('User', userSchema);

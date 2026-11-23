@@ -7,10 +7,12 @@ import {
   ROLES,
 } from '../../constants/index.js';
 import ApiError from '../../utils/ApiError.js';
+import { formatEventWhen } from '../../utils/dates.js';
 import { sendInviteEmail } from '../../utils/mailer.js';
 import { randomToken } from '../../utils/tokens.js';
 import Calendar from '../calendars/calendar.model.js';
 import Event from '../events/event.model.js';
+import User from '../users/user.model.js';
 import Invite from './invite.model.js';
 import { INVITE_POPULATE } from './invite.serializer.js';
 import { isInviteToken } from './invite.validation.js';
@@ -22,18 +24,6 @@ const TARGET_GONE = 'Подію або календар із цього запр
 const WRONG_EMAIL = 'Це запрошення надіслано на інший email';
 const ALREADY_PROCESSED = 'Запрошення вже опрацьовано';
 const EXPIRED = 'Термін дії запрошення минув';
-
-const formatWhen = (event, timeZone) =>
-  event.startAt
-    ? new Intl.DateTimeFormat('uk-UA', {
-        timeZone,
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        hour: event.allDay ? undefined : '2-digit',
-        minute: event.allDay ? undefined : '2-digit',
-      }).format(event.startAt)
-    : null;
 
 export async function createInvite({
   kind,
@@ -63,13 +53,16 @@ export async function createInvite({
     });
   }
 
+  const invitee = await User.findOne({ email }).select('notifications');
+  if (invitee?.notifications?.sharedCalendarEmails === false) return invite;
+
   try {
     await sendInviteEmail({
       to: email,
       inviterName: invitedBy.name,
       kind,
       title: isEvent ? event.title : calendar.name,
-      when: isEvent ? formatWhen(event, invitedBy.timezone) : null,
+      when: isEvent ? formatEventWhen(event, invitedBy.timezone) : null,
       acceptUrl: `${env.clientUrl}/invite/${invite.token}`,
     });
   } catch (err) {
@@ -172,6 +165,7 @@ async function acceptEvent(invite, user, respondedAt) {
         'participants.$.status': status,
         'participants.$.respondedAt': respondedAt,
       },
+      $inc: { __v: 1 },
     },
   );
   if (matchedCount > 0) return;
@@ -188,6 +182,7 @@ async function acceptEvent(invite, user, respondedAt) {
           respondedAt,
         },
       },
+      $inc: { __v: 1 },
     },
   );
 }
@@ -200,6 +195,7 @@ const declineEvent = (invite, respondedAt) =>
         'participants.$.status': PARTICIPANT_STATUSES.DECLINED,
         'participants.$.respondedAt': respondedAt,
       },
+      $inc: { __v: 1 },
     },
   );
 

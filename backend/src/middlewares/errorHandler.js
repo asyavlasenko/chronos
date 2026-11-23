@@ -11,6 +11,10 @@ function toApiError(err) {
     return new ApiError(400, 'Помилка валідації', details);
   }
 
+  if (err instanceof mongoose.Error.VersionError) {
+    return new ApiError(409, 'Запис щойно змінили. Онови сторінку й спробуй ще раз');
+  }
+
   if (err instanceof mongoose.Error.CastError) {
     return new ApiError(400, 'Некоректний ідентифікатор або значення поля');
   }
@@ -54,6 +58,7 @@ export default function errorHandler(err, req, res, next) {
     status: 'error',
     message: error.message,
     ...(error.details ? { details: error.details } : {}),
+    ...(error.code ? { code: error.code } : {}),
     ...(env.nodeEnv === 'development' ? { stack: err?.stack } : {}),
   });
 }

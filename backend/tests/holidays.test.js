@@ -36,12 +36,20 @@ const nagerPayload = [
   },
 ];
 
+const saintNicholas = {
+  date: '2026-12-06',
+  localName: 'День святого Миколая',
+  name: 'Saint Nicholas Day',
+};
+
 const expectedHolidays = [
   { date: '2026-01-01', localName: 'Новий Рік', name: "New Year's Day" },
   { date: '2026-08-24', localName: 'День Незалежності', name: 'Independence Day' },
+  saintNicholas,
 ];
 
 const oldHolidays = [{ date: '2026-01-07', localName: 'Старе свято', name: 'Old Holiday' }];
+const expectedOldHolidays = [...oldHolidays, saintNicholas];
 
 const respondWith = (body, status = 200) =>
   global.fetch.mockImplementation(async () => ({
@@ -128,7 +136,7 @@ describe('GET /api/holidays', () => {
     const res = await getHolidays(me.headers, { year: 2026, country: 'UA' });
 
     expect(res.status).toBe(200);
-    expect(res.body.holidays).toEqual(oldHolidays);
+    expect(res.body.holidays).toEqual(expectedOldHolidays);
     expect(res.body.isStale).toBe(false);
     expect(global.fetch).not.toHaveBeenCalled();
   });
@@ -160,7 +168,7 @@ describe('GET /api/holidays', () => {
     expect(res.body).toEqual({
       country: 'UA',
       year: 2026,
-      holidays: oldHolidays,
+      holidays: expectedOldHolidays,
       fetchedAt: stale.fetchedAt.toISOString(),
       isStale: true,
     });
@@ -181,7 +189,7 @@ describe('GET /api/holidays', () => {
 
     expect(serverError.status).toBe(200);
     expect(serverError.body.isStale).toBe(true);
-    expect(serverError.body.holidays).toEqual(oldHolidays);
+    expect(serverError.body.holidays).toEqual(expectedOldHolidays);
     expect(brokenBody.status).toBe(200);
     expect(brokenBody.body.isStale).toBe(true);
   });
@@ -258,7 +266,23 @@ describe('GET /api/holidays', () => {
     expect(res.status).toBe(200);
     expect(res.body.holidays).toEqual([
       { date: '2026-05-01', localName: 'Labour Day', name: 'Labour Day' },
+      saintNicholas,
     ]);
+  });
+
+  it('додає День святого Миколая лише для України і не дублює офіційне свято', async () => {
+    const ukraine = await getHolidays(me.headers, { year: 2026, country: 'UA' });
+    const poland = await getHolidays(me.headers, { year: 2026, country: 'PL' });
+    respondWith([{ date: '2027-12-06', localName: 'Офіційний Миколай', name: 'Official' }]);
+    const official = await getHolidays(me.headers, { year: 2027, country: 'UA' });
+    const cached = await HolidayCache.findOne({ country: 'UA', year: 2026 });
+
+    expect(ukraine.body.holidays).toContainEqual(saintNicholas);
+    expect(poland.body.holidays.map((holiday) => holiday.date)).not.toContain('2026-12-06');
+    expect(official.body.holidays).toEqual([
+      { date: '2027-12-06', localName: 'Офіційний Миколай', name: 'Official' },
+    ]);
+    expect(cached.holidays.map((holiday) => holiday.date)).not.toContain('2026-12-06');
   });
 
   it('одночасні запити для однієї пари не падають на унікальному індексі', async () => {

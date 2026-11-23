@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="utf-8">
+    <title>Chronos</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 12px 12px max(12px, env(safe-area-inset-bottom));
+        font-family: system-ui, sans-serif;
+      }
+
+      p {
+        margin: 0;
+      }
+
+      button {
+        font: inherit;
+      }
+
+      svg {
+        display: block;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .busy {
+        opacity: 0.6;
+      }
+
+      .head {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+
+      .date {
+        min-width: 0;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .tabs {
+        display: flex;
+        flex: none;
+        gap: 2px;
+        padding: 3px;
+        border-radius: 999px;
+        background: var(--tg-theme-secondary-bg-color);
+      }
+
+      .tab {
+        padding: 5px 11px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--tg-theme-text-color);
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .on {
+        background: var(--tg-theme-button-color);
+        color: var(--tg-theme-button-text-color);
+      }
+
+      .list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        min-height: 26px;
+        padding: 8px 10px;
+        border-radius: 12px;
+        background: var(--tg-theme-secondary-bg-color);
+      }
+
+      .time {
+        flex: none;
+        width: 84px;
+        color: var(--tg-theme-hint-color);
+        font-size: 12px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .name {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        font-size: 14px;
+        font-weight: 500;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .done .name {
+        color: var(--tg-theme-hint-color);
+        text-decoration: line-through;
+      }
+
+      .box {
+        flex: none;
+        width: 24px;
+        height: 24px;
+        padding: 2px;
+        border: 2px solid var(--tg-theme-hint-color);
+        border-radius: 8px;
+        background: transparent;
+        touch-action: auto;
+      }
+
+      .box svg {
+        stroke: var(--tg-theme-button-text-color);
+        stroke-width: 3.4;
+      }
+
+      .done .box {
+        border-color: var(--tg-theme-button-color);
+        background: var(--tg-theme-button-color);
+      }
+
+      .bell {
+        flex: none;
+        width: 18px;
+        height: 18px;
+        margin: 0 3px;
+        stroke: var(--tg-theme-hint-color);
+        stroke-width: 2;
+      }
+
+      .note {
+        padding: 12px 0;
+        color: var(--tg-theme-hint-color);
+        font-size: 13px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script>
+      const widget = window.TelegramWidget;
+      const app = document.getElementById('app');
+      const TABS = [
+        ['t', 'Сьогодні'],
+        ['m', 'Завтра'],
+      ];
+      const CHECK = '<svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>';
+      const BELL =
+        '<svg class="bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>';
+      const ENTITIES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' };
+      let day = 't';
+      let isBusy = false;
+
+      const escapeHtml = (text) => String(text).replace(/[&<>"]/g, (char) => ENTITIES[char]);
+
+      function parse(text) {
+        try {
+          return JSON.parse(text);
+        } catch {
+          return null;
+        }
+      }
+
+      function tail(kind, id, isDone) {
+        if (kind === 'r') return BELL;
+        if (kind !== 't') return '';
+        return `<button class="box" onclick="ask('done:${day}:${id}')">${isDone ? CHECK : ''}</button>`;
+      }
+
+      const row = ([time, title, kind, id, isDone]) =>
+        `<div class="row${isDone ? ' done' : ''}"><span class="time">${escapeHtml(time)}</span>` +
+        `<span class="name">${escapeHtml(title)}</span>${tail(kind, id, isDone)}</div>`;
+
+      const tab = ([key, label]) =>
+        `<button class="tab${key === day ? ' on' : ''}" onclick="ask('day:${key}')">${label}</button>`;
+
+      function render(text) {
+        const state = parse(text);
+        if (!state) return;
+
+        day = state.d;
+        const rows = state.e.length ? state.e.map(row).join('') : '<p class="note">Подій немає</p>';
+        const more = state.m ? `<p class="note">і ще ${state.m}</p>` : '';
+        app.innerHTML =
+          `<div class="head"><span class="date">${escapeHtml(state.h)}</span>` +
+          `<span class="tabs">${TABS.map(tab).join('')}</span></div>` +
+          `<div class="list">${rows}${more}</div>`;
+      }
+
+      function ask(query) {
+        if (isBusy) return;
+        isBusy = true;
+        app.className = 'busy';
+        widget
+          .request(query)
+          .then(
+            (answer) => render(answer.result),
+            () => null,
+          )
+          .then(() => {
+            isBusy = false;
+            app.className = '';
+          });
+      }
+
+      widget.onEvent('chatDataChanged', () => render(widget.chatData));
+      widget.onEvent('activated', () => ask(`ref:${day}`));
+      render(widget.chatData);
+      widget.ready();
+      ask(`ref:${day}`);
+    </script>
+  </body>
+</html>
