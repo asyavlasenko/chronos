@@ -4,15 +4,16 @@
 з ролями, запрошення на email і державні свята твоєї країни. Проєкт виконується в межах
 ucode connect, трек Full Stack (challenge «Chronos», Innovation Campus NTU «KhPI»).
 
-> Стан: **Act: Basic реалізовано.** Бекенд і фронтенд працюють разом: реєстрація, календарі з ролями, події трьох типів,
-> запрошення по email, свята за країною. Що лишилось до здачі, описано в [docs/STATUS.md](docs/STATUS.md).
+> Стан: **Act: Basic реалізовано повністю, частину Act: Creative теж.** Реєстрація з підтвердженням email, календарі з ролями,
+> події трьох типів, запрошення й нагадування листами, свята за країною, дошка з наклейками, помічник на Claude.
+> Що лишилось до здачі, описано в [docs/STATUS.md](docs/STATUS.md).
 
 ## Стек
 
 | Частина  | Технології                                                        |
 |----------|-------------------------------------------------------------------|
-| Backend  | Node.js 20, Express 4, MongoDB 7, Mongoose 8, JWT, Joi, nodemailer |
-| Frontend | React 18, Vite 5, React Router 6, axios, CSS Modules               |
+| Backend  | Node.js 20, Express 4, MongoDB 7, Mongoose 8, JWT, Joi, nodemailer, Anthropic SDK (помічник), node-telegram-bot-api (нагадування в Telegram) |
+| Frontend | React 18, Vite 5, React Router 6, axios, CSS Modules, three.js (3D-персонаж помічника) |
 | Інфра    | Docker, Docker Compose, nginx (віддача фронту + проксі `/api`)    |
 | Якість   | ESLint (Airbnb), Prettier, Jest + supertest                       |
 
@@ -59,7 +60,9 @@ docker compose exec -e SEED_ALLOW_PRODUCTION=true backend npm run seed
 «Робота» з ролями та події на поточний тиждень. Пароль для всіх трьох: `chronos-demo` (або значення змінної `SEED_PASSWORD`).
 Повторний запуск перестворює лише ці демо-акаунти, інших користувачів не чіпає.
 
-Листи (запрошення, скидання пароля) без налаштованого SMTP не надсилаються, а друкуються в лог бекенду разом із посиланням:
+Листи (підтвердження email після реєстрації, запрошення, нагадування про події, зміни та скасування подій, скидання пароля) без налаштованого SMTP ідуть у тестову скриньку [Ethereal](https://ethereal.email): бекенд створює її сам і друкує в лог посилання на перегляд кожного листа. Справжнім адресатам такі листи не надходять.
+
+Нагадування в Telegram: створи бота через @BotFather (команда `/newbot`), встав токен у `.env` як `TELEGRAM_BOT_TOKEN` і перезапусти бекенд. У профілі, в розділі «Сповіщення», з'явиться рядок «Нагадування в Telegram» із кнопкою «Підключити». Без токена цього рядка немає.
 
 ```bash
 docker compose logs -f backend
@@ -101,7 +104,7 @@ cd frontend && npm install && npm run dev
 |-------------------------------|-----------|---------------------------------------------|
 | `npm run lint` / `lint:fix`   | обидва    | ESLint за Airbnb                            |
 | `npm run format`              | обидва    | Prettier                                    |
-| `npm test`                    | backend   | Jest + supertest, 222 тести; потрібна MongoDB на `localhost:27017` |
+| `npm test`                    | backend   | Jest + supertest, 336 тестів; потрібна MongoDB на `localhost:27017` |
 | `npm run seed`                | backend   | Демо-дані для локальної бази                |
 | `npm run build`               | frontend  | Продакшн-збірка Vite у `dist/`              |
 
@@ -132,7 +135,7 @@ chronos/
 
 Зняті зі справжнього застосунку на демо-даних.
 
-| Огляд | Календар · Тиждень |
+| Огляд: дошка з наклейками | Календар · Тиждень |
 |---|---|
 | ![Огляд](docs/screenshots/01-overview.jpg) | ![Тиждень](docs/screenshots/02-week.jpg) |
 
@@ -151,6 +154,10 @@ chronos/
 | Створення події | Деталі події |
 |---|---|
 | ![Нова подія](docs/screenshots/10-event-create.jpg) | ![Деталі події](docs/screenshots/12-event-details.jpg) |
+
+| Помічник іде по драбинці створювати подію | Результат у вікні помічника |
+|---|---|
+| ![Помічник на драбинці](docs/screenshots/17-assistant-ladder.jpg) | ![Відповідь помічника](docs/screenshots/18-assistant-result.jpg) |
 
 <img src="docs/screenshots/16-mobile.jpg" width="280" alt="Мобільний огляд">
 

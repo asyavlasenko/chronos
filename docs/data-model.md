@@ -26,6 +26,9 @@ HolidayCache (country, year) — незалежна, кеш зовнішньог
 | showWeekNumbers | Boolean, default true | |
 | showHolidays | Boolean, default true | видимість віртуального календаря свят |
 | notifications | { emailReminders, push, sharedCalendarEmails } | |
+| hiddenModules | [String] | блоки головного екрана, які користувач сховав |
+| theme | { color, mode } | тема оформлення: колір і режим (`light`, `dark`, `system`); типово `graphite`, `light` |
+| telegram | { chatId, username, connectedAt, linkToken, linkExpiresAt } | чат для нагадувань; `linkToken` (хеш одноразового коду) і `linkExpiresAt` мають `select: false`; у відповідях API поля немає |
 | isEmailVerified | Boolean | |
 | emailVerificationToken, passwordResetToken, passwordResetExpiresAt | select: false | зберігати хеш токена |
 | tokenVersion | Number, default 0 | ++ → усі refresh-токени недійсні («Вийти всюди») |
@@ -57,17 +60,22 @@ HolidayCache (country, year) — незалежна, кеш зовнішньог
 | type | arrangement \| reminder \| task | обов'язково |
 | calendar | ref Calendar | обов'язково |
 | creator | ref User | обов'язково |
-| startAt | Date \| null | arrangement: початок; reminder: момент; task: дедлайн (null = без дати) |
+| startAt | Date, required | arrangement: початок; reminder: момент; task: дедлайн. Дата є в кожної події (вимога ТЗ) |
+| isFloating | Boolean, default false | лише task: справа без дедлайну. `startAt` тоді дорівнює моменту створення, у календарі задача не показується |
 | endAt | Date \| null | лише arrangement, > startAt; за замовчуванням startAt + defaultArrangementDuration |
 | allDay | Boolean | |
 | color | COLOR_KEY \| null | null = колір календаря (у спільному — колір учасника-автора) |
 | location | String ..200 | адреса, кімната або посилання на Meet |
-| reminderMinutesBefore | Number 0..10080, default 10 | |
+| reminderMinutesBefore | Number 0..10080 \| null, default 10 | за скільки хвилин до `startAt` надіслати лист; `null` = не нагадувати |
+| reminderSentAt | Date \| null | коли нагадування надіслано; скидається в `null`, якщо змінити `startAt` або `reminderMinutesBefore`. В API не віддається |
 | isCompleted, completedAt | Boolean, Date | лише task |
 | priority | low \| medium \| high | лише task |
 | participants[] | [{ user \| null, email, status: pending \| accepted \| declined, invitedAt, respondedAt }] | user null, доки не зареєструвався |
 
-Індекси: `{ calendar, startAt }`, `{ calendar, endAt }`, `{ creator, type }`, text `{ title, description }`, `{ 'participants.user' }`.
+Індекси: `{ calendar, startAt }`, `{ calendar, endAt }`, `{ creator, type }`, text `{ title, description }`, `{ 'participants.user' }`,
+`{ reminderSentAt, startAt }` (пошук подій, яким час нагадати).
+
+Зміна списку учасників збільшує версію документа `__v` і перевіряє її під час збереження: якщо подію тим часом змінив хтось інший, запит отримує `409`.
 
 Перетин з діапазоном `[from, to)`: `startAt < to && (endAt > from || (endAt == null && startAt >= from))`.
 
@@ -87,6 +95,30 @@ HolidayCache (country, year) — незалежна, кеш зовнішньог
 
 Індекси: `{ email, status }`, `{ expiresAt }`, `{ event }`, `{ calendar }`.
 
+## Drawing
+
+| Поле | Тип | Опис |
+|---|---|---|
+| owner | ref User | автор; малюнки особисті |
+| color | enum ключів кольорів | |
+| width | Number 1..12 | товщина лінії |
+| points | [[Number, Number]], 2..2000 | точки `[t, y]`: час у мс від епохи і пікселі від верху полотна |
+| startAt, endAt | Date | найраніша й найпізніша точка штриха; за ними шукаємо штрихи в діапазоні |
+
+Індекс: `{ owner, startAt }`. Один документ це один штрих, щоб гумка і «Скасувати» видаляли рівно одну лінію.
+
+## TelegramSnooze
+
+Відкладені нагадування з кнопки «Відкласти на 10 хв» у Telegram. Запис видаляється, щойно нагадування надіслано.
+
+| Поле | Тип | Примітки |
+|---|---|---|
+| user | ObjectId → User | хто відклав |
+| event | ObjectId → Event | про яку подію нагадати |
+| dueAt | Date | коли нагадати ще раз |
+
+Індекси: унікальний `{ user, event }` (одна відкладена копія на подію), `{ dueAt }` для планувальника.
+
 ## HolidayCache
 
 | Поле | Тип | Опис |
@@ -104,4 +136,4 @@ HolidayCache (country, year) — незалежна, кеш зовнішньог
 - Колір події в сітці: `event.color` → `members[creator].color` (якщо календар спільний) → `calendar.color`.
 - Бейджі на екрані «Календарі»: `isMain` → «головний · не видаляється», `isShared` → «спільний»,
   `members[me].isHidden` → «прихований», `holidays` → «тільки читання».
-- Групи на екрані «Задачі»: `startAt` сьогодні / цього тижня / `null` («Без дати») / `isCompleted`.
+- Групи на екрані «Задачі»: `startAt` сьогодні / цього тижня / пізніше / `isCompleted`.
